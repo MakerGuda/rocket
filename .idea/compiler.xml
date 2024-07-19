@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="container" />
+        <module name="controller" />
+        <module name="test" />
+        <module name="auth" />
+        <module name="openmessaging" />
+        <module name="acl" />
+        <module name="store" />
+        <module name="tieredstore" />
+        <module name="broker" />
+        <module name="remoting" />
+        <module name="tools" />
+        <module name="example" />
+        <module name="namesrv" />
+        <module name="filter" />
+        <module name="proxy" />
+        <module name="srvutil" />
+        <module name="common" />
+        <module name="client" />
+      </profile>
+    </annotationProcessing>
+  </component>
+</project>
