@@ -30,11 +30,7 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.controller.Controller;
 import org.apache.rocketmq.controller.helper.BrokerLifecycleListener;
 import org.apache.rocketmq.controller.impl.closure.ControllerClosure;
-import org.apache.rocketmq.controller.impl.task.BrokerCloseChannelRequest;
-import org.apache.rocketmq.controller.impl.task.CheckNotActiveBrokerRequest;
-import org.apache.rocketmq.controller.impl.task.GetBrokerLiveInfoRequest;
-import org.apache.rocketmq.controller.impl.task.GetSyncStateDataRequest;
-import org.apache.rocketmq.controller.impl.task.RaftBrokerHeartBeatEventRequest;
+import org.apache.rocketmq.controller.impl.task.*;
 import org.apache.rocketmq.remoting.ChannelEventListener;
 import org.apache.rocketmq.remoting.CommandCustomHeader;
 import org.apache.rocketmq.remoting.RemotingServer;
@@ -80,15 +76,15 @@ public class JRaftController implements Controller {
         this.brokerLifecycleListeners = new ArrayList<>();
 
         final NodeOptions nodeOptions = new NodeOptions();
-        nodeOptions.setElectionTimeoutMs(controllerConfig.getJraftConfig().getjRaftElectionTimeoutMs());
-        nodeOptions.setSnapshotIntervalSecs(controllerConfig.getJraftConfig().getjRaftSnapshotIntervalSecs());
+        nodeOptions.setElectionTimeoutMs(controllerConfig.getJraftConfig().getJRaftElectionTimeoutMs());
+        nodeOptions.setSnapshotIntervalSecs(controllerConfig.getJraftConfig().getJRaftSnapshotIntervalSecs());
         final PeerId serverId = new PeerId();
-        if (!serverId.parse(controllerConfig.getJraftConfig().getjRaftServerId())) {
-            throw new IllegalArgumentException("Fail to parse serverId:" + controllerConfig.getJraftConfig().getjRaftServerId());
+        if (!serverId.parse(controllerConfig.getJraftConfig().getJRaftServerId())) {
+            throw new IllegalArgumentException("Fail to parse serverId:" + controllerConfig.getJraftConfig().getJRaftServerId());
         }
         final Configuration initConf = new Configuration();
-        if (!initConf.parse(controllerConfig.getJraftConfig().getjRaftInitConf())) {
-            throw new IllegalArgumentException("Fail to parse initConf:" + controllerConfig.getJraftConfig().getjRaftInitConf());
+        if (!initConf.parse(controllerConfig.getJraftConfig().getJRaftInitConf())) {
+            throw new IllegalArgumentException("Fail to parse initConf:" + controllerConfig.getJraftConfig().getJRaftInitConf());
         }
         nodeOptions.setInitialConf(initConf);
 
@@ -97,12 +93,12 @@ public class JRaftController implements Controller {
         nodeOptions.setRaftMetaUri(controllerConfig.getControllerStorePath() + File.separator + "raft_meta");
         nodeOptions.setSnapshotUri(controllerConfig.getControllerStorePath() + File.separator + "snapshot");
 
-        this.stateMachine = new JRaftControllerStateMachine(controllerConfig, new NodeId(controllerConfig.getJraftConfig().getjRaftGroupId(), serverId));
+        this.stateMachine = new JRaftControllerStateMachine(controllerConfig, new NodeId(controllerConfig.getJraftConfig().getJRaftGroupId(), serverId));
         this.stateMachine.registerOnLeaderStart(this::onLeaderStart);
         this.stateMachine.registerOnLeaderStop(this::onLeaderStop);
         nodeOptions.setFsm(this.stateMachine);
 
-        this.raftGroupService = new RaftGroupService(controllerConfig.getJraftConfig().getjRaftGroupId(), serverId, nodeOptions);
+        this.raftGroupService = new RaftGroupService(controllerConfig.getJraftConfig().getJRaftGroupId(), serverId, nodeOptions);
 
         this.peerIdToAddr = new HashMap<>();
         initPeerIdMap();
@@ -113,8 +109,8 @@ public class JRaftController implements Controller {
     }
 
     private void initPeerIdMap() {
-        String[] peers = this.controllerConfig.getJraftConfig().getjRaftInitConf().split(",");
-        String[] rpcAddrs = this.controllerConfig.getJraftConfig().getjRaftControllerRPCAddr().split(",");
+        String[] peers = this.controllerConfig.getJraftConfig().getJRaftInitConf().split(",");
+        String[] rpcAddrs = this.controllerConfig.getJraftConfig().getJRaftControllerRPCAddr().split(",");
         for (int i = 0; i < peers.length; i++) {
             PeerId peerId = new PeerId();
             if (!peerId.parse(peers[i])) {

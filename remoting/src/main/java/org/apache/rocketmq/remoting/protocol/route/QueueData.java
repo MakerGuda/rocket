@@ -1,37 +1,33 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
-  $Id: QueueData.java 1835 2013-05-16 02:00:50Z vintagewang@apache.org $
- */
 package org.apache.rocketmq.remoting.protocol.route;
 
 public class QueueData implements Comparable<QueueData> {
+
+    /**
+     * 当前queue所在broker名称
+     */
     private String brokerName;
+
+    /**
+     * 写队列数量
+     */
     private int readQueueNums;
+
+    /**
+     * 读队列数量
+     */
     private int writeQueueNums;
+
     private int perm;
+
+    /**
+     * 是否系统主题标识
+     */
     private int topicSysFlag;
 
     public QueueData() {
 
     }
 
-    // Deep copy QueueData
     public QueueData(QueueData queueData) {
         this.brokerName = queueData.brokerName;
         this.readQueueNums = queueData.readQueueNums;
@@ -109,9 +105,7 @@ public class QueueData implements Comparable<QueueData> {
 
     @Override
     public String toString() {
-        return "QueueData [brokerName=" + brokerName + ", readQueueNums=" + readQueueNums
-            + ", writeQueueNums=" + writeQueueNums + ", perm=" + perm + ", topicSysFlag=" + topicSysFlag
-            + "]";
+        return "QueueData [brokerName=" + brokerName + ", readQueueNums=" + readQueueNums + ", writeQueueNums=" + writeQueueNums + ", perm=" + perm + ", topicSysFlag=" + topicSysFlag + "]";
     }
 
     @Override
@@ -126,4 +120,5 @@ public class QueueData implements Comparable<QueueData> {
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
     }
+
 }

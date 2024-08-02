@@ -1,29 +1,5 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.broker;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.broker.plugin.BrokerAttachedPlugin;
 import org.apache.rocketmq.broker.schedule.DelayOffsetSerializeWrapper;
 import org.apache.rocketmq.common.MixAll;
@@ -40,8 +16,14 @@ import org.apache.rocketmq.store.ha.HAConnectionState;
 import org.apache.rocketmq.store.ha.HAConnectionStateNotificationRequest;
 import org.apache.rocketmq.store.timer.TimerCheckpoint;
 
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+
 public class BrokerPreOnlineService extends ServiceThread {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
+
     private final BrokerController brokerController;
 
     private int waitBrokerIndex = 0;
@@ -61,7 +43,6 @@ public class BrokerPreOnlineService extends ServiceThread {
     @Override
     public void run() {
         LOGGER.info(this.getServiceName() + " service started");
-
         while (!this.isStopped()) {
             if (!this.brokerController.isIsolated()) {
                 LOGGER.info("broker {} is online", this.brokerController.getBrokerConfig().getCanonicalName());
@@ -78,14 +59,12 @@ public class BrokerPreOnlineService extends ServiceThread {
                 LOGGER.error("Broker preOnline error, ", e);
             }
         }
-
         LOGGER.info(this.getServiceName() + " service end");
     }
 
     CompletableFuture<Boolean> waitForHaHandshakeComplete(String brokerAddr) {
         LOGGER.info("wait for handshake completion with {}", brokerAddr);
-        HAConnectionStateNotificationRequest request =
-            new HAConnectionStateNotificationRequest(HAConnectionState.TRANSFER, RemotingHelper.parseHostFromAddress(brokerAddr), true);
+        HAConnectionStateNotificationRequest request = new HAConnectionStateNotificationRequest(HAConnectionState.TRANSFER, RemotingHelper.parseHostFromAddress(brokerAddr), true);
         if (this.brokerController.getMessageStore().getHaService() != null) {
             this.brokerController.getMessageStore().getHaService().putGroupConnectionStateRequest(request);
         } else {
@@ -117,21 +96,14 @@ public class BrokerPreOnlineService extends ServiceThread {
                 this.brokerController.startService(MixAll.MASTER_ID, this.brokerController.getBrokerAddr());
                 return true;
             }
-
             String brokerAddrToWait = brokerMemberGroup.getBrokerAddrs().get(brokerIdList.get(waitBrokerIndex));
-
             try {
-                this.brokerController.getBrokerOuterAPI().
-                    sendBrokerHaInfo(brokerAddrToWait, this.brokerController.getHAServerAddr(),
-                        this.brokerController.getMessageStore().getBrokerInitMaxOffset(), this.brokerController.getBrokerAddr());
+                this.brokerController.getBrokerOuterAPI().sendBrokerHaInfo(brokerAddrToWait, this.brokerController.getHAServerAddr(), this.brokerController.getMessageStore().getBrokerInitMaxOffset(), this.brokerController.getBrokerAddr());
             } catch (Exception e) {
                 LOGGER.error("send ha address to {} exception, {}", brokerAddrToWait, e);
                 return false;
             }
-
-            CompletableFuture<Boolean> haHandshakeFuture = waitForHaHandshakeComplete(brokerAddrToWait)
-                .thenApply(result -> futureWaitAction(result, brokerMemberGroup));
-
+            CompletableFuture<Boolean> haHandshakeFuture = waitForHaHandshakeComplete(brokerAddrToWait).thenApply(result -> futureWaitAction(result, brokerMemberGroup));
             try {
                 if (!haHandshakeFuture.get()) {
                     return false;
@@ -140,7 +112,6 @@ public class BrokerPreOnlineService extends ServiceThread {
                 LOGGER.error("Wait handshake completion exception, {}", e);
                 return false;
             }
-
             if (syncMetadataReverse(brokerAddrToWait)) {
                 waitBrokerIndex++;
             } else {
@@ -152,11 +123,8 @@ public class BrokerPreOnlineService extends ServiceThread {
     private boolean syncMetadataReverse(String brokerAddr) {
         try {
             LOGGER.info("Get metadata reverse from {}", brokerAddr);
-
             String delayOffset = this.brokerController.getBrokerOuterAPI().getAllDelayOffset(brokerAddr);
-            DelayOffsetSerializeWrapper delayOffsetSerializeWrapper =
-                DelayOffsetSerializeWrapper.fromJson(delayOffset, DelayOffsetSerializeWrapper.class);
-
+            DelayOffsetSerializeWrapper delayOffsetSerializeWrapper = DelayOffsetSerializeWrapper.fromJson(delayOffset, DelayOffsetSerializeWrapper.class);
             ConsumerOffsetSerializeWrapper consumerOffsetSerializeWrapper = this.brokerController.getBrokerOuterAPI().getAllConsumerOffset(brokerAddr);
 
             TimerCheckpoint timerCheckpoint = this.brokerController.getBrokerOuterAPI().getTimerCheckPoint(brokerAddr);
@@ -245,21 +213,19 @@ public class BrokerPreOnlineService extends ServiceThread {
         return true;
     }
 
+    /**
+     * 预上线
+     */
     private boolean prepareForBrokerOnline() {
         BrokerMemberGroup brokerMemberGroup;
         try {
-            brokerMemberGroup = this.brokerController.getBrokerOuterAPI().syncBrokerMemberGroup(
-                this.brokerController.getBrokerConfig().getBrokerClusterName(),
-                this.brokerController.getBrokerConfig().getBrokerName(),
-                this.brokerController.getBrokerConfig().isCompatibleWithOldNameSrv());
+            brokerMemberGroup = this.brokerController.getBrokerOuterAPI().syncBrokerMemberGroup(this.brokerController.getBrokerConfig().getBrokerClusterName(), this.brokerController.getBrokerConfig().getBrokerName(), this.brokerController.getBrokerConfig().isCompatibleWithOldNameSrv());
         } catch (Exception e) {
             LOGGER.error("syncBrokerMemberGroup from namesrv error, start service failed, will try later, ", e);
             return false;
         }
-
         if (brokerMemberGroup != null && !brokerMemberGroup.getBrokerAddrs().isEmpty()) {
             long minBrokerId = getMinBrokerId(brokerMemberGroup.getBrokerAddrs());
-
             if (this.brokerController.getBrokerConfig().getBrokerId() == MixAll.MASTER_ID) {
                 return prepareForMasterOnline(brokerMemberGroup);
             } else if (minBrokerId == MixAll.MASTER_ID) {
@@ -272,10 +238,12 @@ public class BrokerPreOnlineService extends ServiceThread {
             LOGGER.info("no other broker online, will start service directly");
             this.brokerController.startService(this.brokerController.getBrokerConfig().getBrokerId(), this.brokerController.getBrokerAddr());
         }
-
         return true;
     }
 
+    /**
+     * 获取最小brokerId
+     */
     private long getMinBrokerId(Map<Long, String> brokerAddrMap) {
         Map<Long, String> brokerAddrMapCopy = new HashMap<>(brokerAddrMap);
         brokerAddrMapCopy.remove(this.brokerController.getBrokerConfig().getBrokerId());
@@ -284,4 +252,5 @@ public class BrokerPreOnlineService extends ServiceThread {
         }
         return this.brokerController.getBrokerConfig().getBrokerId();
     }
+
 }

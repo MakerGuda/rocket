@@ -1,25 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.client;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.message.MessageQueue;
@@ -30,45 +12,90 @@ import org.apache.rocketmq.remoting.protocol.LanguageCode;
 import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
 import org.apache.rocketmq.remoting.protocol.RequestType;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
- * Client Common configuration
+ * 客户端通用配置
  */
+@Getter
+@Setter
 public class ClientConfig {
+
+    /**
+     * 使用vip通道发送消息
+     */
     public static final String SEND_MESSAGE_WITH_VIP_CHANNEL_PROPERTY = "com.rocketmq.sendMessageWithVIPChannel";
+
     public static final String SOCKS_PROXY_CONFIG = "com.rocketmq.socks.proxy.config";
+
     public static final String DECODE_READ_BODY = "com.rocketmq.read.body";
+
     public static final String DECODE_DECOMPRESS_BODY = "com.rocketmq.decompress.body";
+
     public static final String SEND_LATENCY_ENABLE = "com.rocketmq.sendLatencyEnable";
+
     public static final String START_DETECTOR_ENABLE = "com.rocketmq.startDetectorEnable";
+
     public static final String HEART_BEAT_V2 = "com.rocketmq.heartbeat.v2";
+
+    /**
+     * 获取namesrv地址
+     */
     private String namesrvAddr = NameServerAddressUtils.getNameServerAddresses();
+
+    /**
+     * 获取客户端ip
+     */
     private String clientIP = NetworkUtil.getLocalAddress();
+
+    /**
+     * 获取客户端实例名称
+     */
     private String instanceName = System.getProperty("rocketmq.client.name", "DEFAULT");
+
     private int clientCallbackExecutorThreads = Runtime.getRuntime().availableProcessors();
+
     @Deprecated
     protected String namespace;
+
     private boolean namespaceInitialized = false;
+
     protected String namespaceV2;
+
     protected AccessChannel accessChannel = AccessChannel.LOCAL;
 
     /**
-     * Pulling topic information interval from the named server
+     * 从namesrv拉取topic信息的时间间隔
      */
     private int pollNameServerInterval = 1000 * 30;
+
     /**
-     * Heartbeat interval in microseconds with message broker
+     * broker发送心跳检测的时间间隔
      */
     private int heartbeatBrokerInterval = 1000 * 30;
+
     /**
-     * Offset persistent interval for consumer
+     * 持久化消费者组偏移量的时间间隔
      */
     private int persistConsumerOffsetInterval = 1000 * 5;
+
+    /**
+     * 发生异常时，拉取消息的延迟时间
+     */
     private long pullTimeDelayMillsWhenException = 1000;
+
     private boolean unitMode = false;
+
     private String unitName;
+
     private boolean decodeReadBody = Boolean.parseBoolean(System.getProperty(DECODE_READ_BODY, "true"));
+
     private boolean decodeDecompressBody = Boolean.parseBoolean(System.getProperty(DECODE_DECOMPRESS_BODY, "true"));
+
     private boolean vipChannelEnabled = Boolean.parseBoolean(System.getProperty(SEND_MESSAGE_WITH_VIP_CHANNEL_PROPERTY, "false"));
+
     private boolean useHeartbeatV2 = Boolean.parseBoolean(System.getProperty(HEART_BEAT_V2, "false"));
 
     private boolean useTLS = TlsSystemConfig.tlsEnable;
@@ -76,85 +103,57 @@ public class ClientConfig {
     private String socksProxyConfig = System.getProperty(SOCKS_PROXY_CONFIG, "{}");
 
     private int mqClientApiTimeout = 3 * 1000;
+
     private int detectTimeout = 200;
+
     private int detectInterval = 2 * 1000;
 
     private LanguageCode language = LanguageCode.JAVA;
 
-    /**
-     * Enable stream request type will inject a RPCHook to add corresponding request type to remoting layer.
-     * And it will also generate a different client id to prevent unexpected reuses of MQClientInstance.
-     */
     protected boolean enableStreamRequestType = false;
 
-    /**
-     * Enable the fault tolerance mechanism of the client sending process.
-     * DO NOT OPEN when ORDER messages are required.
-     * Turning on will interfere with the queue selection functionality,
-     * possibly conflicting with the order message.
-     */
     private boolean sendLatencyEnable = Boolean.parseBoolean(System.getProperty(SEND_LATENCY_ENABLE, "false"));
+
     private boolean startDetectorEnable = Boolean.parseBoolean(System.getProperty(START_DETECTOR_ENABLE, "false"));
 
     private boolean enableHeartbeatChannelEventListener = true;
 
-    /**
-     * The switch for message trace
-     */
     protected boolean enableTrace = false;
 
-    /**
-     * The name value of message trace topic. If not set, the default trace topic name will be used.
-     */
     protected String traceTopic;
 
+    /**
+     * 构建客户端id
+     */
     public String buildMQClientId() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.getClientIP());
-
         sb.append("@");
         sb.append(this.getInstanceName());
         if (!UtilAll.isBlank(this.unitName)) {
             sb.append("@");
             sb.append(this.unitName);
         }
-
         if (enableStreamRequestType) {
             sb.append("@");
             sb.append(RequestType.STREAM);
         }
-
         return sb.toString();
     }
 
-    public String getClientIP() {
-        return clientIP;
-    }
-
-    public void setClientIP(String clientIP) {
-        this.clientIP = clientIP;
-    }
-
-    public String getInstanceName() {
-        return instanceName;
-    }
-
-    public void setInstanceName(String instanceName) {
-        this.instanceName = instanceName;
-    }
-
+    /**
+     * 修改客户端实例名称为进程ip, 当有两个客户端部署在同一台机器上时，不会发生冲突
+     */
     public void changeInstanceNameToPID() {
         if (this.instanceName.equals("DEFAULT")) {
             this.instanceName = UtilAll.getPid() + "#" + System.nanoTime();
         }
     }
 
-    @Deprecated
     public String withNamespace(String resource) {
         return NamespaceUtil.wrapNamespace(this.getNamespace(), resource);
     }
 
-    @Deprecated
     public Set<String> withNamespace(Set<String> resourceSet) {
         Set<String> resourceWithNamespace = new HashSet<>();
         for (String resource : resourceSet) {
@@ -163,12 +162,10 @@ public class ClientConfig {
         return resourceWithNamespace;
     }
 
-    @Deprecated
     public String withoutNamespace(String resource) {
         return NamespaceUtil.withoutNamespace(resource, this.getNamespace());
     }
 
-    @Deprecated
     public Set<String> withoutNamespace(Set<String> resourceSet) {
         Set<String> resourceWithoutNamespace = new HashSet<>();
         for (String resource : resourceSet) {
@@ -177,7 +174,6 @@ public class ClientConfig {
         return resourceWithoutNamespace;
     }
 
-    @Deprecated
     public MessageQueue queueWithNamespace(MessageQueue queue) {
         if (StringUtils.isEmpty(this.getNamespace())) {
             return queue;
@@ -185,14 +181,11 @@ public class ClientConfig {
         return new MessageQueue(withNamespace(queue.getTopic()), queue.getBrokerName(), queue.getQueueId());
     }
 
-    @Deprecated
     public Collection<MessageQueue> queuesWithNamespace(Collection<MessageQueue> queues) {
         if (StringUtils.isEmpty(this.getNamespace())) {
             return queues;
         }
-        Iterator<MessageQueue> iter = queues.iterator();
-        while (iter.hasNext()) {
-            MessageQueue queue = iter.next();
+        for (MessageQueue queue : queues) {
             queue.setTopic(withNamespace(queue.getTopic()));
         }
         return queues;
@@ -262,6 +255,9 @@ public class ClientConfig {
         return cc;
     }
 
+    /**
+     * 获取namesrv地址
+     */
     public String getNamesrvAddr() {
         if (StringUtils.isNotEmpty(namesrvAddr) && NameServerAddressUtils.NAMESRV_ENDPOINT_PATTERN.matcher(namesrvAddr.trim()).matches()) {
             return NameServerAddressUtils.getNameSrvAddrFromNamesrvEndpoint(namesrvAddr);
@@ -269,121 +265,11 @@ public class ClientConfig {
         return namesrvAddr;
     }
 
-    /**
-     * Domain name mode access way does not support the delimiter(;), and only one domain name can be set.
-     *
-     * @param namesrvAddr name server address
-     */
     public void setNamesrvAddr(String namesrvAddr) {
         this.namesrvAddr = namesrvAddr;
         this.namespaceInitialized = false;
     }
 
-    public int getClientCallbackExecutorThreads() {
-        return clientCallbackExecutorThreads;
-    }
-
-    public void setClientCallbackExecutorThreads(int clientCallbackExecutorThreads) {
-        this.clientCallbackExecutorThreads = clientCallbackExecutorThreads;
-    }
-
-    public int getPollNameServerInterval() {
-        return pollNameServerInterval;
-    }
-
-    public void setPollNameServerInterval(int pollNameServerInterval) {
-        this.pollNameServerInterval = pollNameServerInterval;
-    }
-
-    public int getHeartbeatBrokerInterval() {
-        return heartbeatBrokerInterval;
-    }
-
-    public void setHeartbeatBrokerInterval(int heartbeatBrokerInterval) {
-        this.heartbeatBrokerInterval = heartbeatBrokerInterval;
-    }
-
-    public int getPersistConsumerOffsetInterval() {
-        return persistConsumerOffsetInterval;
-    }
-
-    public void setPersistConsumerOffsetInterval(int persistConsumerOffsetInterval) {
-        this.persistConsumerOffsetInterval = persistConsumerOffsetInterval;
-    }
-
-    public long getPullTimeDelayMillsWhenException() {
-        return pullTimeDelayMillsWhenException;
-    }
-
-    public void setPullTimeDelayMillsWhenException(long pullTimeDelayMillsWhenException) {
-        this.pullTimeDelayMillsWhenException = pullTimeDelayMillsWhenException;
-    }
-
-    public String getUnitName() {
-        return unitName;
-    }
-
-    public void setUnitName(String unitName) {
-        this.unitName = unitName;
-    }
-
-    public boolean isUnitMode() {
-        return unitMode;
-    }
-
-    public void setUnitMode(boolean unitMode) {
-        this.unitMode = unitMode;
-    }
-
-    public boolean isVipChannelEnabled() {
-        return vipChannelEnabled;
-    }
-
-    public void setVipChannelEnabled(final boolean vipChannelEnabled) {
-        this.vipChannelEnabled = vipChannelEnabled;
-    }
-
-    public boolean isUseTLS() {
-        return useTLS;
-    }
-
-    public void setUseTLS(boolean useTLS) {
-        this.useTLS = useTLS;
-    }
-
-    public String getSocksProxyConfig() {
-        return socksProxyConfig;
-    }
-
-    public void setSocksProxyConfig(String socksProxyConfig) {
-        this.socksProxyConfig = socksProxyConfig;
-    }
-
-    public LanguageCode getLanguage() {
-        return language;
-    }
-
-    public void setLanguage(LanguageCode language) {
-        this.language = language;
-    }
-
-    public boolean isDecodeReadBody() {
-        return decodeReadBody;
-    }
-
-    public void setDecodeReadBody(boolean decodeReadBody) {
-        this.decodeReadBody = decodeReadBody;
-    }
-
-    public boolean isDecodeDecompressBody() {
-        return decodeDecompressBody;
-    }
-
-    public void setDecodeDecompressBody(boolean decodeDecompressBody) {
-        this.decodeDecompressBody = decodeDecompressBody;
-    }
-
-    @Deprecated
     public String getNamespace() {
         if (namespaceInitialized) {
             return namespace;
@@ -402,106 +288,9 @@ public class ClientConfig {
         return namespace;
     }
 
-    @Deprecated
     public void setNamespace(String namespace) {
         this.namespace = namespace;
         this.namespaceInitialized = true;
-    }
-
-    public String getNamespaceV2() {
-        return namespaceV2;
-    }
-
-    public void setNamespaceV2(String namespaceV2) {
-        this.namespaceV2 = namespaceV2;
-    }
-
-    public AccessChannel getAccessChannel() {
-        return this.accessChannel;
-    }
-
-    public void setAccessChannel(AccessChannel accessChannel) {
-        this.accessChannel = accessChannel;
-    }
-
-    public int getMqClientApiTimeout() {
-        return mqClientApiTimeout;
-    }
-
-    public void setMqClientApiTimeout(int mqClientApiTimeout) {
-        this.mqClientApiTimeout = mqClientApiTimeout;
-    }
-
-    public boolean isEnableStreamRequestType() {
-        return enableStreamRequestType;
-    }
-
-    public void setEnableStreamRequestType(boolean enableStreamRequestType) {
-        this.enableStreamRequestType = enableStreamRequestType;
-    }
-
-    public boolean isSendLatencyEnable() {
-        return sendLatencyEnable;
-    }
-
-    public void setSendLatencyEnable(boolean sendLatencyEnable) {
-        this.sendLatencyEnable = sendLatencyEnable;
-    }
-
-    public boolean isStartDetectorEnable() {
-        return startDetectorEnable;
-    }
-
-    public void setStartDetectorEnable(boolean startDetectorEnable) {
-        this.startDetectorEnable = startDetectorEnable;
-    }
-
-    public boolean isEnableHeartbeatChannelEventListener() {
-        return enableHeartbeatChannelEventListener;
-    }
-
-    public void setEnableHeartbeatChannelEventListener(boolean enableHeartbeatChannelEventListener) {
-        this.enableHeartbeatChannelEventListener = enableHeartbeatChannelEventListener;
-    }
-
-    public int getDetectTimeout() {
-        return this.detectTimeout;
-    }
-
-    public void setDetectTimeout(int detectTimeout) {
-        this.detectTimeout = detectTimeout;
-    }
-
-    public int getDetectInterval() {
-        return this.detectInterval;
-    }
-
-    public void setDetectInterval(int detectInterval) {
-        this.detectInterval = detectInterval;
-    }
-
-    public boolean isUseHeartbeatV2() {
-        return useHeartbeatV2;
-    }
-
-    public void setUseHeartbeatV2(boolean useHeartbeatV2) {
-        this.useHeartbeatV2 = useHeartbeatV2;
-    }
-
-    public boolean isEnableTrace() {
-        return enableTrace;
-    }
-
-    public void setEnableTrace(boolean enableTrace) {
-        this.enableTrace = enableTrace;
-    }
-
-    public String getTraceTopic() {
-        return traceTopic;
-    }
-
-    public void setTraceTopic(String traceTopic) {
-        this.traceTopic = traceTopic;
     }
 
     @Override
@@ -539,4 +328,5 @@ public class ClientConfig {
             ", traceTopic='" + traceTopic + '\'' +
             '}';
     }
+
 }

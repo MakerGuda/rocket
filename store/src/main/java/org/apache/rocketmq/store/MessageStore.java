@@ -1,28 +1,9 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.store;
 
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.sdk.metrics.InstrumentSelector;
+import io.opentelemetry.sdk.metrics.ViewBuilder;
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.SystemClock;
@@ -41,164 +22,104 @@ import org.apache.rocketmq.store.stats.BrokerStatsManager;
 import org.apache.rocketmq.store.timer.TimerMessageStore;
 import org.apache.rocketmq.store.util.PerfCounter;
 import org.rocksdb.RocksDBException;
-import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.sdk.metrics.InstrumentSelector;
-import io.opentelemetry.sdk.metrics.ViewBuilder;
+
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 /**
- * This class defines contracting interfaces to implement, allowing third-party vendor to use customized message store.
+ * 消息存储接口
  */
 public interface MessageStore {
 
     /**
-     * Load previously stored messages.
-     *
-     * @return true if success; false otherwise.
+     * 加载存储的消息数据
      */
     boolean load();
 
     /**
-     * Launch this message store.
-     *
-     * @throws Exception if there is any error.
+     * 启动消息存储服务
      */
     void start() throws Exception;
 
     /**
-     * Shutdown this message store.
+     * 关闭消息存储服务
      */
     void shutdown();
 
     /**
-     * Destroy this message store. Generally, all persistent files should be removed after invocation.
+     * 销毁消息存储，调用后，所有持久化文件将会被移除
      */
     void destroy();
 
     /**
-     * Store a message into store in async manner, the processor can process the next request rather than wait for
-     * result when result is completed, notify the client in async manner
-     *
-     * @param msg MessageInstance to store
-     * @return a CompletableFuture for the result of store operation
+     * 异步存储消息
      */
     default CompletableFuture<PutMessageResult> asyncPutMessage(final MessageExtBrokerInner msg) {
         return CompletableFuture.completedFuture(putMessage(msg));
     }
 
     /**
-     * Store a batch of messages in async manner
-     *
-     * @param messageExtBatch the message batch
-     * @return a CompletableFuture for the result of store operation
+     * 异步存储批量消息
      */
     default CompletableFuture<PutMessageResult> asyncPutMessages(final MessageExtBatch messageExtBatch) {
         return CompletableFuture.completedFuture(putMessages(messageExtBatch));
     }
 
     /**
-     * Store a message into store.
-     *
-     * @param msg Message instance to store
-     * @return result of store operation.
+     * 同步消息存储
      */
     PutMessageResult putMessage(final MessageExtBrokerInner msg);
 
     /**
-     * Store a batch of messages.
-     *
-     * @param messageExtBatch Message batch.
-     * @return result of storing batch messages.
+     * 同步批量消息存储
      */
     PutMessageResult putMessages(final MessageExtBatch messageExtBatch);
 
     /**
-     * Query at most <code>maxMsgNums</code> messages belonging to <code>topic</code> at <code>queueId</code> starting
-     * from given <code>offset</code>. Resulting messages will further be screened using provided message filter.
+     * 从指定主题的指定偏移量获取消息
      *
-     * @param group         Consumer group that launches this query.
-     * @param topic         Topic to query.
-     * @param queueId       Queue ID to query.
-     * @param offset        Logical offset to start from.
-     * @param maxMsgNums    Maximum count of messages to query.
-     * @param messageFilter Message filter used to screen desired messages.
-     * @return Matched messages.
+     * @param group         消费者组
+     * @param topic         主题
+     * @param queueId        消息获取的队列id
+     * @param offset         起始偏移量
+     * @param maxMsgNums    查询最大消息数
+     * @param messageFilter     消息过滤器
+     * @return 匹配的消息
      */
-    GetMessageResult getMessage(final String group, final String topic, final int queueId,
-        final long offset, final int maxMsgNums, final MessageFilter messageFilter);
+    GetMessageResult getMessage(final String group, final String topic, final int queueId, final long offset, final int maxMsgNums, final MessageFilter messageFilter);
 
     /**
-     * Asynchronous get message
-     * @see #getMessage(String, String, int, long, int, MessageFilter) getMessage
-     *
-     * @param group         Consumer group that launches this query.
-     * @param topic         Topic to query.
-     * @param queueId       Queue ID to query.
-     * @param offset        Logical offset to start from.
-     * @param maxMsgNums    Maximum count of messages to query.
-     * @param messageFilter Message filter used to screen desired messages.
-     * @return Matched messages.
+     * 异步获取消息
      */
-    CompletableFuture<GetMessageResult> getMessageAsync(final String group, final String topic, final int queueId,
-        final long offset, final int maxMsgNums, final MessageFilter messageFilter);
+    CompletableFuture<GetMessageResult> getMessageAsync(final String group, final String topic, final int queueId, final long offset, final int maxMsgNums, final MessageFilter messageFilter);
 
     /**
-     * Query at most <code>maxMsgNums</code> messages belonging to <code>topic</code> at <code>queueId</code> starting
-     * from given <code>offset</code>. Resulting messages will further be screened using provided message filter.
-     *
-     * @param group           Consumer group that launches this query.
-     * @param topic           Topic to query.
-     * @param queueId         Queue ID to query.
-     * @param offset          Logical offset to start from.
-     * @param maxMsgNums      Maximum count of messages to query.
-     * @param maxTotalMsgSize Maximum total msg size of the messages
-     * @param messageFilter   Message filter used to screen desired messages.
-     * @return Matched messages.
+     * 同步获取消息
      */
-    GetMessageResult getMessage(final String group, final String topic, final int queueId,
-        final long offset, final int maxMsgNums, final int maxTotalMsgSize, final MessageFilter messageFilter);
+    GetMessageResult getMessage(final String group, final String topic, final int queueId, final long offset, final int maxMsgNums, final int maxTotalMsgSize, final MessageFilter messageFilter);
 
     /**
-     * Asynchronous get message
-     * @see #getMessage(String, String, int, long, int, int, MessageFilter) getMessage
-     *
-     * @param group           Consumer group that launches this query.
-     * @param topic           Topic to query.
-     * @param queueId         Queue ID to query.
-     * @param offset          Logical offset to start from.
-     * @param maxMsgNums      Maximum count of messages to query.
-     * @param maxTotalMsgSize Maximum total msg size of the messages
-     * @param messageFilter   Message filter used to screen desired messages.
-     * @return Matched messages.
+     * 异步获取消息
      */
-    CompletableFuture<GetMessageResult> getMessageAsync(final String group, final String topic, final int queueId,
-        final long offset, final int maxMsgNums, final int maxTotalMsgSize, final MessageFilter messageFilter);
+    CompletableFuture<GetMessageResult> getMessageAsync(final String group, final String topic, final int queueId, final long offset, final int maxMsgNums, final int maxTotalMsgSize, final MessageFilter messageFilter);
 
     /**
-     * Get maximum offset of the topic queue.
-     *
-     * @param topic   Topic name.
-     * @param queueId Queue ID.
-     * @return Maximum offset at present.
+     * 获取指定主题，指定队列下的最大偏移量
      */
     long getMaxOffsetInQueue(final String topic, final int queueId);
 
     /**
-     * Get maximum offset of the topic queue.
-     *
-     * @param topic     Topic name.
-     * @param queueId   Queue ID.
-     * @param committed return the max offset in ConsumeQueue if true, or the max offset in CommitLog if false
-     * @return Maximum offset at present.
+     * 返回最大偏移量  true表示获取consumeQueue的最大偏移量  false表示获取commitLog的最大偏移量
      */
     long getMaxOffsetInQueue(final String topic, final int queueId, final boolean committed);
 
     /**
-     * Get the minimum offset of the topic queue.
-     *
-     * @param topic   Topic name.
-     * @param queueId Queue ID.
-     * @return Minimum offset at present.
+     * 获取最小偏移量
      */
     long getMinOffsetInQueue(final String topic, final int queueId);
 
@@ -546,9 +467,7 @@ public interface MessageStore {
     void setConfirmOffset(long phyOffset);
 
     /**
-     * Check if the operating system page cache is busy or not.
-     *
-     * @return true if the OS page cache is busy; false otherwise.
+     * 判断操作系统页缓存是否繁忙
      */
     boolean isOSPageCacheBusy();
 
@@ -947,9 +866,7 @@ public interface MessageStore {
     long remainHowManyDataToFlush();
 
     /**
-     * Get whether message store is shutdown
-     *
-     * @return whether shutdown
+     * 判断当前消息存储服务是否已关闭
      */
     boolean isShutdown();
 

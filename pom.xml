@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
         <groupId>org.apache</groupId>
@@ -12,7 +27,7 @@
 
     <inceptionYear>2012</inceptionYear>
     <groupId>org.apache.rocketmq</groupId>
-    <artifactId>rocketmq-all</artifactId>
+    <artifactId>rocket</artifactId>
     <version>5.3.0</version>
     <packaging>pom</packaging>
     <name>Apache RocketMQ ${project.version}</name>
@@ -217,8 +232,8 @@
                 </executions>
                 <configuration>
                     <rules>
-                        <banCircularDependencies/>
-                        <dependencyConvergence/>
+                        <banCircularDependencies />
+                        <dependencyConvergence />
                     </rules>
                     <fail>true</fail>
                 </configuration>
@@ -517,92 +532,92 @@
         <dependencies>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>acl</artifactId>
+                <artifactId>rocketmq-acl</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>auth</artifactId>
+                <artifactId>rocketmq-auth</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>broker</artifactId>
+                <artifactId>rocketmq-broker</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>client</artifactId>
+                <artifactId>rocketmq-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>common</artifactId>
+                <artifactId>rocketmq-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>container</artifactId>
+                <artifactId>rocketmq-container</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>controller</artifactId>
+                <artifactId>rocketmq-controller</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>example</artifactId>
+                <artifactId>rocketmq-example</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>filter</artifactId>
+                <artifactId>rocketmq-filter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>namesrv</artifactId>
+                <artifactId>rocketmq-namesrv</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>openmessaging</artifactId>
+                <artifactId>rocketmq-openmessaging</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>proxy</artifactId>
+                <artifactId>rocketmq-proxy</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>remoting</artifactId>
+                <artifactId>rocketmq-remoting</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>srvutil</artifactId>
+                <artifactId>rocketmq-srvutil</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>store</artifactId>
+                <artifactId>rocketmq-store</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>tieredstore</artifactId>
+                <artifactId>rocketmq-tiered-store</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>test</artifactId>
+                <artifactId>rocketmq-test</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.rocketmq</groupId>
-                <artifactId>tools</artifactId>
+                <artifactId>rocketmq-tools</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -1,35 +1,11 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.broker.util;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.schedule.ScheduleMessageService;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.message.MessageAccessor;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.common.message.*;
 import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.common.utils.QueueTypeUtils;
@@ -40,35 +16,35 @@ import org.apache.rocketmq.store.PutMessageStatus;
 import org.apache.rocketmq.store.config.BrokerRole;
 import org.apache.rocketmq.store.timer.TimerMessageStore;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
+
 public class HookUtils {
 
     protected static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
 
     private static final AtomicLong PRINT_TIMES = new AtomicLong(0);
 
-    /**
-     * On Linux: The maximum length for a file name is 255 bytes.
-     * The maximum combined length of both the file name and path name is 4096 bytes.
-     * This length matches the PATH_MAX that is supported by the operating system.
-     * The Unicode representation of a character can occupy several bytes,
-     * so the maximum number of characters that comprises a path and file name can vary.
-     * The actual limitation is the number of bytes in the path and file components,
-     * which might correspond to an equal number of characters.
-     */
     private static final Integer MAX_TOPIC_LENGTH = 255;
 
+    /**
+     * 存储消息前的一系列校验
+     */
     public static PutMessageResult checkBeforePutMessage(BrokerController brokerController, final MessageExt msg) {
+        //判断消息存储服务是否已关闭
         if (brokerController.getMessageStore().isShutdown()) {
             LOG.warn("message store has shutdown, so putMessage is forbidden");
             return new PutMessageResult(PutMessageStatus.SERVICE_NOT_AVAILABLE, null);
         }
 
+        //判断当前broker服务是否为slave角色，将不可写入消息
         if (!brokerController.getMessageStoreConfig().isDuplicationEnable() && BrokerRole.SLAVE == brokerController.getMessageStoreConfig().getBrokerRole()) {
             long value = PRINT_TIMES.getAndIncrement();
             if ((value % 50000) == 0) {
                 LOG.warn("message store is in slave mode, so putMessage is forbidden ");
             }
-
             return new PutMessageResult(PutMessageStatus.SERVICE_NOT_AVAILABLE, null);
         }
 
@@ -77,44 +53,42 @@ public class HookUtils {
             if ((value % 50000) == 0) {
                 LOG.warn("message store is not writeable, so putMessage is forbidden " + brokerController.getMessageStore().getRunningFlags().getFlagBits());
             }
-
             return new PutMessageResult(PutMessageStatus.SERVICE_NOT_AVAILABLE, null);
         } else {
             PRINT_TIMES.set(0);
         }
 
+        //判断当前主题大小
         final byte[] topicData = msg.getTopic().getBytes(MessageDecoder.CHARSET_UTF8);
-        boolean retryTopic = msg.getTopic() != null && msg.getTopic().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX);
+        boolean retryTopic = msg.getTopic().startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX);
         if (!retryTopic && topicData.length > Byte.MAX_VALUE) {
-            LOG.warn("putMessage message topic[{}] length too long {}, but it is not supported by broker",
-                msg.getTopic(), topicData.length);
+            LOG.warn("putMessage message topic[{}] length too long {}, but it is not supported by broker", msg.getTopic(), topicData.length);
             return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);
         }
-
         if (topicData.length > MAX_TOPIC_LENGTH) {
-            LOG.warn("putMessage message topic[{}] length too long {}, but it is not supported by broker",
-                msg.getTopic(), topicData.length);
+            LOG.warn("putMessage message topic[{}] length too long {}, but it is not supported by broker", msg.getTopic(), topicData.length);
             return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);
         }
 
+        //判断消息体是否为空
         if (msg.getBody() == null) {
             LOG.warn("putMessage message topic[{}], but message body is null", msg.getTopic());
             return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);
         }
-
         if (brokerController.getMessageStore().isOSPageCacheBusy()) {
             return new PutMessageResult(PutMessageStatus.OS_PAGE_CACHE_BUSY, null);
         }
         return null;
     }
 
+    /**
+     * 校验批量消息
+     */
     public static PutMessageResult checkInnerBatch(BrokerController brokerController, final MessageExt msg) {
-        if (msg.getProperties().containsKey(MessageConst.PROPERTY_INNER_NUM)
-            && !MessageSysFlag.check(msg.getSysFlag(), MessageSysFlag.INNER_BATCH_FLAG)) {
+        if (msg.getProperties().containsKey(MessageConst.PROPERTY_INNER_NUM) && !MessageSysFlag.check(msg.getSysFlag(), MessageSysFlag.INNER_BATCH_FLAG)) {
             LOG.warn("[BUG]The message had property {} but is not an inner batch", MessageConst.PROPERTY_INNER_NUM);
             return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);
         }
-
         if (MessageSysFlag.check(msg.getSysFlag(), MessageSysFlag.INNER_BATCH_FLAG)) {
             Optional<TopicConfig> topicConfig = Optional.ofNullable(brokerController.getTopicConfigManager().getTopicConfigTable().get(msg.getTopic()));
             if (!QueueTypeUtils.isBatchCq(topicConfig)) {
@@ -122,19 +96,15 @@ public class HookUtils {
                 return new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, null);
             }
         }
-
         return null;
     }
 
-    public static PutMessageResult handleScheduleMessage(BrokerController brokerController,
-        final MessageExtBrokerInner msg) {
+    public static PutMessageResult handleScheduleMessage(BrokerController brokerController, final MessageExtBrokerInner msg) {
         final int tranType = MessageSysFlag.getTransactionValue(msg.getSysFlag());
-        if (tranType == MessageSysFlag.TRANSACTION_NOT_TYPE
-            || tranType == MessageSysFlag.TRANSACTION_COMMIT_TYPE) {
+        if (tranType == MessageSysFlag.TRANSACTION_NOT_TYPE || tranType == MessageSysFlag.TRANSACTION_COMMIT_TYPE) {
             if (!isRolledTimerMessage(msg)) {
                 if (checkIfTimerMessage(msg)) {
                     if (!brokerController.getMessageStoreConfig().isTimerWheelEnable()) {
-                        //wheel timer is not enabled, reject the message
                         return new PutMessageResult(PutMessageStatus.WHEEL_TIMER_NOT_ENABLE, null);
                     }
                     PutMessageResult transformRes = transformTimerMessage(brokerController, msg);
@@ -143,7 +113,6 @@ public class HookUtils {
                     }
                 }
             }
-            // Delay Delivery
             if (msg.getDelayTimeLevel() > 0) {
                 transformDelayLevelMessage(brokerController, msg);
             }
@@ -167,17 +136,14 @@ public class HookUtils {
                 MessageAccessor.clearProperty(msg, MessageConst.PROPERTY_TIMER_DELAY_MS);
             }
             return false;
-            //return this.defaultMessageStore.getMessageStoreConfig().isTimerInterceptDelayLevel();
         }
-        //double check
         if (TimerMessageStore.TIMER_TOPIC.equals(msg.getTopic()) || null != msg.getProperty(MessageConst.PROPERTY_TIMER_OUT_MS)) {
             return false;
         }
         return null != msg.getProperty(MessageConst.PROPERTY_TIMER_DELIVER_MS) || null != msg.getProperty(MessageConst.PROPERTY_TIMER_DELAY_MS) || null != msg.getProperty(MessageConst.PROPERTY_TIMER_DELAY_SEC);
     }
 
-    private static PutMessageResult transformTimerMessage(BrokerController brokerController,
-        MessageExtBrokerInner msg) {
+    private static PutMessageResult transformTimerMessage(BrokerController brokerController, MessageExtBrokerInner msg) {
         //do transform
         int delayLevel = msg.getDelayTimeLevel();
         long deliverMs;
@@ -196,14 +162,12 @@ public class HookUtils {
             if (delayLevel <= 0 && deliverMs - System.currentTimeMillis() > brokerController.getMessageStoreConfig().getTimerMaxDelaySec() * 1000L) {
                 return new PutMessageResult(PutMessageStatus.WHEEL_TIMER_MSG_ILLEGAL, null);
             }
-
             int timerPrecisionMs = brokerController.getMessageStoreConfig().getTimerPrecisionMs();
             if (deliverMs % timerPrecisionMs == 0) {
                 deliverMs -= timerPrecisionMs;
             } else {
                 deliverMs = deliverMs / timerPrecisionMs * timerPrecisionMs;
             }
-
             if (brokerController.getTimerMessageStore().isReject(deliverMs)) {
                 return new PutMessageResult(PutMessageStatus.WHEEL_TIMER_FLOW_CONTROL, null);
             }
@@ -220,16 +184,12 @@ public class HookUtils {
     }
 
     public static void transformDelayLevelMessage(BrokerController brokerController, MessageExtBrokerInner msg) {
-
         if (msg.getDelayTimeLevel() > brokerController.getScheduleMessageService().getMaxDelayLevel()) {
             msg.setDelayTimeLevel(brokerController.getScheduleMessageService().getMaxDelayLevel());
         }
-
-        // Backup real topic, queueId
         MessageAccessor.putProperty(msg, MessageConst.PROPERTY_REAL_TOPIC, msg.getTopic());
         MessageAccessor.putProperty(msg, MessageConst.PROPERTY_REAL_QUEUE_ID, String.valueOf(msg.getQueueId()));
         msg.setPropertiesString(MessageDecoder.messageProperties2String(msg.getProperties()));
-
         msg.setTopic(TopicValidator.RMQ_SYS_SCHEDULE_TOPIC);
         msg.setQueueId(ScheduleMessageService.delayLevel2QueueId(msg.getDelayTimeLevel()));
     }
@@ -250,4 +210,5 @@ public class HookUtils {
         }
         return true;
     }
+
 }

@@ -1,21 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.client.trace;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.client.AccessChannel;
 import org.apache.rocketmq.client.producer.LocalTransactionState;
 import org.apache.rocketmq.common.message.MessageConst;
@@ -25,20 +11,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Encode/decode for Trace Data
- */
+@Getter
+@Setter
 public class TraceDataEncoder {
 
-    /**
-     * Resolving traceContext list From trace data String
-     *
-     * @param traceData
-     * @return
-     */
     public static List<TraceContext> decoderFromTraceDataString(String traceData) {
         List<TraceContext> resList = new ArrayList<>();
-        if (traceData == null || traceData.length() <= 0) {
+        if (traceData == null || traceData.isEmpty()) {
             return resList;
         }
         String[] contextList = traceData.split(String.valueOf(TraceConstants.FIELD_SPLITOR));
@@ -59,21 +38,17 @@ public class TraceDataEncoder {
                 bean.setBodyLength(Integer.parseInt(line[9]));
                 pubContext.setCostTime(Integer.parseInt(line[10]));
                 bean.setMsgType(MessageType.values()[Integer.parseInt(line[11])]);
-
                 if (line.length == 13) {
                     pubContext.setSuccess(Boolean.parseBoolean(line[12]));
                 } else if (line.length == 14) {
                     bean.setOffsetMsgId(line[12]);
                     pubContext.setSuccess(Boolean.parseBoolean(line[13]));
                 }
-
-                // compatible with the old version
                 if (line.length >= 15) {
                     bean.setOffsetMsgId(line[12]);
                     pubContext.setSuccess(Boolean.parseBoolean(line[13]));
                     bean.setClientHost(line[14]);
                 }
-
                 pubContext.setTraceBeans(new ArrayList<>(1));
                 pubContext.getTraceBeans().add(bean);
                 resList.add(pubContext);
@@ -103,10 +78,8 @@ public class TraceDataEncoder {
                 subAfterContext.setCostTime(Integer.parseInt(line[3]));
                 subAfterContext.setSuccess(Boolean.parseBoolean(line[4]));
                 if (line.length >= 7) {
-                    // add the context type
                     subAfterContext.setContextCode(Integer.parseInt(line[6]));
                 }
-                // compatible with the old version
                 if (line.length >= 9) {
                     subAfterContext.setTimeStamp(Long.parseLong(line[7]));
                     subAfterContext.setGroupName(line[8]);
@@ -128,7 +101,6 @@ public class TraceDataEncoder {
                 bean.setTransactionId(line[10]);
                 bean.setTransactionState(LocalTransactionState.valueOf(line[11]));
                 bean.setFromTransactionCheck(Boolean.parseBoolean(line[12]));
-
                 endTransactionContext.setTraceBeans(new ArrayList<>(1));
                 endTransactionContext.getTraceBeans().add(bean);
                 resList.add(endTransactionContext);
@@ -137,23 +109,15 @@ public class TraceDataEncoder {
         return resList;
     }
 
-    /**
-     * Encoding the trace context into data strings and keyset sets
-     *
-     * @param ctx
-     * @return
-     */
     public static TraceTransferBean encoderFromContextBean(TraceContext ctx) {
         if (ctx == null) {
             return null;
         }
-        //build message trace of the transferring entity content bean
         TraceTransferBean transferBean = new TraceTransferBean();
         StringBuilder sb = new StringBuilder(256);
         switch (ctx.getTraceType()) {
             case Pub: {
                 TraceBean bean = ctx.getTraceBeans().get(0);
-                //append the content of context and traceBean to transferBean's TransData
                 sb.append(ctx.getTraceType()).append(TraceConstants.CONTENT_SPLITOR)//
                     .append(ctx.getTimeStamp()).append(TraceConstants.CONTENT_SPLITOR)//
                     .append(ctx.getRegionId()).append(TraceConstants.CONTENT_SPLITOR)//
@@ -220,13 +184,13 @@ public class TraceDataEncoder {
         }
         transferBean.setTransData(sb.toString());
         for (TraceBean bean : ctx.getTraceBeans()) {
-
             transferBean.getTransKey().add(bean.getMsgId());
-            if (bean.getKeys() != null && bean.getKeys().length() > 0) {
+            if (bean.getKeys() != null && !bean.getKeys().isEmpty()) {
                 String[] keys = bean.getKeys().split(MessageConst.KEY_SEPARATOR);
                 transferBean.getTransKey().addAll(Arrays.asList(keys));
             }
         }
         return transferBean;
     }
+
 }

@@ -16,13 +16,6 @@
  */
 package org.apache.rocketmq.client.impl.consumer;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import org.apache.rocketmq.client.QueryResult;
 import org.apache.rocketmq.client.Validators;
 import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
@@ -48,12 +41,10 @@ import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.filter.ExpressionType;
 import org.apache.rocketmq.common.help.FAQUrl;
-import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.common.message.MessageAccessor;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.common.message.*;
 import org.apache.rocketmq.common.sysflag.PullSysFlag;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.apache.rocketmq.remoting.exception.RemotingException;
@@ -63,14 +54,14 @@ import org.apache.rocketmq.remoting.protocol.filter.FilterAPI;
 import org.apache.rocketmq.remoting.protocol.heartbeat.ConsumeType;
 import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * This class will be removed in 2022, and a better implementation {@link DefaultLitePullConsumerImpl} is recommend to use
  * in the scenario of actively pulling messages.
  */
-@Deprecated
 public class DefaultMQPullConsumerImpl implements MQConsumerInner {
     private static final Logger log = LoggerFactory.getLogger(DefaultMQPullConsumerImpl.class);
     private final DefaultMQPullConsumer defaultMQPullConsumer;
@@ -354,10 +345,13 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
         return ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET;
     }
 
+    /**
+     * 获取消费者订阅关系
+     */
     @Override
     public Set<SubscriptionData> subscriptions() {
         Set<SubscriptionData> result = new HashSet<>();
-
+        //当前消费者订阅的所有主题
         Set<String> topics = this.defaultMQPullConsumer.getRegisterTopics();
         if (topics != null) {
             synchronized (topics) {
@@ -375,7 +369,6 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                 }
             }
         }
-
         return result;
     }
 
@@ -407,6 +400,9 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
         }
     }
 
+    /**
+     * 更新消费者主题订阅信息
+     */
     @Override
     public void updateTopicSubscribeInfo(String topic, Set<MessageQueue> info) {
         Map<String, SubscriptionData> subTable = this.rebalanceImpl.getSubscriptionInner();
@@ -417,6 +413,9 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
         }
     }
 
+    /**
+     * 判断消费者的主题订阅数据是否需要更新
+     */
     @Override
     public boolean isSubscribeTopicNeedUpdate(String topic) {
         Map<String, SubscriptionData> subTable = this.rebalanceImpl.getSubscriptionInner();
@@ -425,7 +424,6 @@ public class DefaultMQPullConsumerImpl implements MQConsumerInner {
                 return !this.rebalanceImpl.topicSubscribeInfoTable.containsKey(topic);
             }
         }
-
         return false;
     }
 

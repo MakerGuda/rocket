@@ -1,47 +1,4 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.store.dledger;
-
-import java.net.Inet6Address;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
-import org.apache.rocketmq.common.UtilAll;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExtBatch;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
-import org.apache.rocketmq.common.message.MessageVersion;
-import org.apache.rocketmq.common.sysflag.MessageSysFlag;
-import org.apache.rocketmq.store.AppendMessageResult;
-import org.apache.rocketmq.store.AppendMessageStatus;
-import org.apache.rocketmq.store.CommitLog;
-import org.apache.rocketmq.store.DefaultMessageStore;
-import org.apache.rocketmq.store.DispatchRequest;
-import org.apache.rocketmq.store.MessageExtEncoder;
-import org.apache.rocketmq.store.PutMessageResult;
-import org.apache.rocketmq.store.PutMessageStatus;
-import org.apache.rocketmq.store.SelectMappedBufferResult;
-import org.apache.rocketmq.store.StoreStatsService;
-import org.apache.rocketmq.store.config.MessageStoreConfig;
-import org.apache.rocketmq.store.logfile.MappedFile;
-import org.rocksdb.RocksDBException;
 
 import io.openmessaging.storage.dledger.AppendFuture;
 import io.openmessaging.storage.dledger.BatchAppendFuture;
@@ -57,10 +14,24 @@ import io.openmessaging.storage.dledger.store.file.MmapFile;
 import io.openmessaging.storage.dledger.store.file.MmapFileList;
 import io.openmessaging.storage.dledger.store.file.SelectMmapBufferResult;
 import io.openmessaging.storage.dledger.utils.DLedgerUtils;
+import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.message.MessageDecoder;
+import org.apache.rocketmq.common.message.MessageExtBatch;
+import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.common.message.MessageVersion;
+import org.apache.rocketmq.common.sysflag.MessageSysFlag;
+import org.apache.rocketmq.store.*;
+import org.apache.rocketmq.store.config.MessageStoreConfig;
+import org.apache.rocketmq.store.logfile.MappedFile;
+import org.rocksdb.RocksDBException;
 
-/**
- * Store all metadata downtime for recovery, data protection reliability
- */
+import java.net.Inet6Address;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
 public class DLedgerCommitLog extends CommitLog {
 
     static {
@@ -68,17 +39,19 @@ public class DLedgerCommitLog extends CommitLog {
     }
 
     private final DLedgerServer dLedgerServer;
+
     private final DLedgerConfig dLedgerConfig;
+
     private final DLedgerMmapFileStore dLedgerFileStore;
+
     private final MmapFileList dLedgerFileList;
 
-    //The id identifies the broker role, 0 means master, others means slave
     private final int id;
 
     private final MessageSerializer messageSerializer;
+
     private volatile long beginTimeInDledgerLock = 0;
 
-    //This offset separate the old commitlog from dledger commitlog
     private long dividedCommitlogOffset = -1;
 
     private boolean isInrecoveringOldCommitlog = false;
@@ -90,9 +63,9 @@ public class DLedgerCommitLog extends CommitLog {
         dLedgerConfig = new DLedgerConfig();
         dLedgerConfig.setEnableDiskForceClean(defaultMessageStore.getMessageStoreConfig().isCleanFileForciblyEnable());
         dLedgerConfig.setStoreType(DLedgerConfig.FILE);
-        dLedgerConfig.setSelfId(defaultMessageStore.getMessageStoreConfig().getdLegerSelfId());
-        dLedgerConfig.setGroup(defaultMessageStore.getMessageStoreConfig().getdLegerGroup());
-        dLedgerConfig.setPeers(defaultMessageStore.getMessageStoreConfig().getdLegerPeers());
+        dLedgerConfig.setSelfId(defaultMessageStore.getMessageStoreConfig().getDLegerSelfId());
+        dLedgerConfig.setGroup(defaultMessageStore.getMessageStoreConfig().getDLegerGroup());
+        dLedgerConfig.setPeers(defaultMessageStore.getMessageStoreConfig().getDLegerPeers());
         dLedgerConfig.setStoreBaseDir(defaultMessageStore.getMessageStoreConfig().getStorePathRootDir());
         dLedgerConfig.setDataStorePath(defaultMessageStore.getMessageStoreConfig().getStorePathDLedgerCommitLog());
         dLedgerConfig.setReadOnlyDataStoreDirs(defaultMessageStore.getMessageStoreConfig().getReadOnlyCommitLogStorePaths());
@@ -102,7 +75,6 @@ public class DLedgerCommitLog extends CommitLog {
         dLedgerConfig.setPreferredLeaderId(defaultMessageStore.getMessageStoreConfig().getPreferredLeaderId());
         dLedgerConfig.setEnableBatchPush(defaultMessageStore.getMessageStoreConfig().isEnableBatchPush());
         dLedgerConfig.setDiskSpaceRatioToCheckExpired(defaultMessageStore.getMessageStoreConfig().getDiskMaxUsedSpaceRatio() / 100f);
-
         id = Integer.parseInt(dLedgerConfig.getSelfId().substring(1)) + 1;
         dLedgerServer = new DLedgerServer(dLedgerConfig);
         dLedgerFileStore = (DLedgerMmapFileStore) dLedgerServer.getdLedgerStore();
@@ -194,15 +166,9 @@ public class DLedgerCommitLog extends CommitLog {
     }
 
     @Override
-    public int deleteExpiredFile(
-        final long expiredTime,
-        final int deleteFilesInterval,
-        final long intervalForcibly,
-        final boolean cleanImmediately
-    ) {
+    public int deleteExpiredFile(final long expiredTime, final int deleteFilesInterval, final long intervalForcibly, final boolean cleanImmediately) {
         if (mappedFileQueue.getMappedFiles().isEmpty()) {
             refreshConfig();
-            //To prevent too much log in defaultMessageStore
             return Integer.MAX_VALUE;
         } else {
             disableDeleteDledger();
@@ -211,7 +177,6 @@ public class DLedgerCommitLog extends CommitLog {
         if (count > 0 || mappedFileQueue.getMappedFiles().size() != 1) {
             return count;
         }
-        //the old logic will keep the last file, here to delete it
         MappedFile mappedFile = mappedFileQueue.getLastMappedFile();
         log.info("Try to delete the last old commitlog file {}", mappedFile.getFileName());
         long liveMaxTimestamp = mappedFile.getLastModifiedTimestamp() + expiredTime;
@@ -230,7 +195,6 @@ public class DLedgerCommitLog extends CommitLog {
         } else {
             return new DLedgerSelectMappedBufferResult(sbr);
         }
-
     }
 
     public SelectMmapBufferResult truncate(SelectMmapBufferResult sbr) {
@@ -269,7 +233,6 @@ public class DLedgerCommitLog extends CommitLog {
             SelectMmapBufferResult sbr = mappedFile.selectMappedBuffer(pos);
             return convertSbr(truncate(sbr));
         }
-
         return null;
     }
 

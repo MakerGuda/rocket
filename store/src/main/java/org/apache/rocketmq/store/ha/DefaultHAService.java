@@ -192,11 +192,7 @@ public class DefaultHAService implements HAService {
     }
 
     protected boolean isInSyncSlave(final long masterPutWhere, HAConnection conn) {
-        if (masterPutWhere - conn.getSlaveAckOffset() < this.defaultMessageStore.getMessageStoreConfig()
-            .getHaMaxGapNotInSync()) {
-            return true;
-        }
-        return false;
+        return masterPutWhere - conn.getSlaveAckOffset() < this.defaultMessageStore.getMessageStoreConfig().getHaMaxGapNotInSync();
     }
 
     @Override

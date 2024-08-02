@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.store.index;
 
 import java.nio.ByteBuffer;
@@ -34,19 +18,51 @@ import java.util.concurrent.atomic.AtomicLong;
  * Begin Timestamp(8) + End Timestamp(8) + Begin Physical Offset(8) + End Physical Offset(8) + Hash Slot Count(4) + Index Count(4) = 40 Bytes
  */
 public class IndexHeader {
+
     public static final int INDEX_HEADER_SIZE = 40;
-    private static int beginTimestampIndex = 0;
-    private static int endTimestampIndex = 8;
-    private static int beginPhyoffsetIndex = 16;
-    private static int endPhyoffsetIndex = 24;
-    private static int hashSlotcountIndex = 32;
-    private static int indexCountIndex = 36;
+
+    private static final int beginTimestampIndex = 0;
+
+    private static final int endTimestampIndex = 8;
+
+    private static final int beginPhyoffsetIndex = 16;
+
+    private static final int endPhyoffsetIndex = 24;
+
+    private static final int hashSlotcountIndex = 32;
+
+    private static final int indexCountIndex = 36;
+
     private final ByteBuffer byteBuffer;
+
+    /**
+     * 索引文件中包含消息的最小存储时间
+     */
     private final AtomicLong beginTimestamp = new AtomicLong(0);
+
+    /**
+     * 索引文件中包含消息的最大存储时间
+     */
     private final AtomicLong endTimestamp = new AtomicLong(0);
+
+    /**
+     * 索引文件中包含消息的最小物理偏移量，即commitLog的偏移量
+     */
     private final AtomicLong beginPhyOffset = new AtomicLong(0);
+
+    /**
+     * 索引文件中包含消息的最大物理偏移量，即commitLog的偏移量
+     */
     private final AtomicLong endPhyOffset = new AtomicLong(0);
+
+    /**
+     * hashSlot个数
+     */
     private final AtomicInteger hashSlotCount = new AtomicInteger(0);
+
+    /**
+     * index条目列表中当前已使用个数, index条目在index条目列表中按顺序存储
+     */
     private final AtomicInteger indexCount = new AtomicInteger(1);
 
     public IndexHeader(final ByteBuffer byteBuffer) {
@@ -58,10 +74,8 @@ public class IndexHeader {
         this.endTimestamp.set(byteBuffer.getLong(endTimestampIndex));
         this.beginPhyOffset.set(byteBuffer.getLong(beginPhyoffsetIndex));
         this.endPhyOffset.set(byteBuffer.getLong(endPhyoffsetIndex));
-
         this.hashSlotCount.set(byteBuffer.getInt(hashSlotcountIndex));
         this.indexCount.set(byteBuffer.getInt(indexCountIndex));
-
         if (this.indexCount.get() <= 0) {
             this.indexCount.set(1);
         }
@@ -94,10 +108,6 @@ public class IndexHeader {
         this.byteBuffer.putLong(endTimestampIndex, endTimestamp);
     }
 
-    public long getBeginPhyOffset() {
-        return beginPhyOffset.get();
-    }
-
     public void setBeginPhyOffset(long beginPhyOffset) {
         this.beginPhyOffset.set(beginPhyOffset);
         this.byteBuffer.putLong(beginPhyoffsetIndex, beginPhyOffset);
@@ -110,10 +120,6 @@ public class IndexHeader {
     public void setEndPhyOffset(long endPhyOffset) {
         this.endPhyOffset.set(endPhyOffset);
         this.byteBuffer.putLong(endPhyoffsetIndex, endPhyOffset);
-    }
-
-    public AtomicInteger getHashSlotCount() {
-        return hashSlotCount;
     }
 
     public void incHashSlotCount() {
@@ -129,4 +135,5 @@ public class IndexHeader {
         int value = this.indexCount.incrementAndGet();
         this.byteBuffer.putInt(indexCountIndex, value);
     }
+
 }

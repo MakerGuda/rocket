@@ -1,43 +1,45 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.common.consumer;
 
-import java.util.Arrays;
-import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.common.KeyBuilder;
 import org.apache.rocketmq.common.message.MessageConst;
 
+import java.util.Arrays;
+import java.util.List;
+
+@Getter
+@Setter
 public class ReceiptHandle {
+
     private static final String SEPARATOR = MessageConst.KEY_SEPARATOR;
+
     public static final String NORMAL_TOPIC = "0";
+
     public static final String RETRY_TOPIC = "1";
 
     public static final String RETRY_TOPIC_V2 = "2";
+
     private final long startOffset;
+
     private final long retrieveTime;
+
     private final long invisibleTime;
+
     private final long nextVisibleTime;
+
     private final int reviveQueueId;
+
     private final String topicType;
+
     private final String brokerName;
+
     private final int queueId;
+
     private final long offset;
+
     private final long commitLogOffset;
+
     private final String receiptHandle;
 
     public String encode() {
@@ -67,7 +69,6 @@ public class ReceiptHandle {
         if (dataList.size() >= 9) {
             commitLogOffset = Long.parseLong(dataList.get(8));
         }
-
         return new ReceiptHandleBuilder()
             .startOffset(startOffset)
             .retrieveTime(retrieveTime)
@@ -97,16 +98,28 @@ public class ReceiptHandle {
         this.receiptHandle = receiptHandle;
     }
 
+    @Getter
+    @Setter
     public static class ReceiptHandleBuilder {
+
         private long startOffset;
+
         private long retrieveTime;
+
         private long invisibleTime;
+
         private int reviveQueueId;
+
         private String topicType;
+
         private String brokerName;
+
         private int queueId;
+
         private long offset;
+
         private long commitLogOffset;
+
         private String receiptHandle;
 
         ReceiptHandleBuilder() {
@@ -171,54 +184,11 @@ public class ReceiptHandle {
         public String toString() {
             return "ReceiptHandle.ReceiptHandleBuilder(startOffset=" + this.startOffset + ", retrieveTime=" + this.retrieveTime + ", invisibleTime=" + this.invisibleTime + ", reviveQueueId=" + this.reviveQueueId + ", topic=" + this.topicType + ", brokerName=" + this.brokerName + ", queueId=" + this.queueId + ", offset=" + this.offset + ", commitLogOffset=" + this.commitLogOffset + ", receiptHandle=" + this.receiptHandle + ")";
         }
+
     }
 
     public static ReceiptHandle.ReceiptHandleBuilder builder() {
         return new ReceiptHandle.ReceiptHandleBuilder();
-    }
-
-    public long getStartOffset() {
-        return this.startOffset;
-    }
-
-    public long getRetrieveTime() {
-        return this.retrieveTime;
-    }
-
-    public long getInvisibleTime() {
-        return this.invisibleTime;
-    }
-
-    public long getNextVisibleTime() {
-        return this.nextVisibleTime;
-    }
-
-    public int getReviveQueueId() {
-        return this.reviveQueueId;
-    }
-
-    public String getTopicType() {
-        return this.topicType;
-    }
-
-    public String getBrokerName() {
-        return this.brokerName;
-    }
-
-    public int getQueueId() {
-        return this.queueId;
-    }
-
-    public long getOffset() {
-        return this.offset;
-    }
-
-    public long getCommitLogOffset() {
-        return commitLogOffset;
-    }
-
-    public String getReceiptHandle() {
-        return this.receiptHandle;
     }
 
     public boolean isRetryTopic() {
@@ -234,4 +204,5 @@ public class ReceiptHandle {
         }
         return topic;
     }
+
 }

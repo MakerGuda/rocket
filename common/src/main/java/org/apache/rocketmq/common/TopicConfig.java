@@ -1,46 +1,73 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.common;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.alibaba.fastjson.annotation.JSONField;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.common.attribute.TopicMessageType;
 import org.apache.rocketmq.common.constant.PermName;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import static org.apache.rocketmq.common.TopicAttributes.TOPIC_MESSAGE_TYPE_ATTRIBUTE;
 
+@Getter
+@Setter
 public class TopicConfig {
+
+    /**
+     * 分隔符
+     */
     private static final String SEPARATOR = " ";
+
+    /**
+     * 默认读队列数量
+     */
     public static int defaultReadQueueNums = 16;
+
+    /**
+     * 默认写队列数量
+     */
     public static int defaultWriteQueueNums = 16;
+
     private static final TypeReference<Map<String, String>> ATTRIBUTES_TYPE_REFERENCE = new TypeReference<Map<String, String>>() {
     };
+
+    /**
+     * 主题名称
+     */
     private String topicName;
+
+    /**
+     * 读队列数量
+     */
     private int readQueueNums = defaultReadQueueNums;
+
+    /**
+     * 写队列数量
+     */
     private int writeQueueNums = defaultWriteQueueNums;
+
     private int perm = PermName.PERM_READ | PermName.PERM_WRITE;
+
     private TopicFilterType topicFilterType = TopicFilterType.SINGLE_TAG;
+
+    /**
+     * 主题系统标识
+     */
     private int topicSysFlag = 0;
+
+    /**
+     * 是否顺序主题
+     */
     private boolean order = false;
-    // Field attributes should not have ' ' char in key or value, otherwise will lead to decode failure.
+
+    /**
+     * 主题属性
+     */
     private Map<String, String> attributes = new HashMap<>();
 
     public TopicConfig() {
@@ -82,120 +109,48 @@ public class TopicConfig {
         this.attributes = other.attributes;
     }
 
+    /**
+     * 编码成字符串
+     */
     public String encode() {
         StringBuilder sb = new StringBuilder();
-        //[0]
         sb.append(this.topicName);
         sb.append(SEPARATOR);
-        //[1]
         sb.append(this.readQueueNums);
         sb.append(SEPARATOR);
-        //[2]
         sb.append(this.writeQueueNums);
         sb.append(SEPARATOR);
-        //[3]
         sb.append(this.perm);
         sb.append(SEPARATOR);
-        //[4]
         sb.append(this.topicFilterType);
         sb.append(SEPARATOR);
-        //[5]
         if (attributes != null) {
             sb.append(JSON.toJSONString(attributes));
         }
-
         return sb.toString();
     }
 
+    /**
+     * 是否能够解码成功
+     */
     public boolean decode(final String in) {
-        String[] strs = in.split(SEPARATOR);
-        if (strs.length >= 5) {
-            this.topicName = strs[0];
-
-            this.readQueueNums = Integer.parseInt(strs[1]);
-
-            this.writeQueueNums = Integer.parseInt(strs[2]);
-
-            this.perm = Integer.parseInt(strs[3]);
-
-            this.topicFilterType = TopicFilterType.valueOf(strs[4]);
-
-            if (strs.length >= 6) {
+        String[] str = in.split(SEPARATOR);
+        if (str.length >= 5) {
+            this.topicName = str[0];
+            this.readQueueNums = Integer.parseInt(str[1]);
+            this.writeQueueNums = Integer.parseInt(str[2]);
+            this.perm = Integer.parseInt(str[3]);
+            this.topicFilterType = TopicFilterType.valueOf(str[4]);
+            if (str.length >= 6) {
                 try {
-                    this.attributes = JSON.parseObject(strs[5], ATTRIBUTES_TYPE_REFERENCE.getType());
+                    this.attributes = JSON.parseObject(str[5], ATTRIBUTES_TYPE_REFERENCE.getType());
                 } catch (Exception e) {
                     // ignore exception when parse failed, cause map's key/value can have ' ' char.
                 }
             }
-
             return true;
         }
-
         return false;
-    }
-
-    public String getTopicName() {
-        return topicName;
-    }
-
-    public void setTopicName(String topicName) {
-        this.topicName = topicName;
-    }
-
-    public int getReadQueueNums() {
-        return readQueueNums;
-    }
-
-    public void setReadQueueNums(int readQueueNums) {
-        this.readQueueNums = readQueueNums;
-    }
-
-    public int getWriteQueueNums() {
-        return writeQueueNums;
-    }
-
-    public void setWriteQueueNums(int writeQueueNums) {
-        this.writeQueueNums = writeQueueNums;
-    }
-
-    public int getPerm() {
-        return perm;
-    }
-
-    public void setPerm(int perm) {
-        this.perm = perm;
-    }
-
-    public TopicFilterType getTopicFilterType() {
-        return topicFilterType;
-    }
-
-    public void setTopicFilterType(TopicFilterType topicFilterType) {
-        this.topicFilterType = topicFilterType;
-    }
-
-    public int getTopicSysFlag() {
-        return topicSysFlag;
-    }
-
-    public void setTopicSysFlag(int topicSysFlag) {
-        this.topicSysFlag = topicSysFlag;
-    }
-
-    public boolean isOrder() {
-        return order;
-    }
-
-    public void setOrder(boolean isOrder) {
-        this.order = isOrder;
-    }
-
-    public Map<String, String> getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(Map<String, String> attributes) {
-        this.attributes = attributes;
     }
 
     @JSONField(serialize = false, deserialize = false)
@@ -223,9 +178,7 @@ public class TopicConfig {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-
         TopicConfig that = (TopicConfig) o;
-
         if (readQueueNums != that.readQueueNums) {
             return false;
         }
@@ -270,4 +223,5 @@ public class TopicConfig {
             + ", topicFilterType=" + topicFilterType + ", topicSysFlag=" + topicSysFlag + ", order=" + order
             + ", attributes=" + attributes + "]";
     }
+
 }

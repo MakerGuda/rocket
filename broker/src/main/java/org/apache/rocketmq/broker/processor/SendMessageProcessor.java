@@ -290,7 +290,7 @@ public class SendMessageProcessor extends AbstractSendMessageProcessor implement
             }
         }
 
-        msgInner.setTagsCode(MessageExtBrokerInner.tagsString2tagsCode(topicConfig.getTopicFilterType(), msgInner.getTags()));
+        msgInner.setTagsCode(MessageExtBrokerInner.tagsString2tagsCode( msgInner.getTags()));
         msgInner.setBornTimestamp(requestHeader.getBornTimestamp());
         msgInner.setBornHost(ctx.channel().remoteAddress());
         msgInner.setStoreHost(this.getStoreHost());

@@ -1,90 +1,65 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.common.config;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
 import com.google.common.collect.Maps;
-
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.utils.DataConverter;
 import org.apache.rocketmq.common.utils.ThreadUtils;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.rocksdb.ColumnFamilyDescriptor;
-import org.rocksdb.ColumnFamilyHandle;
-import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.CompactRangeOptions;
-import org.rocksdb.CompactionOptions;
-import org.rocksdb.DBOptions;
-import org.rocksdb.FlushOptions;
-import org.rocksdb.LiveFileMetaData;
-import org.rocksdb.Priority;
-import org.rocksdb.ReadOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.Statistics;
-import org.rocksdb.Status;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
+import org.rocksdb.*;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
 
 import static org.rocksdb.RocksDB.NOT_FOUND;
 
+@Getter
+@Setter
 public abstract class AbstractRocksDBStorage {
+
     protected static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.ROCKSDB_LOGGER_NAME);
 
     private static final String SPACE = " | ";
 
     protected String dbPath;
+
     protected boolean readOnly;
+
     protected RocksDB db;
+
     protected DBOptions options;
 
     protected WriteOptions writeOptions;
+
     protected WriteOptions ableWalWriteOptions;
 
     protected ReadOptions readOptions;
+
     protected ReadOptions totalOrderReadOptions;
 
     protected CompactionOptions compactionOptions;
+
     protected CompactRangeOptions compactRangeOptions;
 
     protected ColumnFamilyHandle defaultCFHandle;
-    protected final List<ColumnFamilyOptions> cfOptions = new ArrayList();
+
+    protected final List<ColumnFamilyOptions> cfOptions = new ArrayList<>();
 
     protected volatile boolean loaded;
+
     private volatile boolean closed;
 
     private final Semaphore reloadPermit = new Semaphore(1);
+
     private final ScheduledExecutorService reloadScheduler = ThreadUtils.newScheduledThreadPool(1, new ThreadFactoryImpl("RocksDBStorageReloadService_"));
-    private final ThreadPoolExecutor manualCompactionThread = (ThreadPoolExecutor) ThreadUtils.newThreadPoolExecutor(
-            1, 1, 1000 * 60, TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue(1),
-            new ThreadFactoryImpl("RocksDBManualCompactionService_"),
-            new ThreadPoolExecutor.DiscardOldestPolicy());
+
+    private final ThreadPoolExecutor manualCompactionThread = (ThreadPoolExecutor) ThreadUtils.newThreadPoolExecutor(1, 1, 1000 * 60, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1), new ThreadFactoryImpl("RocksDBManualCompactionService_"), new ThreadPoolExecutor.DiscardOldestPolicy());
 
     static {
         RocksDB.loadLibrary();
@@ -102,9 +77,7 @@ public abstract class AbstractRocksDBStorage {
     public void release() {
     }
 
-    protected void put(ColumnFamilyHandle cfHandle, WriteOptions writeOptions,
-                       final byte[] keyBytes, final int keyLen,
-                       final byte[] valueBytes, final int valueLen) throws RocksDBException {
+    protected void put(ColumnFamilyHandle cfHandle, WriteOptions writeOptions, final byte[] keyBytes, final int keyLen, final byte[] valueBytes, final int valueLen) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -119,8 +92,7 @@ public abstract class AbstractRocksDBStorage {
         }
     }
 
-    protected void put(ColumnFamilyHandle cfHandle, WriteOptions writeOptions,
-                       final ByteBuffer keyBB, final ByteBuffer valueBB) throws RocksDBException {
+    protected void put(ColumnFamilyHandle cfHandle, WriteOptions writeOptions, final ByteBuffer keyBB, final ByteBuffer valueBB) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -161,8 +133,7 @@ public abstract class AbstractRocksDBStorage {
         }
     }
 
-    protected boolean get(ColumnFamilyHandle cfHandle, ReadOptions readOptions,
-                          final ByteBuffer keyBB, final ByteBuffer valueBB) throws RocksDBException {
+    protected boolean get(ColumnFamilyHandle cfHandle, ReadOptions readOptions, final ByteBuffer keyBB, final ByteBuffer valueBB) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -176,9 +147,7 @@ public abstract class AbstractRocksDBStorage {
         }
     }
 
-    protected List<byte[]> multiGet(final ReadOptions readOptions,
-                                    final List<ColumnFamilyHandle> columnFamilyHandleList,
-                                    final List<byte[]> keys) throws RocksDBException {
+    protected List<byte[]> multiGet(final ReadOptions readOptions, final List<ColumnFamilyHandle> columnFamilyHandleList, final List<byte[]> keys) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -220,8 +189,7 @@ public abstract class AbstractRocksDBStorage {
         }
     }
 
-    protected void rangeDelete(ColumnFamilyHandle cfHandle, WriteOptions writeOptions,
-                               final byte[] startKey, final byte[] endKey) throws RocksDBException {
+    protected void rangeDelete(ColumnFamilyHandle cfHandle, WriteOptions writeOptions, final byte[] startKey, final byte[] endKey) throws RocksDBException {
         if (!hold()) {
             throw new IllegalStateException("rocksDB:" + this + " is not ready");
         }
@@ -255,17 +223,11 @@ public abstract class AbstractRocksDBStorage {
         }
     }
 
-    protected void manualCompaction(long minPhyOffset, final CompactRangeOptions compactRangeOptions) {
-        this.manualCompactionThread.submit(new Runnable() {
-            @Override
-            public void run() {
-                manualCompactionDefaultCfRange(compactRangeOptions);
-            }
-        });
+    protected void manualCompaction(final CompactRangeOptions compactRangeOptions) {
+        this.manualCompactionThread.submit(() -> manualCompactionDefaultCfRange(compactRangeOptions));
     }
 
-    protected void open(final List<ColumnFamilyDescriptor> cfDescriptors,
-                        final List<ColumnFamilyHandle> cfHandles) throws RocksDBException {
+    protected void open(final List<ColumnFamilyDescriptor> cfDescriptors, final List<ColumnFamilyHandle> cfHandles) throws RocksDBException {
         if (this.readOnly) {
             this.db = RocksDB.openReadOnly(this.options, this.dbPath, cfDescriptors, cfHandles);
         } else {
@@ -273,7 +235,6 @@ public abstract class AbstractRocksDBStorage {
         }
         this.db.getEnv().setBackgroundThreads(8, Priority.HIGH);
         this.db.getEnv().setBackgroundThreads(8, Priority.LOW);
-
         if (this.db == null) {
             throw new RocksDBException("open rocksdb null");
         }
@@ -302,7 +263,6 @@ public abstract class AbstractRocksDBStorage {
             if (!this.loaded) {
                 return true;
             }
-
             final FlushOptions flushOptions = new FlushOptions();
             flushOptions.setWaitForFlush(true);
             try {
@@ -312,16 +272,11 @@ public abstract class AbstractRocksDBStorage {
             }
             this.db.cancelAllBackgroundWork(true);
             this.db.pauseBackgroundWork();
-            //The close order is matter.
-            //1. close column family handles
             preShutdown();
-
             this.defaultCFHandle.close();
-            //2. close column family options.
             for (final ColumnFamilyOptions opt : this.cfOptions) {
                 opt.close();
             }
-            //3. close options
             if (this.writeOptions != null) {
                 this.writeOptions.close();
             }
@@ -337,14 +292,12 @@ public abstract class AbstractRocksDBStorage {
             if (this.options != null) {
                 this.options.close();
             }
-            //4. close db.
             if (db != null && !this.readOnly) {
                 this.db.syncWal();
             }
             if (db != null) {
                 this.db.closeE();
             }
-            //5. help gc.
             this.cfOptions.clear();
             this.db = null;
             this.readOptions = null;
@@ -352,7 +305,6 @@ public abstract class AbstractRocksDBStorage {
             this.writeOptions = null;
             this.ableWalWriteOptions = null;
             this.options = null;
-
             this.loaded = false;
             LOGGER.info("shutdown OK. {}", this.dbPath);
         } catch (Exception e) {
@@ -366,7 +318,6 @@ public abstract class AbstractRocksDBStorage {
         if (!this.loaded || this.readOnly || closed) {
             return;
         }
-
         try {
             if (db != null) {
                 this.db.flush(flushOptions);
@@ -379,10 +330,6 @@ public abstract class AbstractRocksDBStorage {
 
     public Statistics getStatistics() {
         return this.options.statistics();
-    }
-
-    public ColumnFamilyHandle getDefaultCFHandle() {
-        return defaultCFHandle;
     }
 
     public List<LiveFileMetaData> getCompactionStatus() {
@@ -402,7 +349,6 @@ public abstract class AbstractRocksDBStorage {
         }
         Status status = rocksDBException.getStatus();
         Status.Code code = status.getCode();
-        // Status.Code.Incomplete == code
         if (Status.Code.Aborted == code || Status.Code.Corruption == code || Status.Code.Undefined == code) {
             LOGGER.error("scheduleReloadRocksdb. {}, {}", this.dbPath, getStatusError(rocksDBException));
             scheduleReloadRocksdb0();
@@ -414,22 +360,18 @@ public abstract class AbstractRocksDBStorage {
             return;
         }
         this.closed = true;
-        this.reloadScheduler.schedule(new Runnable() {
-            @Override
-            public void run() {
-                boolean result = true;
-                try {
-                    reloadRocksdb();
-                } catch (Exception e) {
-                    result = false;
-                } finally {
-                    reloadPermit.release();
-                }
-                // try to reload rocksdb next time
-                if (!result) {
-                    LOGGER.info("reload rocksdb Retry. {}", dbPath);
-                    scheduleReloadRocksdb0();
-                }
+        this.reloadScheduler.schedule(() -> {
+            boolean result = true;
+            try {
+                reloadRocksdb();
+            } catch (Exception e) {
+                result = false;
+            } finally {
+                reloadPermit.release();
+            }
+            if (!result) {
+                LOGGER.info("reload rocksdb Retry. {}", dbPath);
+                scheduleReloadRocksdb0();
             }
         }, 10, TimeUnit.SECONDS);
     }
@@ -471,7 +413,6 @@ public abstract class AbstractRocksDBStorage {
 
     public void statRocksdb(Logger logger) {
         try {
-
             List<LiveFileMetaData> liveFileMetaDataList = this.getCompactionStatus();
             if (liveFileMetaDataList == null || liveFileMetaDataList.isEmpty()) {
                 return;
@@ -499,4 +440,5 @@ public abstract class AbstractRocksDBStorage {
         } catch (Exception ignored) {
         }
     }
+
 }

@@ -1,30 +1,22 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.common.message;
+
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 
+@Getter
+@Setter
 public class MessageQueueForC implements Comparable<MessageQueueForC>, Serializable {
 
     private static final long serialVersionUID = 5320967846569962104L;
+
     private String topic;
+
     private String brokerName;
+
     private int queueId;
+
     private long offset;
 
     public MessageQueueForC(String topic, String brokerName, int queueId, long offset) {
@@ -89,47 +81,12 @@ public class MessageQueueForC implements Comparable<MessageQueueForC>, Serializa
         } else if (!topic.equals(other.topic))
             return false;
 
-        if (offset != other.offset) {
-            return false;
-        }
-        return true;
+        return offset == other.offset;
     }
 
     @Override
     public String toString() {
-        return "MessageQueueForC [topic=" + topic + ", brokerName=" + brokerName + ", queueId=" + queueId
-            + ", offset=" + offset + "]";
+        return "MessageQueueForC [topic=" + topic + ", brokerName=" + brokerName + ", queueId=" + queueId + ", offset=" + offset + "]";
     }
 
-    public String getTopic() {
-        return topic;
-    }
-
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
-
-    public String getBrokerName() {
-        return brokerName;
-    }
-
-    public void setBrokerName(String brokerName) {
-        this.brokerName = brokerName;
-    }
-
-    public int getQueueId() {
-        return queueId;
-    }
-
-    public void setQueueId(int queueId) {
-        this.queueId = queueId;
-    }
-
-    public long getOffset() {
-        return offset;
-    }
-
-    public void setOffset(long offset) {
-        this.offset = offset;
-    }
 }

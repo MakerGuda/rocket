@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.common.message;
 
 import java.util.HashSet;
@@ -47,7 +31,6 @@ public class MessageConst {
     public static final String DUP_INFO = "DUP_INFO";
     public static final String PROPERTY_CHECK_IMMUNITY_TIME_IN_SECONDS = "CHECK_IMMUNITY_TIME_IN_SECONDS";
     public static final String PROPERTY_TRANSACTION_PREPARED_QUEUE_OFFSET = "TRAN_PREPARED_QUEUE_OFFSET";
-    public static final String PROPERTY_TRANSACTION_ID = "__transactionId__";
     public static final String PROPERTY_TRANSACTION_CHECK_TIMES = "TRANSACTION_CHECK_TIMES";
     public static final String PROPERTY_INSTANCE_ID = "INSTANCE_ID";
     public static final String PROPERTY_CORRELATION_ID = "CORRELATION_ID";
@@ -61,8 +44,6 @@ public class MessageConst {
     public static final String PROPERTY_POP_CK_OFFSET = "POP_CK_OFFSET";
     public static final String PROPERTY_FIRST_POP_TIME = "1ST_POP_TIME";
     public static final String PROPERTY_SHARDING_KEY = "__SHARDINGKEY";
-    public static final String PROPERTY_FORWARD_QUEUE_ID = "PROPERTY_FORWARD_QUEUE_ID";
-    public static final String PROPERTY_REDIRECT = "REDIRECT";
     public static final String PROPERTY_INNER_MULTI_DISPATCH = "INNER_MULTI_DISPATCH";
     public static final String PROPERTY_INNER_MULTI_QUEUE_OFFSET = "INNER_MULTI_QUEUE_OFFSET";
     public static final String PROPERTY_TRACE_CONTEXT = "TRACE_CONTEXT";
@@ -70,26 +51,11 @@ public class MessageConst {
     public static final String PROPERTY_TIMER_DELIVER_MS = "TIMER_DELIVER_MS";
     public static final String PROPERTY_BORN_HOST = "__BORNHOST";
     public static final String PROPERTY_BORN_TIMESTAMP = "BORN_TIMESTAMP";
-
-    /**
-     * property which name starts with "__RMQ.TRANSIENT." is called transient one that will not stored in broker disks.
-     */
     public static final String PROPERTY_TRANSIENT_PREFIX = "__RMQ.TRANSIENT.";
-
-    /**
-     * the transient property key of topicSysFlag (set by client when pulling messages)
-     */
     public static final String PROPERTY_TRANSIENT_TOPIC_CONFIG = PROPERTY_TRANSIENT_PREFIX + "TOPIC_SYS_FLAG";
-
-    /**
-     * the transient property key of groupSysFlag (set by client when pulling messages)
-     */
     public static final String PROPERTY_TRANSIENT_GROUP_CONFIG = PROPERTY_TRANSIENT_PREFIX + "GROUP_SYS_FLAG";
-
     public static final String KEY_SEPARATOR = " ";
-
     public static final HashSet<String> STRING_HASH_SET = new HashSet<>(64);
-
     public static final String PROPERTY_TIMER_ENQUEUE_MS = "TIMER_ENQUEUE_MS";
     public static final String PROPERTY_TIMER_DEQUEUE_MS = "TIMER_DEQUEUE_MS";
     public static final String PROPERTY_TIMER_ROLL_TIMES = "TIMER_ROLL_TIMES";
@@ -98,10 +64,6 @@ public class MessageConst {
     public static final String PROPERTY_TIMER_DELAY_LEVEL = "TIMER_DELAY_LEVEL";
     public static final String PROPERTY_TIMER_DELAY_MS = "TIMER_DELAY_MS";
     public static final String PROPERTY_CRC32 = "__CRC32#";
-
-    /**
-     * properties for DLQ
-     */
     public static final String PROPERTY_DLQ_ORIGIN_TOPIC = "DLQ_ORIGIN_TOPIC";
     public static final String PROPERTY_DLQ_ORIGIN_MESSAGE_ID = "DLQ_ORIGIN_MESSAGE_ID";
 
@@ -158,4 +120,5 @@ public class MessageConst {
         STRING_HASH_SET.add(PROPERTY_DLQ_ORIGIN_MESSAGE_ID);
         STRING_HASH_SET.add(PROPERTY_CRC32);
     }
+
 }

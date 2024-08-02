@@ -137,17 +137,6 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
     /**
      * We already implement it in RocksDBConsumeQueueStore.
      * @see RocksDBConsumeQueueStore#getOffsetInQueueByTime
-     * @param timestamp timestamp
-     * @return
-     */
-    @Override
-    public long getOffsetInQueueByTime(long timestamp) {
-        return 0;
-    }
-
-    /**
-     * We already implement it in RocksDBConsumeQueueStore.
-     * @see RocksDBConsumeQueueStore#getOffsetInQueueByTime
      * @param timestamp    timestamp
      * @param boundaryType Lower or Upper
      * @return

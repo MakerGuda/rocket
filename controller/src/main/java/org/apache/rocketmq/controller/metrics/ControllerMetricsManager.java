@@ -21,22 +21,13 @@ import com.google.common.base.Splitter;
 import io.openmessaging.storage.dledger.MemberState;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.api.metrics.LongHistogram;
-import io.opentelemetry.api.metrics.LongUpDownCounter;
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableLongGauge;
+import io.opentelemetry.api.metrics.*;
 import io.opentelemetry.exporter.logging.otlp.OtlpJsonLoggingMetricExporter;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporterBuilder;
 import io.opentelemetry.exporter.prometheus.PrometheusHttpServer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.metrics.Aggregation;
-import io.opentelemetry.sdk.metrics.InstrumentSelector;
-import io.opentelemetry.sdk.metrics.InstrumentType;
-import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
-import io.opentelemetry.sdk.metrics.View;
+import io.opentelemetry.sdk.metrics.*;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
@@ -45,11 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.ControllerConfig;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.metrics.MetricsExporterType;
-import org.apache.rocketmq.common.metrics.NopLongCounter;
-import org.apache.rocketmq.common.metrics.NopLongHistogram;
-import org.apache.rocketmq.common.metrics.NopLongUpDownCounter;
-import org.apache.rocketmq.common.metrics.NopObservableLongGauge;
+import org.apache.rocketmq.common.metrics.*;
 import org.apache.rocketmq.controller.ControllerManager;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
@@ -62,22 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.AGGREGATION_DELTA;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.COUNTER_DLEDGER_OP_TOTAL;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.COUNTER_ELECTION_TOTAL;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.COUNTER_REQUEST_TOTAL;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.GAUGE_ACTIVE_BROKER_NUM;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.GAUGE_DLEDGER_DISK_USAGE;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.GAUGE_ROLE;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.HISTOGRAM_DLEDGER_OP_LATENCY;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.HISTOGRAM_REQUEST_LATENCY;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_ADDRESS;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_AGGREGATION;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_BROKER_SET;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_CLUSTER_NAME;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_GROUP;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.LABEL_PEER_ID;
-import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.OPEN_TELEMETRY_METER_NAME;
+import static org.apache.rocketmq.controller.metrics.ControllerMetricsConstant.*;
 
 public class ControllerMetricsManager {
 
@@ -167,9 +139,9 @@ public class ControllerMetricsManager {
         this.controllerManager = controllerManager;
         this.config = this.controllerManager.getControllerConfig();
         if (config.getControllerType().equals(ControllerConfig.JRAFT_CONTROLLER)) {
-            this.LABEL_MAP.put(LABEL_ADDRESS, this.config.getJraftConfig().getjRaftAddress());
-            this.LABEL_MAP.put(LABEL_GROUP, this.config.getJraftConfig().getjRaftGroupId());
-            this.LABEL_MAP.put(LABEL_PEER_ID, this.config.getJraftConfig().getjRaftServerId());
+            this.LABEL_MAP.put(LABEL_ADDRESS, this.config.getJraftConfig().getJRaftGroupId());
+            this.LABEL_MAP.put(LABEL_GROUP, this.config.getJraftConfig().getJRaftGroupId());
+            this.LABEL_MAP.put(LABEL_PEER_ID, this.config.getJraftConfig().getJRaftServerId());
         } else {
             this.LABEL_MAP.put(LABEL_ADDRESS, this.config.getDLedgerAddress());
             this.LABEL_MAP.put(LABEL_GROUP, this.config.getControllerDLegerGroup());

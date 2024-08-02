@@ -19,7 +19,7 @@ package org.apache.rocketmq.store;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
-import java.nio.ByteBuffer;
+import lombok.Data;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageDecoder;
@@ -30,6 +30,8 @@ import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
+
+import java.nio.ByteBuffer;
 
 public class MessageExtEncoder {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
@@ -404,20 +406,17 @@ public class MessageExtEncoder {
         return this.byteBuf.nioBuffer(0, this.byteBuf.capacity());
     }
 
-    public int getMaxMessageBodySize() {
-        return this.maxMessageBodySize;
-    }
-
     public void updateEncoderBufferCapacity(int newMaxMessageBodySize) {
         this.maxMessageBodySize = newMaxMessageBodySize;
-        //Reserve 64kb for encoding buffer outside body
-        this.maxMessageSize = Integer.MAX_VALUE - newMaxMessageBodySize >= 64 * 1024 ?
-            this.maxMessageBodySize + 64 * 1024 : Integer.MAX_VALUE;
+        this.maxMessageSize = Integer.MAX_VALUE - newMaxMessageBodySize >= 64 * 1024 ? this.maxMessageBodySize + 64 * 1024 : Integer.MAX_VALUE;
         this.byteBuf.capacity(this.maxMessageSize);
     }
 
+    @Data
     static class PutMessageThreadLocal {
+
         private final MessageExtEncoder encoder;
+
         private final StringBuilder keyBuilder;
 
         PutMessageThreadLocal(MessageStoreConfig messageStoreConfig) {
@@ -425,13 +424,6 @@ public class MessageExtEncoder {
             keyBuilder = new StringBuilder();
         }
 
-        public MessageExtEncoder getEncoder() {
-            return encoder;
-        }
-
-        public StringBuilder getKeyBuilder() {
-            return keyBuilder;
-        }
     }
 
 }

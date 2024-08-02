@@ -17,19 +17,27 @@
 
 package org.apache.rocketmq.common.stats;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+@Getter
+@Setter
 public class MomentStatsItem {
 
     private final AtomicLong value = new AtomicLong(0);
 
     private final String statsName;
+
     private final String statsKey;
+
     private final ScheduledExecutorService scheduledExecutorService;
+
     private final Logger log;
 
     public MomentStatsItem(String statsName, String statsKey,
@@ -41,15 +49,11 @@ public class MomentStatsItem {
     }
 
     public void init() {
-        this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    printAtMinutes();
-
-                    MomentStatsItem.this.value.set(0);
-                } catch (Throwable e) {
-                }
+        this.scheduledExecutorService.scheduleAtFixedRate(() -> {
+            try {
+                printAtMinutes();
+                MomentStatsItem.this.value.set(0);
+            } catch (Throwable ignored) {
             }
         }, Math.abs(UtilAll.computeNextMinutesTimeMillis() - System.currentTimeMillis()), 1000 * 60 * 5, TimeUnit.MILLISECONDS);
     }
@@ -61,15 +65,4 @@ public class MomentStatsItem {
             this.value.get());
     }
 
-    public AtomicLong getValue() {
-        return value;
-    }
-
-    public String getStatsKey() {
-        return statsKey;
-    }
-
-    public String getStatsName() {
-        return statsName;
-    }
 }

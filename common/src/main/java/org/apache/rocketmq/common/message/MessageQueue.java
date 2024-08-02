@@ -1,27 +1,29 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.common.message;
+
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 
+@Getter
+@Setter
 public class MessageQueue implements Comparable<MessageQueue>, Serializable {
+
     private static final long serialVersionUID = 6191200464116433425L;
+
+    /**
+     * 当前队列所在主题
+     */
     private String topic;
+
+    /**
+     * 当前队列所在brokerName
+     */
     private String brokerName;
+
+    /**
+     * 当前队列id
+     */
     private int queueId;
 
     public MessageQueue() {
@@ -37,30 +39,6 @@ public class MessageQueue implements Comparable<MessageQueue>, Serializable {
     public MessageQueue(String topic, String brokerName, int queueId) {
         this.topic = topic;
         this.brokerName = brokerName;
-        this.queueId = queueId;
-    }
-
-    public String getTopic() {
-        return topic;
-    }
-
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
-
-    public String getBrokerName() {
-        return brokerName;
-    }
-
-    public void setBrokerName(String brokerName) {
-        this.brokerName = brokerName;
-    }
-
-    public int getQueueId() {
-        return queueId;
-    }
-
-    public void setQueueId(int queueId) {
         this.queueId = queueId;
     }
 
@@ -91,11 +69,8 @@ public class MessageQueue implements Comparable<MessageQueue>, Serializable {
         if (queueId != other.queueId)
             return false;
         if (topic == null) {
-            if (other.topic != null)
-                return false;
-        } else if (!topic.equals(other.topic))
-            return false;
-        return true;
+            return other.topic == null;
+        } else return topic.equals(other.topic);
     }
 
     @Override
@@ -111,14 +86,13 @@ public class MessageQueue implements Comparable<MessageQueue>, Serializable {
                 return result;
             }
         }
-
         {
             int result = this.brokerName.compareTo(o.brokerName);
             if (result != 0) {
                 return result;
             }
         }
-
         return this.queueId - o.queueId;
     }
+
 }

@@ -19,18 +19,10 @@ package org.apache.rocketmq.proxy.service.route;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-
-import java.time.Duration;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.client.latency.MQFaultStrategy;
-import org.apache.rocketmq.client.latency.Resolver;
 import org.apache.rocketmq.client.latency.ServiceDetector;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -49,6 +41,13 @@ import org.apache.rocketmq.remoting.protocol.header.GetMaxOffsetRequestHeader;
 import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public abstract class TopicRouteService extends AbstractStartAndShutdown {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -105,33 +104,27 @@ public abstract class TopicRouteService extends AbstractStartAndShutdown {
                     }
                 }
             });
-        ServiceDetector serviceDetector = new ServiceDetector() {
-            @Override
-            public boolean detect(String endpoint, long timeoutMillis) {
-                Optional<String> candidateTopic = pickTopic();
-                if (!candidateTopic.isPresent()) {
-                    return false;
-                }
-                try {
-                    GetMaxOffsetRequestHeader requestHeader = new GetMaxOffsetRequestHeader();
-                    requestHeader.setTopic(candidateTopic.get());
-                    requestHeader.setQueueId(0);
-                    Long maxOffset = mqClientAPIFactory.getClient().getMaxOffset(endpoint, requestHeader, timeoutMillis).get();
-                    return true;
-                } catch (Exception e) {
-                    return false;
-                }
+
+        ServiceDetector serviceDetector = (endpoint, timeoutMillis) -> {
+            Optional<String> candidateTopic = pickTopic();
+            if (!candidateTopic.isPresent()) {
+                return false;
+            }
+            try {
+                GetMaxOffsetRequestHeader requestHeader = new GetMaxOffsetRequestHeader();
+                requestHeader.setTopic(candidateTopic.get());
+                requestHeader.setQueueId(0);
+                mqClientAPIFactory.getClient().getMaxOffset(endpoint, requestHeader, timeoutMillis).get();
+                return true;
+            } catch (Exception e) {
+                return false;
             }
         };
-        mqFaultStrategy = new MQFaultStrategy(extractClientConfigFromProxyConfig(config), new Resolver() {
-            @Override
-            public String resolve(String name) {
-                try {
-                    String brokerAddr = getBrokerAddr(ProxyContext.createForInner("MQFaultStrategy"), name);
-                    return brokerAddr;
-                } catch (Exception e) {
-                    return null;
-                }
+        mqFaultStrategy = new MQFaultStrategy(extractClientConfigFromProxyConfig(config), name -> {
+            try {
+                return getBrokerAddr(ProxyContext.createForInner("MQFaultStrategy"), name);
+            } catch (Exception e) {
+                return null;
             }
         }, serviceDetector);
         this.init();

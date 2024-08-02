@@ -25,30 +25,15 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.controller.BrokerHeartbeatManager;
 import org.apache.rocketmq.controller.helper.BrokerLifecycleListener;
 import org.apache.rocketmq.controller.impl.JRaftController;
-import org.apache.rocketmq.controller.impl.task.BrokerCloseChannelRequest;
-import org.apache.rocketmq.controller.impl.task.CheckNotActiveBrokerRequest;
-import org.apache.rocketmq.controller.impl.task.GetBrokerLiveInfoRequest;
-import org.apache.rocketmq.controller.impl.task.GetBrokerLiveInfoResponse;
-import org.apache.rocketmq.controller.impl.task.RaftBrokerHeartBeatEventRequest;
+import org.apache.rocketmq.controller.impl.task.*;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class RaftBrokerHeartBeatManager implements BrokerHeartbeatManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CONTROLLER_LOGGER_NAME);
@@ -188,7 +173,7 @@ public class RaftBrokerHeartBeatManager implements BrokerHeartbeatManager {
         }
 
         // if has not received any heartbeat from broker, we do not need to scan
-        if (this.firstReceivedHeartbeatTime + controllerConfig.getJraftConfig().getjRaftScanWaitTimeoutMs() < System.currentTimeMillis()) {
+        if (this.firstReceivedHeartbeatTime + controllerConfig.getJraftConfig().getJRaftScanWaitTimeoutMs() < System.currentTimeMillis()) {
             log.info("has not received any heartbeat from broker, skip scan not active broker");
             return;
         }

@@ -726,7 +726,7 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
 
         final CreateAccessConfigRequestHeader requestHeader =
-            (CreateAccessConfigRequestHeader) request.decodeCommandCustomHeader(CreateAccessConfigRequestHeader.class);
+                request.decodeCommandCustomHeader(CreateAccessConfigRequestHeader.class);
 
         PlainAccessConfig accessConfig = new PlainAccessConfig();
         accessConfig.setAccessKey(requestHeader.getAccessKey());
@@ -759,12 +759,10 @@ public class AdminBrokerProcessor implements NettyRequestProcessor {
             response.setRemark(e.getMessage());
             return response;
         }
-
         return null;
     }
 
-    private synchronized RemotingCommand deleteAccessConfig(ChannelHandlerContext ctx,
-        RemotingCommand request) throws RemotingCommandException {
+    private synchronized RemotingCommand deleteAccessConfig(ChannelHandlerContext ctx, RemotingCommand request) throws RemotingCommandException {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
 
         final DeleteAccessConfigRequestHeader requestHeader =

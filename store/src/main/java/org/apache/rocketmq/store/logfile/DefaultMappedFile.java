@@ -1,23 +1,24 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.store.logfile;
 
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.common.message.MessageExtBatch;
+import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.common.utils.NetworkUtil;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.store.*;
+import org.apache.rocketmq.store.config.FlushDiskType;
+import org.apache.rocketmq.store.util.LibC;
+import sun.misc.Unsafe;
+import sun.nio.ch.DirectBuffer;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -37,74 +38,123 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
-import org.apache.commons.lang3.SystemUtils;
-import org.apache.rocketmq.common.UtilAll;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageExtBatch;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
-import org.apache.rocketmq.common.utils.NetworkUtil;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.store.AppendMessageCallback;
-import org.apache.rocketmq.store.AppendMessageResult;
-import org.apache.rocketmq.store.AppendMessageStatus;
-import org.apache.rocketmq.store.CompactionAppendMsgCallback;
-import org.apache.rocketmq.store.PutMessageContext;
-import org.apache.rocketmq.store.SelectMappedBufferResult;
-import org.apache.rocketmq.store.TransientStorePool;
-import org.apache.rocketmq.store.config.FlushDiskType;
-import org.apache.rocketmq.store.util.LibC;
-import sun.misc.Unsafe;
-import sun.nio.ch.DirectBuffer;
 
+@Getter
+@Setter
 public class DefaultMappedFile extends AbstractMappedFile {
+
+    /**
+     * 操作系统每页大小，默认4k
+     */
     public static final int OS_PAGE_SIZE = 1024 * 4;
+
     public static final Unsafe UNSAFE = getUnsafe();
+
     private static final Method IS_LOADED_METHOD;
+
     public static final int UNSAFE_PAGE_SIZE = UNSAFE == null ? OS_PAGE_SIZE : UNSAFE.pageSize();
 
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
 
+    /**
+     * 当前jvm中mappedFile虚拟内存
+     */
     protected static final AtomicLong TOTAL_MAPPED_VIRTUAL_MEMORY = new AtomicLong(0);
 
+    /**
+     * 当前jvm中 mappedFile文件个数
+     */
     protected static final AtomicInteger TOTAL_MAPPED_FILES = new AtomicInteger(0);
 
     protected static final AtomicIntegerFieldUpdater<DefaultMappedFile> WROTE_POSITION_UPDATER;
+
     protected static final AtomicIntegerFieldUpdater<DefaultMappedFile> COMMITTED_POSITION_UPDATER;
+
     protected static final AtomicIntegerFieldUpdater<DefaultMappedFile> FLUSHED_POSITION_UPDATER;
 
-    protected volatile int wrotePosition;
-    protected volatile int committedPosition;
-    protected volatile int flushedPosition;
-    protected int fileSize;
-    protected FileChannel fileChannel;
     /**
-     * Message will put to here first, and then reput to FileChannel if writeBuffer is not null.
+     * 当前文件的写指针，从0开始
+     */
+    protected volatile int wrotePosition;
+
+    /**
+     * 当前文件的提交指针，如果开启transientStorePoolEnable，数据会先存储在transientStorePool中，然后提交到内存映射ByteBuffer中，最后写磁盘
+     */
+    protected volatile int committedPosition;
+
+    /**
+     * 刷盘指针，该指针之前的数据持久到磁盘
+     */
+    protected volatile int flushedPosition;
+
+    /**
+     * 文件大小
+     */
+    protected int fileSize;
+
+    /**
+     * 文件通道
+     */
+    protected FileChannel fileChannel;
+
+    /**
+     * 堆内存ByteBuffer，transientStorePoolEnable为true时不为空
      */
     protected ByteBuffer writeBuffer = null;
+
+    /**
+     * 堆内存缓冲池
+     */
     protected TransientStorePool transientStorePool = null;
+
+    /**
+     * 文件名称
+     */
     protected String fileName;
+
+    /**
+     * 文件的初始偏移量
+     */
     protected long fileFromOffset;
+
+    /**
+     * 物理文件
+     */
     protected File file;
+
+    /**
+     * 物理文件对应的内存映射文件Buffer
+     */
     protected MappedByteBuffer mappedByteBuffer;
+
+    /**
+     * 文件最后一次写入时间
+     */
     protected volatile long storeTimestamp = 0;
+
+    /**
+     * 是否为mappedFileQueue中的第一个文件
+     */
     protected boolean firstCreateInQueue = false;
+
+    /**
+     * 最后一次刷盘时间
+     */
     private long lastFlushTime = -1L;
 
     protected MappedByteBuffer mappedByteBufferWaitToClean = null;
+
     protected long swapMapTime = 0L;
+
     protected long mappedByteBufferAccessCountSinceLastSwap = 0L;
 
     /**
-     * If this mapped file belongs to consume queue, this field stores store-timestamp of first message referenced
-     * by this logical queue.
+     * 第一条消息的存储时间
      */
     private long startTimestamp = -1;
 
     /**
-     * If this mapped file belongs to consume queue, this field stores store-timestamp of last message referenced
-     * by this logical queue.
+     * 最后一条消息的存储时间
      */
     private long stopTimestamp = -1;
 
@@ -114,8 +164,6 @@ public class DefaultMappedFile extends AbstractMappedFile {
         FLUSHED_POSITION_UPDATER = AtomicIntegerFieldUpdater.newUpdater(DefaultMappedFile.class, "flushedPosition");
 
         Method isLoaded0method = null;
-        // On the windows platform and openjdk 11 method isLoaded0 always returns false.
-        // see https://github.com/AdoptOpenJDK/openjdk-jdk11/blob/19fb8f93c59dfd791f62d41f332db9e306bc1422/src/java.base/windows/native/libnio/MappedByteBuffer.c#L34
         if (!SystemUtils.IS_OS_WINDOWS) {
             try {
                 isLoaded0method = MappedByteBuffer.class.getDeclaredMethod("isLoaded0", long.class, long.class, int.class);
@@ -126,29 +174,16 @@ public class DefaultMappedFile extends AbstractMappedFile {
         IS_LOADED_METHOD = isLoaded0method;
     }
 
-    public DefaultMappedFile() {
-    }
-
     public DefaultMappedFile(final String fileName, final int fileSize) throws IOException {
         init(fileName, fileSize);
     }
 
-    public DefaultMappedFile(final String fileName, final int fileSize,
-        final TransientStorePool transientStorePool) throws IOException {
+    public DefaultMappedFile(final String fileName, final int fileSize, final TransientStorePool transientStorePool) throws IOException {
         init(fileName, fileSize, transientStorePool);
     }
 
-    public static int getTotalMappedFiles() {
-        return TOTAL_MAPPED_FILES.get();
-    }
-
-    public static long getTotalMappedVirtualMemory() {
-        return TOTAL_MAPPED_VIRTUAL_MEMORY.get();
-    }
-
     @Override
-    public void init(final String fileName, final int fileSize,
-        final TransientStorePool transientStorePool) throws IOException {
+    public void init(final String fileName, final int fileSize, final TransientStorePool transientStorePool) throws IOException {
         init(fileName, fileSize);
         this.writeBuffer = transientStorePool.borrowBuffer();
         this.transientStorePool = transientStorePool;
@@ -160,9 +195,7 @@ public class DefaultMappedFile extends AbstractMappedFile {
         this.file = new File(fileName);
         this.fileFromOffset = Long.parseLong(this.file.getName());
         boolean ok = false;
-
         UtilAll.ensureDirOK(this.file.getParent());
-
         try {
             this.fileChannel = new RandomAccessFile(this.file, "rw").getChannel();
             this.mappedByteBuffer = this.fileChannel.map(MapMode.READ_WRITE, 0, fileSize);
@@ -182,17 +215,22 @@ public class DefaultMappedFile extends AbstractMappedFile {
         }
     }
 
+    /**
+     * 将文件重命名
+     */
     @Override
-    public boolean renameTo(String fileName) {
+    public void renameTo(String fileName) {
         File newFile = new File(fileName);
         boolean rename = file.renameTo(newFile);
         if (rename) {
             this.fileName = fileName;
             this.file = newFile;
         }
-        return rename;
     }
 
+    /**
+     * 获取最后一次修改时间
+     */
     @Override
     public long getLastModifiedTimestamp() {
         return this.file.lastModified();
@@ -202,10 +240,8 @@ public class DefaultMappedFile extends AbstractMappedFile {
         if (byteBuffer.remaining() < size) {
             return false;
         }
-
         int readPosition = getReadPosition();
         if ((pos + size) <= readPosition) {
-
             if (this.hold()) {
                 try {
                     int readNum = fileChannel.read(byteBuffer, pos);
@@ -217,37 +253,37 @@ public class DefaultMappedFile extends AbstractMappedFile {
                     this.release();
                 }
             } else {
-                log.debug("matched, but hold failed, request pos: " + pos + ", fileFromOffset: "
-                    + this.fileFromOffset);
+                log.debug("matched, but hold failed, request pos: " + pos + ", fileFromOffset: " + this.fileFromOffset);
             }
         } else {
-            log.warn("selectMappedBuffer request pos invalid, request pos: " + pos + ", size: " + size
-                + ", fileFromOffset: " + this.fileFromOffset);
+            log.warn("selectMappedBuffer request pos invalid, request pos: " + pos + ", size: " + size + ", fileFromOffset: " + this.fileFromOffset);
         }
-
         return false;
     }
 
+    /**
+     * 获取文件大小
+     */
     @Override
     public int getFileSize() {
         return fileSize;
     }
 
-    @Override
-    public FileChannel getFileChannel() {
-        return fileChannel;
-    }
-
+    /**
+     * 往文件追加消息
+     */
     public AppendMessageResult appendMessage(final ByteBuffer byteBufferMsg, final CompactionAppendMsgCallback cb) {
         assert byteBufferMsg != null;
         assert cb != null;
-
+        //获取当前文件写指针
         int currentPos = WROTE_POSITION_UPDATER.get(this);
         if (currentPos < this.fileSize) {
             ByteBuffer byteBuffer = appendMessageBuffer().slice();
             byteBuffer.position(currentPos);
             AppendMessageResult result = cb.doAppend(byteBuffer, this.fileFromOffset, this.fileSize - currentPos, byteBufferMsg);
+            //更新当前mappedFile写指针
             WROTE_POSITION_UPDATER.addAndGet(this, result.getWroteBytes());
+            //更新当前文件最后一次写入时间
             this.storeTimestamp = result.getStoreTimestamp();
             return result;
         }
@@ -255,37 +291,38 @@ public class DefaultMappedFile extends AbstractMappedFile {
         return new AppendMessageResult(AppendMessageStatus.UNKNOWN_ERROR);
     }
 
+    /**
+     * 往mappedFile追加消息
+     */
     @Override
-    public AppendMessageResult appendMessage(final MessageExtBrokerInner msg, final AppendMessageCallback cb,
-        PutMessageContext putMessageContext) {
+    public AppendMessageResult appendMessage(final MessageExtBrokerInner msg, final AppendMessageCallback cb, PutMessageContext putMessageContext) {
         return appendMessagesInner(msg, cb, putMessageContext);
     }
 
+    /**
+     * 追加消息
+     */
     @Override
-    public AppendMessageResult appendMessages(final MessageExtBatch messageExtBatch, final AppendMessageCallback cb,
-        PutMessageContext putMessageContext) {
+    public AppendMessageResult appendMessages(final MessageExtBatch messageExtBatch, final AppendMessageCallback cb, PutMessageContext putMessageContext) {
         return appendMessagesInner(messageExtBatch, cb, putMessageContext);
     }
 
-    public AppendMessageResult appendMessagesInner(final MessageExt messageExt, final AppendMessageCallback cb,
-        PutMessageContext putMessageContext) {
+    /**
+     * 往mappedFile追加消息
+     */
+    public AppendMessageResult appendMessagesInner(final MessageExt messageExt, final AppendMessageCallback cb, PutMessageContext putMessageContext) {
         assert messageExt != null;
         assert cb != null;
-
+        //获取当前mappedFile写指针
         int currentPos = WROTE_POSITION_UPDATER.get(this);
-
         if (currentPos < this.fileSize) {
             ByteBuffer byteBuffer = appendMessageBuffer().slice();
             byteBuffer.position(currentPos);
             AppendMessageResult result;
             if (messageExt instanceof MessageExtBatch && !((MessageExtBatch) messageExt).isInnerBatch()) {
-                // traditional batch message
-                result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos,
-                    (MessageExtBatch) messageExt, putMessageContext);
+                result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos, (MessageExtBatch) messageExt, putMessageContext);
             } else if (messageExt instanceof MessageExtBrokerInner) {
-                // traditional single message or newly introduced inner-batch message
-                result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos,
-                    (MessageExtBrokerInner) messageExt, putMessageContext);
+                result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos, (MessageExtBrokerInner) messageExt, putMessageContext);
             } else {
                 return new AppendMessageResult(AppendMessageStatus.UNKNOWN_ERROR);
             }
@@ -302,46 +339,29 @@ public class DefaultMappedFile extends AbstractMappedFile {
         return writeBuffer != null ? writeBuffer : this.mappedByteBuffer;
     }
 
+    /**
+     * 获取文件的初始偏移量
+     */
     @Override
     public long getFileFromOffset() {
         return this.fileFromOffset;
     }
 
+    /**
+     * 往当前mappedFile文件写入消息
+     */
     @Override
     public boolean appendMessage(final byte[] data) {
         return appendMessage(data, 0, data.length);
     }
 
-    @Override
-    public boolean appendMessage(ByteBuffer data) {
-        int currentPos = WROTE_POSITION_UPDATER.get(this);
-        int remaining = data.remaining();
-
-        if ((currentPos + remaining) <= this.fileSize) {
-            try {
-                this.fileChannel.position(currentPos);
-                while (data.hasRemaining()) {
-                    this.fileChannel.write(data);
-                }
-            } catch (Throwable e) {
-                log.error("Error occurred when append message to mappedFile.", e);
-            }
-            WROTE_POSITION_UPDATER.addAndGet(this, remaining);
-            return true;
-        }
-        return false;
-    }
-
     /**
-     * Content of data from offset to offset + length will be written to file.
-     *
-     * @param offset The offset of the subarray to be used.
-     * @param length The length of the subarray to be used.
+     * 将指定起始位置和长度的部分数据写入到文件
      */
     @Override
     public boolean appendMessage(final byte[] data, final int offset, final int length) {
+        //获取当前文件的写指针
         int currentPos = WROTE_POSITION_UPDATER.get(this);
-
         if ((currentPos + length) <= this.fileSize) {
             try {
                 ByteBuffer buf = this.mappedByteBuffer.slice();
@@ -350,26 +370,25 @@ public class DefaultMappedFile extends AbstractMappedFile {
             } catch (Throwable e) {
                 log.error("Error occurred when append message to mappedFile.", e);
             }
+            //更新当前文件的写指针
             WROTE_POSITION_UPDATER.addAndGet(this, length);
             return true;
         }
-
         return false;
     }
 
     /**
-     * @return The current flushed position
+     * 刷盘，将内存中的数据持久化到磁盘
+     *
+     * @param flushLeastPages 最小刷盘页
      */
     @Override
     public int flush(final int flushLeastPages) {
         if (this.isAbleToFlush(flushLeastPages)) {
             if (this.hold()) {
                 int value = getReadPosition();
-
                 try {
                     this.mappedByteBufferAccessCountSinceLastSwap++;
-
-                    //We only append data to fileChannel or mappedByteBuffer, never both.
                     if (writeBuffer != null || this.fileChannel.position() != 0) {
                         this.fileChannel.force(false);
                     } else {
@@ -379,7 +398,6 @@ public class DefaultMappedFile extends AbstractMappedFile {
                 } catch (Throwable e) {
                     log.error("Error occurred when force data to disk.", e);
                 }
-
                 FLUSHED_POSITION_UPDATER.set(this, value);
                 this.release();
             } else {
@@ -390,14 +408,14 @@ public class DefaultMappedFile extends AbstractMappedFile {
         return this.getFlushedPosition();
     }
 
+    /**
+     * 提交
+     */
     @Override
     public int commit(final int commitLeastPages) {
         if (writeBuffer == null) {
-            //no need to commit data to file channel, so just regard wrotePosition as committedPosition.
             return WROTE_POSITION_UPDATER.get(this);
         }
-
-        //no need to commit data to file channel, so just set committedPosition to wrotePosition.
         if (transientStorePool != null && !transientStorePool.isRealCommit()) {
             COMMITTED_POSITION_UPDATER.set(this, WROTE_POSITION_UPDATER.get(this));
         } else if (this.isAbleToCommit(commitLeastPages)) {
@@ -408,27 +426,31 @@ public class DefaultMappedFile extends AbstractMappedFile {
                 log.warn("in commit, hold failed, commit offset = " + COMMITTED_POSITION_UPDATER.get(this));
             }
         }
-
-        // All dirty data has been committed to FileChannel.
         if (writeBuffer != null && this.transientStorePool != null && this.fileSize == COMMITTED_POSITION_UPDATER.get(this)) {
             this.transientStorePool.returnBuffer(writeBuffer);
             this.writeBuffer = null;
         }
-
         return COMMITTED_POSITION_UPDATER.get(this);
     }
 
+    /**
+     * 执行真正的提交操作
+     */
     protected void commit0() {
         int writePos = WROTE_POSITION_UPDATER.get(this);
         int lastCommittedPosition = COMMITTED_POSITION_UPDATER.get(this);
-
         if (writePos - lastCommittedPosition > 0) {
             try {
+                //创建writeBuffer共享缓冲区
                 ByteBuffer byteBuffer = writeBuffer.slice();
+                //将position回退到上一次的提交位置
                 byteBuffer.position(lastCommittedPosition);
+                //设置limit为writePosition，即最大有效数据指针
                 byteBuffer.limit(writePos);
                 this.fileChannel.position(lastCommittedPosition);
+                //写数据
                 this.fileChannel.write(byteBuffer);
+                //将提交指针更新为writePosition
                 COMMITTED_POSITION_UPDATER.set(this, writePos);
             } catch (Throwable e) {
                 log.error("Error occurred when commit data to FileChannel.", e);
@@ -436,72 +458,90 @@ public class DefaultMappedFile extends AbstractMappedFile {
         }
     }
 
+    /**
+     * 判断最小刷盘页是否满足刷盘条件
+     */
     private boolean isAbleToFlush(final int flushLeastPages) {
+        //获取当前刷盘指针
         int flush = FLUSHED_POSITION_UPDATER.get(this);
         int write = getReadPosition();
-
+        //当前文件被写满，直接返回true进行刷盘
         if (this.isFull()) {
             return true;
         }
-
+        //判断待刷页数是否满足最小刷盘页数条件
         if (flushLeastPages > 0) {
             return ((write / OS_PAGE_SIZE) - (flush / OS_PAGE_SIZE)) >= flushLeastPages;
         }
-
+        //刷盘最小页书等于0时，没有限制，只有有未刷的就直接刷
         return write > flush;
     }
 
+    /**
+     * 判断是否满足提交条件
+     */
     protected boolean isAbleToCommit(final int commitLeastPages) {
+        //获取当前提交指针
         int commit = COMMITTED_POSITION_UPDATER.get(this);
+        //获取当前写指针
         int write = WROTE_POSITION_UPDATER.get(this);
-
+        //文件已满返回true
         if (this.isFull()) {
             return true;
         }
-
+        //提交最小页大小大于0时，判断当前写指针与提交指针的差值，除以OS_PAGE_SIZE得到脏页的数量，脏页大于0则提交
         if (commitLeastPages > 0) {
             return ((write / OS_PAGE_SIZE) - (commit / OS_PAGE_SIZE)) >= commitLeastPages;
         }
-
+        //提交最小页大小等于0时，说明不限制提交页大小，只要写指针大于提交指针，就提交
         return write > commit;
     }
 
+    /**
+     * 获取刷盘指针
+     */
     @Override
     public int getFlushedPosition() {
         return FLUSHED_POSITION_UPDATER.get(this);
     }
 
+    /**
+     * 设置刷盘指针
+     */
     @Override
     public void setFlushedPosition(int pos) {
         FLUSHED_POSITION_UPDATER.set(this, pos);
     }
 
+    /**
+     * 判断当前文件是否写满，即写指针的位置是否等于文件大小
+     */
     @Override
     public boolean isFull() {
         return this.fileSize == WROTE_POSITION_UPDATER.get(this);
     }
 
+    /**
+     * 从指定开始位置和长度查找消息
+     */
     @Override
     public SelectMappedBufferResult selectMappedBuffer(int pos, int size) {
         int readPosition = getReadPosition();
+        //当前参数没有超过理论消息位置
         if ((pos + size) <= readPosition) {
             if (this.hold()) {
                 this.mappedByteBufferAccessCountSinceLastSwap++;
-
                 ByteBuffer byteBuffer = this.mappedByteBuffer.slice();
                 byteBuffer.position(pos);
                 ByteBuffer byteBufferNew = byteBuffer.slice();
                 byteBufferNew.limit(size);
                 return new SelectMappedBufferResult(this.fileFromOffset + pos, byteBufferNew, size, this);
             } else {
-                log.warn("matched, but hold failed, request pos: " + pos + ", fileFromOffset: "
-                    + this.fileFromOffset);
+                log.warn("matched, but hold failed, request pos: " + pos + ", fileFromOffset: " + this.fileFromOffset);
             }
         } else {
-            log.warn("selectMappedBuffer request pos invalid, request pos: " + pos + ", size: " + size
-                + ", fileFromOffset: " + this.fileFromOffset);
+            log.warn("selectMappedBuffer request pos invalid, request pos: " + pos + ", size: " + size + ", fileFromOffset: " + this.fileFromOffset);
         }
-
         return null;
     }
 
@@ -519,60 +559,55 @@ public class DefaultMappedFile extends AbstractMappedFile {
                 return new SelectMappedBufferResult(this.fileFromOffset + pos, byteBufferNew, size, this);
             }
         }
-
         return null;
     }
 
     @Override
     public boolean cleanup(final long currentRef) {
+        //available等于true，表示当前文件可用，无法清理
         if (this.isAvailable()) {
-            log.error("this file[REF:" + currentRef + "] " + this.fileName
-                + " have not shutdown, stop unmapping.");
+            log.error("this file[REF:" + currentRef + "] " + this.fileName + " have not shutdown, stop unmapping.");
             return false;
         }
-
         if (this.isCleanupOver()) {
-            log.error("this file[REF:" + currentRef + "] " + this.fileName
-                + " have cleanup, do not do it again.");
+            log.error("this file[REF:" + currentRef + "] " + this.fileName + " have cleanup, do not do it again.");
             return true;
         }
-
         UtilAll.cleanBuffer(this.mappedByteBuffer);
         UtilAll.cleanBuffer(this.mappedByteBufferWaitToClean);
         this.mappedByteBufferWaitToClean = null;
+        //维护类变量，最后返回true表示清理完成
         TOTAL_MAPPED_VIRTUAL_MEMORY.addAndGet(this.fileSize * (-1));
         TOTAL_MAPPED_FILES.decrementAndGet();
         log.info("unmap file[REF:" + currentRef + "] " + this.fileName + " OK");
         return true;
     }
 
+    /**
+     * 文件销毁
+     *
+     * @param intervalForcibly 拒绝被销毁的最大存活时间
+     */
     @Override
     public boolean destroy(final long intervalForcibly) {
         this.shutdown(intervalForcibly);
-
         if (this.isCleanupOver()) {
             try {
                 long lastModified = getLastModifiedTimestamp();
+                //关闭文件通道
                 this.fileChannel.close();
                 log.info("close file channel " + this.fileName + " OK");
-
                 long beginTime = System.currentTimeMillis();
+                //物理文件删除
                 boolean result = this.file.delete();
-                log.info("delete file[REF:" + this.getRefCount() + "] " + this.fileName
-                    + (result ? " OK, " : " Failed, ") + "W:" + this.getWrotePosition() + " M:"
-                    + this.getFlushedPosition() + ", "
-                    + UtilAll.computeElapsedTimeMilliseconds(beginTime)
-                    + "," + (System.currentTimeMillis() - lastModified));
+                log.info("delete file[REF:" + this.getRefCount() + "] " + this.fileName + (result ? " OK, " : " Failed, ") + "W:" + this.getWrotePosition() + " M:" + this.getFlushedPosition() + ", " + UtilAll.computeElapsedTimeMilliseconds(beginTime) + "," + (System.currentTimeMillis() - lastModified));
             } catch (Exception e) {
                 log.warn("close file channel " + this.fileName + " Failed. ", e);
             }
-
             return true;
         } else {
-            log.warn("destroy mapped file[REF:" + this.getRefCount() + "] " + this.fileName
-                + " Failed. cleanupOver: " + this.cleanupOver);
+            log.warn("destroy mapped file[REF:" + this.getRefCount() + "] " + this.fileName + " Failed. cleanupOver: " + this.cleanupOver);
         }
-
         return false;
     }
 
@@ -587,7 +622,7 @@ public class DefaultMappedFile extends AbstractMappedFile {
     }
 
     /**
-     * @return The max position which have valid data
+     * @return 有效数据的最大指针位置
      */
     @Override
     public int getReadPosition() {
@@ -616,38 +651,25 @@ public class DefaultMappedFile extends AbstractMappedFile {
                     mappedByteBuffer.force();
                 }
             }
-
-            // prevent gc
-            // if (j % 1000 == 0) {
-            //     log.info("j={}, costTime={}", j, System.currentTimeMillis() - time);
-            //     time = System.currentTimeMillis();
-            //     try {
-            //         Thread.sleep(0);
-            //     } catch (InterruptedException e) {
-            //         log.error("Interrupted", e);
-            //     }
-            // }
         }
 
         // force flush when prepare load finished
         if (type == FlushDiskType.SYNC_FLUSH) {
-            log.info("mapped file warm-up done, force to disk, mappedFile={}, costTime={}",
-                this.getFileName(), System.currentTimeMillis() - beginTime);
+            log.info("mapped file warm-up done, force to disk, mappedFile={}, costTime={}", this.getFileName(), System.currentTimeMillis() - beginTime);
             mappedByteBuffer.force();
         }
-        log.info("mapped file warm-up done. mappedFile={}, costTime={}", this.getFileName(),
-            System.currentTimeMillis() - beginTime);
+        log.info("mapped file warm-up done. mappedFile={}, costTime={}", this.getFileName(), System.currentTimeMillis() - beginTime);
 
         this.mlock();
     }
 
     @Override
-    public boolean swapMap() {
+    public void swapMap() {
         if (getRefCount() == 1 && this.mappedByteBufferWaitToClean == null) {
 
             if (!hold()) {
                 log.warn("in swapMap, hold failed, fileName: " + this.fileName);
-                return false;
+                return;
             }
             try {
                 this.mappedByteBufferWaitToClean = this.mappedByteBuffer;
@@ -655,7 +677,6 @@ public class DefaultMappedFile extends AbstractMappedFile {
                 this.mappedByteBufferAccessCountSinceLastSwap = 0L;
                 this.swapMapTime = System.currentTimeMillis();
                 log.info("swap file " + this.fileName + " success.");
-                return true;
             } catch (Exception e) {
                 log.error("swapMap file " + this.fileName + " Failed. ", e);
             } finally {
@@ -664,7 +685,6 @@ public class DefaultMappedFile extends AbstractMappedFile {
         } else {
             log.info("Will not swap file: " + this.fileName + ", ref=" + getRefCount());
         }
-        return false;
     }
 
     @Override
@@ -694,11 +714,6 @@ public class DefaultMappedFile extends AbstractMappedFile {
     @Override
     public long getMappedByteBufferAccessCountSinceLastSwap() {
         return this.mappedByteBufferAccessCountSinceLastSwap;
-    }
-
-    @Override
-    public long getLastFlushTime() {
-        return this.lastFlushTime;
     }
 
     @Override
@@ -824,23 +839,6 @@ public class DefaultMappedFile extends AbstractMappedFile {
         return this.fileName;
     }
 
-    public long getStartTimestamp() {
-        return startTimestamp;
-    }
-
-    public void setStartTimestamp(long startTimestamp) {
-        this.startTimestamp = startTimestamp;
-    }
-
-    public long getStopTimestamp() {
-        return stopTimestamp;
-    }
-
-    public void setStopTimestamp(long stopTimestamp) {
-        this.stopTimestamp = stopTimestamp;
-    }
-
-
     public Iterator<SelectMappedBufferResult> iterator(int startPos) {
         return new Itr(startPos);
     }
@@ -908,8 +906,7 @@ public class DefaultMappedFile extends AbstractMappedFile {
                     ByteBuffer bufferResult = byteBuffer.slice();
                     bufferResult.limit(size);
                     current += size;
-                    return new SelectMappedBufferResult(fileFromOffset + current, bufferResult, size,
-                        DefaultMappedFile.this);
+                    return new SelectMappedBufferResult(fileFromOffset + current, bufferResult, size, DefaultMappedFile.this);
                 }
             }
             return null;

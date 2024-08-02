@@ -1,25 +1,9 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.remoting.protocol.header;
 
 import com.google.common.base.MoreObjects;
 import io.netty.buffer.ByteBuf;
-import java.util.HashMap;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.common.action.Action;
 import org.apache.rocketmq.common.action.RocketMQAction;
 import org.apache.rocketmq.common.resource.ResourceType;
@@ -29,44 +13,99 @@ import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.annotation.CFNullable;
 import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 import org.apache.rocketmq.remoting.protocol.FastCodesHeader;
-import org.apache.rocketmq.remoting.rpc.TopicQueueRequestHeader;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
+import org.apache.rocketmq.remoting.rpc.TopicQueueRequestHeader;
 
-/**
- * Use short variable name to speed up FastJson deserialization process.
- */
+import java.util.HashMap;
+
+@Getter
+@Setter
 @RocketMQAction(value = RequestCode.SEND_MESSAGE_V2, action = Action.PUB)
 public class SendMessageRequestHeaderV2 extends TopicQueueRequestHeader implements CommandCustomHeader, FastCodesHeader {
+
+    /**
+     * 生产者组
+     */
     @CFNotNull
-    private String a; // producerGroup;
+    private String a;
+
+    /**
+     * 主题
+     */
     @CFNotNull
     @RocketMQResource(ResourceType.TOPIC)
-    private String b; // topic;
-    @CFNotNull
-    private String c; // defaultTopic;
-    @CFNotNull
-    private Integer d; // defaultTopicQueueNums;
-    @CFNotNull
-    private Integer e; // queueId;
-    @CFNotNull
-    private Integer f; // sysFlag;
-    @CFNotNull
-    private Long g; // bornTimestamp;
-    @CFNotNull
-    private Integer h; // flag;
-    @CFNullable
-    private String i; // properties;
-    @CFNullable
-    private Integer j; // reconsumeTimes;
-    @CFNullable
-    private Boolean k; // unitMode;
+    private String b;
 
-    private Integer l; // consumeRetryTimes
+    /**
+     * 默认主题
+     */
+    @CFNotNull
+    private String c;
 
+    /**
+     * defaultTopicQueueNums
+     */
+    @CFNotNull
+    private Integer d;
+
+    /**
+     * queueId
+     */
+    @CFNotNull
+    private Integer e;
+
+    /**
+     * sysFlag
+     */
+    @CFNotNull
+    private Integer f;
+
+    /**
+     * bornTimestamp
+     */
+    @CFNotNull
+    private Long g;
+
+    /**
+     * flag
+     */
+    @CFNotNull
+    private Integer h;
+
+    /**
+     * properties
+     */
     @CFNullable
-    private Boolean m; //batch
+    private String i;
+
+    /**
+     * reconsumeTimes
+     */
     @CFNullable
-    private String n; // brokerName
+    private Integer j;
+
+    /**
+     * unitMode
+     */
+    @CFNullable
+    private Boolean k;
+
+    /**
+     * consumeRetryTimes
+     */
+    private Integer l;
+
+    /**
+     * batch
+     */
+    @CFNullable
+    private Boolean m;
+
+    /**
+     * brokerName
+     */
+    @CFNullable
+    private String n;
 
     public static SendMessageRequestHeader createSendMessageRequestHeaderV1(final SendMessageRequestHeaderV2 v2) {
         SendMessageRequestHeader v1 = new SendMessageRequestHeader();
@@ -130,180 +169,62 @@ public class SendMessageRequestHeaderV2 extends TopicQueueRequestHeader implemen
 
     @Override
     public void decode(HashMap<String, String> fields) throws RemotingCommandException {
-
         String str = getAndCheckNotNull(fields, "a");
         if (str != null) {
             a = str;
         }
-
         str = getAndCheckNotNull(fields, "b");
         if (str != null) {
             b = str;
         }
-
         str = getAndCheckNotNull(fields, "c");
         if (str != null) {
             c = str;
         }
-
         str = getAndCheckNotNull(fields, "d");
         if (str != null) {
             d = Integer.parseInt(str);
         }
-
         str = getAndCheckNotNull(fields, "e");
         if (str != null) {
             e = Integer.parseInt(str);
         }
-
         str = getAndCheckNotNull(fields, "f");
         if (str != null) {
             f = Integer.parseInt(str);
         }
-
         str = getAndCheckNotNull(fields, "g");
         if (str != null) {
             g = Long.parseLong(str);
         }
-
         str = getAndCheckNotNull(fields, "h");
         if (str != null) {
             h = Integer.parseInt(str);
         }
-
         str = fields.get("i");
         if (str != null) {
             i = str;
         }
-
         str = fields.get("j");
         if (str != null) {
             j = Integer.parseInt(str);
         }
-
         str = fields.get("k");
         if (str != null) {
             k = Boolean.parseBoolean(str);
         }
-
         str = fields.get("l");
         if (str != null) {
             l = Integer.parseInt(str);
         }
-
         str = fields.get("m");
         if (str != null) {
             m = Boolean.parseBoolean(str);
         }
-
         str = fields.get("n");
         if (str != null) {
             n = str;
         }
-    }
-
-    public String getA() {
-        return a;
-    }
-
-    public void setA(String a) {
-        this.a = a;
-    }
-
-    public String getB() {
-        return b;
-    }
-
-    public void setB(String b) {
-        this.b = b;
-    }
-
-    public String getC() {
-        return c;
-    }
-
-    public void setC(String c) {
-        this.c = c;
-    }
-
-    public Integer getD() {
-        return d;
-    }
-
-    public void setD(Integer d) {
-        this.d = d;
-    }
-
-    public Integer getE() {
-        return e;
-    }
-
-    public void setE(Integer e) {
-        this.e = e;
-    }
-
-    public Integer getF() {
-        return f;
-    }
-
-    public void setF(Integer f) {
-        this.f = f;
-    }
-
-    public Long getG() {
-        return g;
-    }
-
-    public void setG(Long g) {
-        this.g = g;
-    }
-
-    public Integer getH() {
-        return h;
-    }
-
-    public void setH(Integer h) {
-        this.h = h;
-    }
-
-    public String getI() {
-        return i;
-    }
-
-    public void setI(String i) {
-        this.i = i;
-    }
-
-    public Integer getJ() {
-        return j;
-    }
-
-    public void setJ(Integer j) {
-        this.j = j;
-    }
-
-    public Boolean isK() {
-        return k;
-    }
-
-    public void setK(Boolean k) {
-        this.k = k;
-    }
-
-    public Integer getL() {
-        return l;
-    }
-
-    public void setL(final Integer l) {
-        this.l = l;
-    }
-
-    public Boolean isM() {
-        return m;
-    }
-
-    public void setM(Boolean m) {
-        this.m = m;
     }
 
     @Override
@@ -345,4 +266,5 @@ public class SendMessageRequestHeaderV2 extends TopicQueueRequestHeader implemen
     public void setTopic(String topic) {
         this.b = topic;
     }
+
 }

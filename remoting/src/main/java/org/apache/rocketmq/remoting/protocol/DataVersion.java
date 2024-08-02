@@ -1,26 +1,13 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.remoting.protocol;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 public class DataVersion extends RemotingSerializable {
+
     private long stateVersion = 0L;
+
     private long timestamp = System.currentTimeMillis();
+
     private AtomicLong counter = new AtomicLong(0);
 
     public void assignNewOne(final DataVersion dataVersion) {
@@ -69,40 +56,31 @@ public class DataVersion extends RemotingSerializable {
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-
         DataVersion version = (DataVersion) o;
-
         if (getStateVersion() != version.getStateVersion())
             return false;
         if (getTimestamp() != version.getTimestamp())
             return false;
-
         if (counter != null && version.counter != null) {
             return counter.longValue() == version.counter.longValue();
         }
-
         return null == counter && null == version.counter;
-
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (getStateVersion() ^ (getStateVersion() >>> 32));
-        result = 31 * result + (int) (getTimestamp() ^ (getTimestamp() >>> 32));
+        int result = Long.hashCode(getStateVersion());
+        result = 31 * result + Long.hashCode(getTimestamp());
         if (null != counter) {
             long l = counter.get();
-            result = 31 * result + (int) (l ^ (l >>> 32));
+            result = 31 * result + Long.hashCode(l);
         }
         return result;
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("DataVersion[");
-        sb.append("timestamp=").append(timestamp);
-        sb.append(", counter=").append(counter);
-        sb.append(']');
-        return sb.toString();
+        return "DataVersion[" + "timestamp=" + timestamp + ", counter=" + counter + ']';
     }
 
     public int compare(DataVersion dataVersion) {
@@ -121,4 +99,5 @@ public class DataVersion extends RemotingSerializable {
         }
         return 0;
     }
+
 }

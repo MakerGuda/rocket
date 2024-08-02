@@ -263,7 +263,7 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
         TopicFilterType topicFilterType =
             (msgInner.getSysFlag() & MessageSysFlag.MULTI_TAGS_FLAG) == MessageSysFlag.MULTI_TAGS_FLAG ? TopicFilterType.MULTI_TAG
                 : TopicFilterType.SINGLE_TAG;
-        long tagsCodeValue = MessageExtBrokerInner.tagsString2tagsCode(topicFilterType, msgInner.getTags());
+        long tagsCodeValue = MessageExtBrokerInner.tagsString2tagsCode( msgInner.getTags());
         msgInner.setTagsCode(tagsCodeValue);
         MessageAccessor.setProperties(msgInner, msgExt.getProperties());
         msgInner.setPropertiesString(MessageDecoder.messageProperties2String(msgExt.getProperties()));

@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.remoting.protocol.header.namesrv;
 
 import org.apache.rocketmq.common.action.Action;
@@ -27,9 +11,16 @@ import org.apache.rocketmq.remoting.rpc.TopicRequestHeader;
 
 @RocketMQAction(value = RequestCode.DELETE_TOPIC_IN_NAMESRV, resource = ResourceType.CLUSTER, action = Action.UPDATE)
 public class DeleteTopicFromNamesrvRequestHeader extends TopicRequestHeader {
+
+    /**
+     * 主题
+     */
     @CFNotNull
     private String topic;
 
+    /**
+     * 集群名称
+     */
     @RocketMQResource(ResourceType.CLUSTER)
     private String clusterName;
 
@@ -52,4 +43,5 @@ public class DeleteTopicFromNamesrvRequestHeader extends TopicRequestHeader {
     public void setClusterName(String clusterName) {
         this.clusterName = clusterName;
     }
+
 }

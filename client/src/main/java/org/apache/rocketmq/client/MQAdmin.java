@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.client;
 
 import org.apache.rocketmq.client.exception.MQBrokerException;
@@ -25,81 +9,79 @@ import org.apache.rocketmq.remoting.exception.RemotingException;
 import java.util.Map;
 
 /**
- * Base interface for MQ management
+ * mq管理的基础接口
  */
 public interface MQAdmin {
-    /**
-     * Creates a topic
-     *  @param key accessKey
-     * @param newTopic topic name
-     * @param queueNum topic's queue number
-     * @param attributes
-     */
-    void createTopic(final String key, final String newTopic, final int queueNum, Map<String, String> attributes)
-        throws MQClientException;
 
     /**
-     * Creates a topic
-     *  @param key accessKey
-     * @param newTopic topic name
-     * @param queueNum topic's queue number
-     * @param topicSysFlag topic system flag
-     * @param attributes
-     */
-    void createTopic(String key, String newTopic, int queueNum, int topicSysFlag, Map<String, String> attributes)
-        throws MQClientException;
-
-    /**
-     * Gets the message queue offset according to some time in milliseconds<br>
-     * be cautious to call because of more IO overhead
+     * 创建一个主题
      *
-     * @param mq Instance of MessageQueue
-     * @param timestamp from when in milliseconds.
-     * @return offset
+     * @param key accessKey
+     * @param newTopic 主题名称
+     * @param queueNum 主题的队列数量
+     * @param attributes 主题属性
+     */
+    void createTopic(final String key, final String newTopic, final int queueNum, Map<String, String> attributes) throws MQClientException;
+
+    /**
+     * 创建主题
+     *
+     * @param key accessKey
+     * @param newTopic 主题名称
+     * @param queueNum 主题队列数量
+     * @param topicSysFlag 主题系统标识
+     * @param attributes 主题属性
+     */
+    void createTopic(String key, String newTopic, int queueNum, int topicSysFlag, Map<String, String> attributes) throws MQClientException;
+
+    /**
+     * 根据时间戳获取队列偏移量
+     *
+     * @param mq 队列
+     * @param timestamp 时间戳
+     * @return 偏移量
      */
     long searchOffset(final MessageQueue mq, final long timestamp) throws MQClientException;
 
     /**
-     * Gets the max offset
+     * 获取队列的最大偏移量
      *
-     * @param mq Instance of MessageQueue
-     * @return the max offset
+     * @param mq 队列实例
+     * @return 最大偏移量
      */
     long maxOffset(final MessageQueue mq) throws MQClientException;
 
     /**
-     * Gets the minimum offset
+     * 获取队列的最小偏移量
      *
-     * @param mq Instance of MessageQueue
-     * @return the minimum offset
+     * @param mq 队列实例
+     * @return 最小偏移量
      */
     long minOffset(final MessageQueue mq) throws MQClientException;
 
     /**
-     * Gets the earliest stored message time
+     * 获取队列中最早存储消息的时间
      *
-     * @param mq Instance of MessageQueue
-     * @return the time in microseconds
+     * @param mq 队列实例
+     * @return 毫秒级别的时间戳
      */
     long earliestMsgStoreTime(final MessageQueue mq) throws MQClientException;
 
     /**
-     * Query messages
+     * 指定主题等信息查询消息
      *
-     * @param topic message topic
-     * @param key message key index word
-     * @param maxNum max message number
-     * @param begin from when
-     * @param end to when
-     * @return Instance of QueryResult
+     * @param topic 主题
+     * @param key 消息索引键
+     * @param maxNum 最大消息数
+     * @param begin 起始偏移量
+     * @param end 结束偏移量
+     * @return 查询结果
      */
-    QueryResult queryMessage(final String topic, final String key, final int maxNum, final long begin,
-        final long end) throws MQClientException, InterruptedException;
+    QueryResult queryMessage(final String topic, final String key, final int maxNum, final long begin, final long end) throws MQClientException, InterruptedException;
 
     /**
-     * @return The {@code MessageExt} of given msgId
+     * 通过主题和消息id检索消息
      */
-    MessageExt viewMessage(String topic,
-        String msgId) throws RemotingException, MQBrokerException, InterruptedException, MQClientException;
+    MessageExt viewMessage(String topic, String msgId) throws RemotingException, MQBrokerException, InterruptedException, MQClientException;
 
 }

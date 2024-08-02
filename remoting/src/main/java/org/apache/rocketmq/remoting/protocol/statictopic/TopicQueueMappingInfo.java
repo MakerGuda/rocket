@@ -1,37 +1,32 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.remoting.protocol.statictopic;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 public class TopicQueueMappingInfo extends RemotingSerializable {
+
     public static final int LEVEL_0 = 0;
 
-    String topic; // redundant field
+    String topic;
+
     String scope = MixAll.METADATA_SCOPE_GLOBAL;
+
     int totalQueues;
-    String bname;  //identify the hosted broker name
-    long epoch; //important to fence the old dirty data
-    boolean dirty; //indicate if the data is dirty
-    //register to broker to construct the route
-    protected ConcurrentMap<Integer/*logicId*/, Integer/*physicalId*/> currIdMap = new ConcurrentHashMap<>();
+
+    String bname;
+
+    long epoch;
+
+    boolean dirty;
+
+    /**
+     * key: logicId value:physicalId
+     */
+    protected ConcurrentMap<Integer, Integer> currIdMap = new ConcurrentHashMap<>();
 
     public TopicQueueMappingInfo() {
 
@@ -56,7 +51,6 @@ public class TopicQueueMappingInfo extends RemotingSerializable {
     public int getTotalQueues() {
         return totalQueues;
     }
-
 
     public String getBname() {
         return bname;
@@ -90,10 +84,6 @@ public class TopicQueueMappingInfo extends RemotingSerializable {
         this.bname = bname;
     }
 
-    public void setCurrIdMap(ConcurrentMap<Integer, Integer> currIdMap) {
-        this.currIdMap = currIdMap;
-    }
-
     public String getScope() {
         return scope;
     }
@@ -106,16 +96,14 @@ public class TopicQueueMappingInfo extends RemotingSerializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof TopicQueueMappingInfo)) return false;
-
         TopicQueueMappingInfo info = (TopicQueueMappingInfo) o;
-
         if (totalQueues != info.totalQueues) return false;
         if (epoch != info.epoch) return false;
         if (dirty != info.dirty) return false;
-        if (topic != null ? !topic.equals(info.topic) : info.topic != null) return false;
-        if (scope != null ? !scope.equals(info.scope) : info.scope != null) return false;
-        if (bname != null ? !bname.equals(info.bname) : info.bname != null) return false;
-        return currIdMap != null ? currIdMap.equals(info.currIdMap) : info.currIdMap == null;
+        if (!Objects.equals(topic, info.topic)) return false;
+        if (!Objects.equals(scope, info.scope)) return false;
+        if (!Objects.equals(bname, info.bname)) return false;
+        return Objects.equals(currIdMap, info.currIdMap);
     }
 
     @Override
@@ -124,7 +112,7 @@ public class TopicQueueMappingInfo extends RemotingSerializable {
         result = 31 * result + (scope != null ? scope.hashCode() : 0);
         result = 31 * result + totalQueues;
         result = 31 * result + (bname != null ? bname.hashCode() : 0);
-        result = 31 * result + (int) (epoch ^ (epoch >>> 32));
+        result = 31 * result + Long.hashCode(epoch);
         result = 31 * result + (dirty ? 1 : 0);
         result = 31 * result + (currIdMap != null ? currIdMap.hashCode() : 0);
         return result;
@@ -142,4 +130,5 @@ public class TopicQueueMappingInfo extends RemotingSerializable {
                 ", currIdMap=" + currIdMap +
                 '}';
     }
+
 }

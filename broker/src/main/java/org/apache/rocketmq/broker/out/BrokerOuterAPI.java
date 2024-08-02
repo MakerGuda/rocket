@@ -1,35 +1,8 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.broker.out;
 
 import com.alibaba.fastjson2.JSON;
-import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.acl.common.AclClientRPCHook;
 import org.apache.rocketmq.acl.common.SessionCredentials;
@@ -40,25 +13,10 @@ import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.impl.consumer.PullResultExt;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
-import org.apache.rocketmq.common.AbstractBrokerRunnable;
-import org.apache.rocketmq.common.BrokerIdentity;
-import org.apache.rocketmq.common.LockCallback;
-import org.apache.rocketmq.common.MixAll;
-import org.apache.rocketmq.common.Pair;
-import org.apache.rocketmq.common.ThreadFactoryImpl;
-import org.apache.rocketmq.common.TopicConfig;
-import org.apache.rocketmq.common.UnlockCallback;
-import org.apache.rocketmq.common.UtilAll;
+import org.apache.rocketmq.common.*;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.filter.ExpressionType;
-import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.common.message.MessageAccessor;
-import org.apache.rocketmq.common.message.MessageBatch;
-import org.apache.rocketmq.common.message.MessageClientIDSetter;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.common.message.*;
 import org.apache.rocketmq.common.namesrv.DefaultTopAddressing;
 import org.apache.rocketmq.common.namesrv.TopAddressing;
 import org.apache.rocketmq.common.sysflag.PullSysFlag;
@@ -69,70 +27,16 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.InvokeCallback;
 import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.remoting.RemotingClient;
-import org.apache.rocketmq.remoting.exception.RemotingCommandException;
-import org.apache.rocketmq.remoting.exception.RemotingConnectException;
-import org.apache.rocketmq.remoting.exception.RemotingException;
-import org.apache.rocketmq.remoting.exception.RemotingSendRequestException;
-import org.apache.rocketmq.remoting.exception.RemotingTimeoutException;
-import org.apache.rocketmq.remoting.exception.RemotingTooMuchRequestException;
+import org.apache.rocketmq.remoting.exception.*;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyRemotingClient;
 import org.apache.rocketmq.remoting.netty.ResponseFuture;
-import org.apache.rocketmq.remoting.protocol.BrokerSyncInfo;
-import org.apache.rocketmq.remoting.protocol.DataVersion;
-import org.apache.rocketmq.remoting.protocol.RemotingCommand;
-import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
-import org.apache.rocketmq.remoting.protocol.RequestCode;
-import org.apache.rocketmq.remoting.protocol.ResponseCode;
-import org.apache.rocketmq.remoting.protocol.body.BrokerMemberGroup;
-import org.apache.rocketmq.remoting.protocol.body.ClusterInfo;
-import org.apache.rocketmq.remoting.protocol.body.ConsumerOffsetSerializeWrapper;
-import org.apache.rocketmq.remoting.protocol.body.ElectMasterResponseBody;
-import org.apache.rocketmq.remoting.protocol.body.GetBrokerMemberGroupResponseBody;
-import org.apache.rocketmq.remoting.protocol.body.KVTable;
-import org.apache.rocketmq.remoting.protocol.body.LockBatchRequestBody;
-import org.apache.rocketmq.remoting.protocol.body.LockBatchResponseBody;
-import org.apache.rocketmq.remoting.protocol.body.MessageRequestModeSerializeWrapper;
-import org.apache.rocketmq.remoting.protocol.body.RegisterBrokerBody;
-import org.apache.rocketmq.remoting.protocol.body.SubscriptionGroupWrapper;
-import org.apache.rocketmq.remoting.protocol.body.SyncStateSet;
-import org.apache.rocketmq.remoting.protocol.body.TopicConfigAndMappingSerializeWrapper;
-import org.apache.rocketmq.remoting.protocol.body.TopicConfigSerializeWrapper;
-import org.apache.rocketmq.remoting.protocol.body.UnlockBatchRequestBody;
-import org.apache.rocketmq.remoting.protocol.header.ExchangeHAInfoRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.ExchangeHAInfoResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetBrokerMemberGroupRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetMaxOffsetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetMaxOffsetResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetMinOffsetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.GetMinOffsetResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.LockBatchMqRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.PullMessageRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.PullMessageResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.SendMessageRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.SendMessageRequestHeaderV2;
-import org.apache.rocketmq.remoting.protocol.header.SendMessageResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.UnlockBatchMqRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.AlterSyncStateSetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.ElectMasterRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.ElectMasterResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.GetMetaDataResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.ApplyBrokerIdRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.ApplyBrokerIdResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.GetNextBrokerIdRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.GetNextBrokerIdResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.RegisterBrokerToControllerRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.controller.register.RegisterBrokerToControllerResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.BrokerHeartbeatRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.GetRouteInfoRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.QueryDataVersionRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.QueryDataVersionResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.RegisterBrokerRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.RegisterBrokerResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.RegisterTopicRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.UnRegisterBrokerRequestHeader;
+import org.apache.rocketmq.remoting.protocol.*;
+import org.apache.rocketmq.remoting.protocol.body.*;
+import org.apache.rocketmq.remoting.protocol.header.*;
+import org.apache.rocketmq.remoting.protocol.header.controller.*;
+import org.apache.rocketmq.remoting.protocol.header.controller.register.*;
+import org.apache.rocketmq.remoting.protocol.header.namesrv.*;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import org.apache.rocketmq.remoting.protocol.namesrv.RegisterBrokerResult;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
@@ -145,9 +49,20 @@ import org.apache.rocketmq.remoting.rpchook.DynamicalExtFieldRPCHook;
 import org.apache.rocketmq.store.timer.TimerCheckpoint;
 import org.apache.rocketmq.store.timer.TimerMetrics;
 
+import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.*;
+
 import static org.apache.rocketmq.remoting.protocol.RemotingSysResponseCode.SUCCESS;
 import static org.apache.rocketmq.remoting.protocol.ResponseCode.CONTROLLER_MASTER_STILL_EXIST;
 
+@Getter
+@Setter
 public class BrokerOuterAPI {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final RemotingClient remotingClient;
@@ -250,9 +165,10 @@ public class BrokerOuterAPI {
         return syncBrokerMemberGroup(clusterName, brokerName, false);
     }
 
-    public BrokerMemberGroup syncBrokerMemberGroup(String clusterName, String brokerName,
-        boolean isCompatibleWithOldNameSrv)
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
+    /**
+     * 同步broker成员组
+     */
+    public BrokerMemberGroup syncBrokerMemberGroup(String clusterName, String brokerName, boolean isCompatibleWithOldNameSrv) throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
         if (isCompatibleWithOldNameSrv) {
             return getBrokerMemberGroupCompatible(clusterName, brokerName);
         } else {
@@ -260,34 +176,27 @@ public class BrokerOuterAPI {
         }
     }
 
-    public BrokerMemberGroup getBrokerMemberGroup(String clusterName, String brokerName)
-        throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
+    /**
+     * 同步获取broker成员组
+     *
+     * @param clusterName 集群名称
+     * @param brokerName  broker名称
+     */
+    public BrokerMemberGroup getBrokerMemberGroup(String clusterName, String brokerName) throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
         BrokerMemberGroup brokerMemberGroup = new BrokerMemberGroup(clusterName, brokerName);
-
         GetBrokerMemberGroupRequestHeader requestHeader = new GetBrokerMemberGroupRequestHeader();
         requestHeader.setClusterName(clusterName);
         requestHeader.setBrokerName(brokerName);
-
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_BROKER_MEMBER_GROUP, requestHeader);
-
-        RemotingCommand response = null;
-        response = this.remotingClient.invokeSync(null, request, 3000);
+        RemotingCommand response = this.remotingClient.invokeSync(null, request, 3000);
         assert response != null;
-
-        switch (response.getCode()) {
-            case ResponseCode.SUCCESS: {
-                byte[] body = response.getBody();
-                if (body != null) {
-                    GetBrokerMemberGroupResponseBody brokerMemberGroupResponseBody =
-                        GetBrokerMemberGroupResponseBody.decode(body, GetBrokerMemberGroupResponseBody.class);
-
-                    return brokerMemberGroupResponseBody.getBrokerMemberGroup();
-                }
+        if (response.getCode() == SUCCESS) {
+            byte[] body = response.getBody();
+            if (body != null) {
+                GetBrokerMemberGroupResponseBody brokerMemberGroupResponseBody = GetBrokerMemberGroupResponseBody.decode(body, GetBrokerMemberGroupResponseBody.class);
+                return brokerMemberGroupResponseBody.getBrokerMemberGroup();
             }
-            default:
-                break;
         }
-
         return brokerMemberGroup;
     }
 
@@ -362,26 +271,29 @@ public class BrokerOuterAPI {
         }
     }
 
-    public void sendHeartbeat(final String clusterName,
-        final String brokerAddr,
-        final String brokerName,
-        final Long brokerId,
-        final int timeoutMills,
-        final boolean isInBrokerContainer) {
+    /**
+     * 发送心跳检测
+     *
+     * @param clusterName         集群名称
+     * @param brokerAddr          broker地址
+     * @param brokerName          broker名称
+     * @param brokerId            brokerId
+     * @param timeoutMills        超时时间
+     * @param isInBrokerContainer ""
+     */
+    public void sendHeartbeat(final String clusterName, final String brokerAddr, final String brokerName, final Long brokerId, final int timeoutMills, final boolean isInBrokerContainer) {
+        //获取可用的namespace地址
         List<String> nameServerAddressList = this.remotingClient.getAvailableNameSrvList();
-
         final BrokerHeartbeatRequestHeader requestHeader = new BrokerHeartbeatRequestHeader();
         requestHeader.setClusterName(clusterName);
         requestHeader.setBrokerAddr(brokerAddr);
         requestHeader.setBrokerName(brokerName);
-
-        if (nameServerAddressList != null && nameServerAddressList.size() > 0) {
+        if (nameServerAddressList != null && !nameServerAddressList.isEmpty()) {
             for (final String namesrvAddr : nameServerAddressList) {
                 brokerOuterExecutor.execute(new AbstractBrokerRunnable(new BrokerIdentity(clusterName, brokerName, brokerId, isInBrokerContainer)) {
                     @Override
                     public void run0() {
                         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.BROKER_HEARTBEAT, requestHeader);
-
                         try {
                             BrokerOuterAPI.this.remotingClient.invokeOneway(namesrvAddr, request, timeoutMills);
                         } catch (Exception e) {
@@ -452,54 +364,27 @@ public class BrokerOuterAPI {
         final boolean compressed,
         final BrokerIdentity brokerIdentity) {
         return registerBrokerAll(clusterName,
-            brokerAddr,
-            brokerName,
-            brokerId,
-            haServerAddr,
-            topicConfigWrapper,
-            filterServerList,
-            oneway, timeoutMills,
-            enableActingMaster,
-            compressed,
-            null,
-            brokerIdentity);
+                brokerAddr, brokerName, brokerId, haServerAddr, topicConfigWrapper, filterServerList, oneway, timeoutMills, enableActingMaster, compressed, null, brokerIdentity);
     }
 
     /**
-     * Considering compression brings much CPU overhead to name server, stream API will not support compression and
-     * compression feature is deprecated.
-     *
-     * @param clusterName
-     * @param brokerAddr
-     * @param brokerName
-     * @param brokerId
-     * @param haServerAddr
-     * @param topicConfigWrapper
-     * @param filterServerList
-     * @param oneway
-     * @param timeoutMills
-     * @param compressed         default false
-     * @return
+     * 注册broker
+     * @param clusterName 集群名称
+     * @param brokerAddr broker地址
+     * @param brokerName broker名称
+     * @param brokerId brokerId
+     * @param haServerAddr "“
+     * @param topicConfigWrapper 主题配置信息
+     * @param filterServerList 过滤服务列表
+     * @param oneway 是否单向发送
+     * @param timeoutMills 超时时间
+     * @param compressed       是否压缩
+     * @return 注册结果
      */
-    public List<RegisterBrokerResult> registerBrokerAll(
-        final String clusterName,
-        final String brokerAddr,
-        final String brokerName,
-        final long brokerId,
-        final String haServerAddr,
-        final TopicConfigSerializeWrapper topicConfigWrapper,
-        final List<String> filterServerList,
-        final boolean oneway,
-        final int timeoutMills,
-        final boolean enableActingMaster,
-        final boolean compressed,
-        final Long heartbeatTimeoutMillis,
-        final BrokerIdentity brokerIdentity) {
-
+    public List<RegisterBrokerResult> registerBrokerAll(final String clusterName, final String brokerAddr, final String brokerName, final long brokerId, final String haServerAddr, final TopicConfigSerializeWrapper topicConfigWrapper, final List<String> filterServerList, final boolean oneway, final int timeoutMills, final boolean enableActingMaster, final boolean compressed, final Long heartbeatTimeoutMillis, final BrokerIdentity brokerIdentity) {
         final List<RegisterBrokerResult> registerBrokerResultList = new CopyOnWriteArrayList<>();
         List<String> nameServerAddressList = this.remotingClient.getAvailableNameSrvList();
-        if (nameServerAddressList != null && nameServerAddressList.size() > 0) {
-
+        if (nameServerAddressList != null && !nameServerAddressList.isEmpty()) {
             final RegisterBrokerRequestHeader requestHeader = new RegisterBrokerRequestHeader();
             requestHeader.setBrokerAddr(brokerAddr);
             requestHeader.setBrokerId(brokerId);
@@ -511,13 +396,13 @@ public class BrokerOuterAPI {
             if (heartbeatTimeoutMillis != null) {
                 requestHeader.setHeartbeatTimeoutMillis(heartbeatTimeoutMillis);
             }
-
             RegisterBrokerBody requestBody = new RegisterBrokerBody();
             requestBody.setTopicConfigSerializeWrapper(TopicConfigAndMappingSerializeWrapper.from(topicConfigWrapper));
             requestBody.setFilterServerList(filterServerList);
             final byte[] body = requestBody.encode(compressed);
             final int bodyCrc32 = UtilAll.crc32(body);
             requestHeader.setBodyCrc32(bodyCrc32);
+            //countDownLatch，每往一个namesrv发送注册成功，减1
             final CountDownLatch countDownLatch = new CountDownLatch(nameServerAddressList.size());
             for (final String namesrvAddr : nameServerAddressList) {
                 brokerOuterExecutor.execute(new AbstractBrokerRunnable(brokerIdentity) {
@@ -528,11 +413,11 @@ public class BrokerOuterAPI {
                             if (result != null) {
                                 registerBrokerResultList.add(result);
                             }
-
                             LOGGER.info("Registering current broker to name server completed. TargetHost={}", namesrvAddr);
                         } catch (Exception e) {
                             LOGGER.error("Failed to register current broker to name server. TargetHost={}", namesrvAddr, e);
                         } finally {
+                            //每完成一个namesrv注册，将锁自减
                             countDownLatch.countDown();
                         }
                     }
@@ -546,21 +431,22 @@ public class BrokerOuterAPI {
             } catch (InterruptedException ignore) {
             }
         }
-
         return registerBrokerResultList;
     }
 
-    private RegisterBrokerResult registerBroker(
-        final String namesrvAddr,
-        final boolean oneway,
-        final int timeoutMills,
-        final RegisterBrokerRequestHeader requestHeader,
-        final byte[] body
-    ) throws RemotingCommandException, MQBrokerException, RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException,
-        InterruptedException {
+    /**
+     * 往namesrv注册broker
+     *
+     * @param namesrvAddr   namesrv地址
+     * @param oneway        是否单向发送
+     * @param timeoutMills  超时时间
+     * @param requestHeader 注册broker请求头
+     * @param body          请求体
+     * @return broker注册结果
+     */
+    private RegisterBrokerResult registerBroker(final String namesrvAddr, final boolean oneway, final int timeoutMills, final RegisterBrokerRequestHeader requestHeader, final byte[] body) throws RemotingCommandException, MQBrokerException, RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.REGISTER_BROKER, requestHeader);
         request.setBody(body);
-
         if (oneway) {
             try {
                 this.remotingClient.invokeOneway(namesrvAddr, request, timeoutMills);
@@ -570,21 +456,18 @@ public class BrokerOuterAPI {
             return null;
         }
 
+        //非单向发送情况下，同步发送请求
         RemotingCommand response = this.remotingClient.invokeSync(namesrvAddr, request, timeoutMills);
         assert response != null;
-        switch (response.getCode()) {
-            case ResponseCode.SUCCESS: {
-                RegisterBrokerResponseHeader responseHeader = response.decodeCommandCustomHeader(RegisterBrokerResponseHeader.class);
-                RegisterBrokerResult result = new RegisterBrokerResult();
-                result.setMasterAddr(responseHeader.getMasterAddr());
-                result.setHaServerAddr(responseHeader.getHaServerAddr());
-                if (response.getBody() != null) {
-                    result.setKvTable(KVTable.decode(response.getBody(), KVTable.class));
-                }
-                return result;
+        if (response.getCode() == SUCCESS) {
+            RegisterBrokerResponseHeader responseHeader = response.decodeCommandCustomHeader(RegisterBrokerResponseHeader.class);
+            RegisterBrokerResult result = new RegisterBrokerResult();
+            result.setMasterAddr(responseHeader.getMasterAddr());
+            result.setHaServerAddr(responseHeader.getHaServerAddr());
+            if (response.getBody() != null) {
+                result.setKvTable(KVTable.decode(response.getBody(), KVTable.class));
             }
-            default:
-                break;
+            return result;
         }
 
         throw new MQBrokerException(response.getCode(), response.getRemark(), requestHeader == null ? null : requestHeader.getBrokerAddr());
@@ -1170,37 +1053,25 @@ public class BrokerOuterAPI {
         throw new MQBrokerException(response.getCode(), response.getRemark());
     }
 
+    /**
+     * 获取broker集群信息
+     */
     public ClusterInfo getBrokerClusterInfo() throws InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException, MQBrokerException {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_BROKER_CLUSTER_INFO, null);
         RemotingCommand response = this.remotingClient.invokeSync(null, request, 3_000);
         assert response != null;
-        switch (response.getCode()) {
-            case ResponseCode.SUCCESS: {
-                return ClusterInfo.decode(response.getBody(), ClusterInfo.class);
-            }
-            default:
-                break;
+        if (response.getCode() == SUCCESS) {
+            return ClusterInfo.decode(response.getBody(), ClusterInfo.class);
         }
-
         throw new MQBrokerException(response.getCode(), response.getRemark());
     }
 
-    public void forwardRequest(String brokerAddr, RemotingCommand request, long timeoutMillis,
-        InvokeCallback invokeCallback) throws InterruptedException, RemotingSendRequestException, RemotingTimeoutException, RemotingTooMuchRequestException, RemotingConnectException {
-        this.remotingClient.invokeAsync(brokerAddr, request, timeoutMillis, invokeCallback);
-    }
-
+    /**
+     * 刷新元数据
+     */
     public void refreshMetadata() throws Exception {
         ClusterInfo brokerClusterInfo = getBrokerClusterInfo();
         clientMetadata.refreshClusterInfo(brokerClusterInfo);
-    }
-
-    public ClientMetadata getClientMetadata() {
-        return clientMetadata;
-    }
-
-    public RpcClient getRpcClient() {
-        return rpcClient;
     }
 
     public MessageRequestModeSerializeWrapper getAllMessageRequestMode(

@@ -723,18 +723,6 @@ public class BatchConsumeQueue implements ConsumeQueueInterface {
         return targetBcq;
     }
 
-    /**
-     * Find the message whose timestamp is the smallest, greater than or equal to the given time.
-     *
-     * @param timestamp
-     * @return
-     */
-    @Deprecated
-    @Override
-    public long getOffsetInQueueByTime(final long timestamp) {
-        return getOffsetInQueueByTime(timestamp, BoundaryType.LOWER);
-    }
-
     @Override
     public long getOffsetInQueueByTime(long timestamp, BoundaryType boundaryType) {
         MappedFile targetBcq;

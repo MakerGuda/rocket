@@ -1,20 +1,14 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.remoting.rpc;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.rocketmq.common.MixAll;
+import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.remoting.protocol.body.ClusterInfo;
+import org.apache.rocketmq.remoting.protocol.route.BrokerData;
+import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
+import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingInfo;
+import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,26 +16,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import org.apache.rocketmq.common.MixAll;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.message.MessageQueue;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.remoting.protocol.body.ClusterInfo;
-import org.apache.rocketmq.remoting.protocol.route.BrokerData;
-import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
-import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingInfo;
-import org.apache.rocketmq.remoting.protocol.statictopic.TopicQueueMappingUtils;
 
+@Getter
+@Setter
 public class ClientMetadata {
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
 
-    private final ConcurrentMap<String/* Topic */, TopicRouteData> topicRouteTable = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String/* Topic */, ConcurrentMap<MessageQueue, String/*brokerName*/>> topicEndPointsTable = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String/* Broker Name */, HashMap<Long/* brokerId */, String/* address */>> brokerAddrTable =
-        new ConcurrentHashMap<>();
-    private final ConcurrentMap<String/* Broker Name */, HashMap<String/* address */, Integer>> brokerVersionTable =
-        new ConcurrentHashMap<>();
+    /**
+     * 主题路由信息 key: topic
+     */
+    private final ConcurrentMap<String, TopicRouteData> topicRouteTable = new ConcurrentHashMap<>();
+
+    /**
+     * key: topicName  value: {key: messageQueue value: brokerName}
+     */
+    private final ConcurrentMap<String, ConcurrentMap<MessageQueue, String>> topicEndPointsTable = new ConcurrentHashMap<>();
+
+    /**
+     * key: brokerName value: {key:brokerId value:address}
+     */
+    private final ConcurrentMap<String, HashMap<Long, String>> brokerAddrTable = new ConcurrentHashMap<>();
+
+    /**
+     * key: brokerName value: {key: address value: version}
+     */
+    private final ConcurrentMap<String, HashMap<String, Integer>> brokerVersionTable = new ConcurrentHashMap<>();
 
     public void freshTopicRoute(String topic, TopicRouteData topicRouteData) {
         if (topic == null
@@ -59,24 +57,24 @@ public class ClientMetadata {
         }
         {
             ConcurrentMap<MessageQueue, String> mqEndPoints = topicRouteData2EndpointsForStaticTopic(topic, topicRouteData);
-            if (mqEndPoints != null
-                    && !mqEndPoints.isEmpty()) {
+            if (!mqEndPoints.isEmpty()) {
                 topicEndPointsTable.put(topic, mqEndPoints);
             }
         }
     }
 
     public String getBrokerNameFromMessageQueue(final MessageQueue mq) {
-        if (topicEndPointsTable.get(mq.getTopic()) != null
-                && !topicEndPointsTable.get(mq.getTopic()).isEmpty()) {
+        if (topicEndPointsTable.get(mq.getTopic()) != null && !topicEndPointsTable.get(mq.getTopic()).isEmpty()) {
             return topicEndPointsTable.get(mq.getTopic()).get(mq);
         }
         return mq.getBrokerName();
     }
 
+    /**
+     * 刷新集群信息
+     */
     public void refreshClusterInfo(ClusterInfo clusterInfo) {
-        if (clusterInfo == null
-            || clusterInfo.getBrokerAddrTable() == null) {
+        if (clusterInfo == null || clusterInfo.getBrokerAddrTable() == null) {
             return;
         }
         for (Map.Entry<String, BrokerData> entry : clusterInfo.getBrokerAddrTable().entrySet()) {
@@ -91,17 +89,11 @@ public class ClientMetadata {
         return brokerAddrTable.get(brokerName).get(MixAll.MASTER_ID);
     }
 
-    public ConcurrentMap<String, HashMap<Long, String>> getBrokerAddrTable() {
-        return brokerAddrTable;
-    }
-
     public static ConcurrentMap<MessageQueue, String> topicRouteData2EndpointsForStaticTopic(final String topic, final TopicRouteData route) {
-        if (route.getTopicQueueMappingByBroker() == null
-                || route.getTopicQueueMappingByBroker().isEmpty()) {
+        if (route.getTopicQueueMappingByBroker() == null || route.getTopicQueueMappingByBroker().isEmpty()) {
             return new ConcurrentHashMap<>();
         }
         ConcurrentMap<MessageQueue, String> mqEndPointsOfBroker = new ConcurrentHashMap<>();
-
         Map<String, Map<String, TopicQueueMappingInfo>> mappingInfosByScope = new HashMap<>();
         for (Map.Entry<String, TopicQueueMappingInfo> entry : route.getTopicQueueMappingByBroker().entrySet()) {
             TopicQueueMappingInfo info = entry.getValue();

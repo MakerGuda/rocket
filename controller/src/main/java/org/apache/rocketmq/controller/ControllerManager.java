@@ -1,32 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.controller;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.ControllerConfig;
 import org.apache.rocketmq.common.Pair;
@@ -37,7 +12,6 @@ import org.apache.rocketmq.controller.elect.impl.DefaultElectPolicy;
 import org.apache.rocketmq.controller.impl.DLedgerController;
 import org.apache.rocketmq.controller.impl.JRaftController;
 import org.apache.rocketmq.controller.impl.heartbeat.RaftBrokerHeartBeatManager;
-import org.apache.rocketmq.controller.metrics.ControllerMetricsManager;
 import org.apache.rocketmq.controller.processor.ControllerRequestProcessor;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
@@ -58,21 +32,38 @@ import org.apache.rocketmq.remoting.protocol.header.controller.ElectMasterReques
 import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoResponseHeader;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.*;
+
+@Getter
+@Setter
 public class ControllerManager {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CONTROLLER_LOGGER_NAME);
 
     private final ControllerConfig controllerConfig;
+
     private final NettyServerConfig nettyServerConfig;
+
     private final NettyClientConfig nettyClientConfig;
+
     private final BrokerHousekeepingService brokerHousekeepingService;
+
     private final Configuration configuration;
+
     private final RemotingClient remotingClient;
+
     private Controller controller;
+
     private final BrokerHeartbeatManager heartbeatManager;
+
     private ExecutorService controllerRequestExecutor;
+
     private BlockingQueue<Runnable> controllerRequestThreadPoolQueue;
+
     private final NotifyService notifyService;
-    private ControllerMetricsManager controllerMetricsManager;
 
     public ControllerManager(ControllerConfig controllerConfig, NettyServerConfig nettyServerConfig,
         NettyClientConfig nettyClientConfig) {
@@ -89,21 +80,15 @@ public class ControllerManager {
 
     public boolean initialize() {
         this.controllerRequestThreadPoolQueue = new LinkedBlockingQueue<>(this.controllerConfig.getControllerRequestThreadPoolQueueCapacity());
-        this.controllerRequestExecutor = ThreadUtils.newThreadPoolExecutor(
-            this.controllerConfig.getControllerThreadPoolNums(),
-            this.controllerConfig.getControllerThreadPoolNums(),
-            1000 * 60,
-            TimeUnit.MILLISECONDS,
-            this.controllerRequestThreadPoolQueue,
-            new ThreadFactoryImpl("ControllerRequestExecutorThread_"));
+        this.controllerRequestExecutor = ThreadUtils.newThreadPoolExecutor(this.controllerConfig.getControllerThreadPoolNums(), this.controllerConfig.getControllerThreadPoolNums(), 1000 * 60, TimeUnit.MILLISECONDS, this.controllerRequestThreadPoolQueue, new ThreadFactoryImpl("ControllerRequestExecutorThread_"));
 
         this.notifyService.initialize();
 
         if (controllerConfig.getControllerType().equals(ControllerConfig.JRAFT_CONTROLLER)) {
-            if (StringUtils.isEmpty(this.controllerConfig.getJraftConfig().getjRaftInitConf())) {
+            if (StringUtils.isEmpty(this.controllerConfig.getJraftConfig().getJRaftInitConf())) {
                 throw new IllegalArgumentException("Attribute value jRaftInitConf of ControllerConfig is null or empty");
             }
-            if (StringUtils.isEmpty(this.controllerConfig.getJraftConfig().getjRaftServerId())) {
+            if (StringUtils.isEmpty(this.controllerConfig.getJraftConfig().getJRaftServerId())) {
                 throw new IllegalArgumentException("Attribute value jRaftServerId of ControllerConfig is null or empty");
             }
             try {
@@ -131,7 +116,6 @@ public class ControllerManager {
         this.heartbeatManager.registerBrokerLifecycleListener(this::onBrokerInactive);
         this.controller.registerBrokerLifecycleListener(this::onBrokerInactive);
         registerProcessor();
-        this.controllerMetricsManager = ControllerMetricsManager.getInstance(this);
         return true;
     }
 
@@ -276,34 +260,6 @@ public class ControllerManager {
         this.notifyService.shutdown();
         this.controller.shutdown();
         this.remotingClient.shutdown();
-    }
-
-    public BrokerHeartbeatManager getHeartbeatManager() {
-        return heartbeatManager;
-    }
-
-    public ControllerConfig getControllerConfig() {
-        return controllerConfig;
-    }
-
-    public Controller getController() {
-        return controller;
-    }
-
-    public NettyServerConfig getNettyServerConfig() {
-        return nettyServerConfig;
-    }
-
-    public NettyClientConfig getNettyClientConfig() {
-        return nettyClientConfig;
-    }
-
-    public BrokerHousekeepingService getBrokerHousekeepingService() {
-        return brokerHousekeepingService;
-    }
-
-    public Configuration getConfiguration() {
-        return configuration;
     }
 
     class NotifyService {

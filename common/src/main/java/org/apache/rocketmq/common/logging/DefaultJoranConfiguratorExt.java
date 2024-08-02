@@ -1,29 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.common.logging;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.logging.ch.qos.logback.classic.ClassicConstants;
 import org.apache.rocketmq.logging.ch.qos.logback.classic.LoggerContext;
 import org.apache.rocketmq.logging.ch.qos.logback.classic.util.DefaultJoranConfigurator;
@@ -34,16 +12,30 @@ import org.apache.rocketmq.logging.ch.qos.logback.core.status.StatusManager;
 import org.apache.rocketmq.logging.ch.qos.logback.core.util.Loader;
 import org.apache.rocketmq.logging.ch.qos.logback.core.util.OptionHelper;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+@Getter
+@Setter
 public class DefaultJoranConfiguratorExt extends DefaultJoranConfigurator {
 
     final public static String TEST_AUTOCONFIG_FILE = "rmq.logback-test.xml";
+
     final public static String AUTOCONFIG_FILE = "rmq.logback.xml";
 
     final public static String PROXY_AUTOCONFIG_FILE = "rmq.proxy.logback.xml";
+
     final public static String BROKER_AUTOCONFIG_FILE = "rmq.broker.logback.xml";
 
     final public static String NAMESRV_AUTOCONFIG_FILE = "rmq.namesrv.logback.xml";
+
     final public static String CONTROLLER_AUTOCONFIG_FILE = "rmq.controller.logback.xml";
+
     final public static String TOOLS_AUTOCONFIG_FILE = "rmq.tools.logback.xml";
 
     final public static String CLIENT_AUTOCONFIG_FILE = "rmq.client.logback.xml";
@@ -68,11 +60,9 @@ public class DefaultJoranConfiguratorExt extends DefaultJoranConfigurator {
         if (url != null) {
             try {
                 configureByResource(url);
-            } catch (JoranException e) {
-                e.printStackTrace();
+            } catch (JoranException ignored) {
             }
         }
-        // skip other configurator on purpose.
         return ExecutionStatus.DO_NOT_INVOKE_NEXT_IF_ANY;
     }
 
@@ -97,7 +87,6 @@ public class DefaultJoranConfiguratorExt extends DefaultJoranConfigurator {
         if (url != null) {
             return url;
         }
-
         for (String configFile : configFiles) {
             url = getResource(configFile, myClassLoader, updateStatus);
             if (url != null) {
@@ -115,8 +104,6 @@ public class DefaultJoranConfiguratorExt extends DefaultJoranConfigurator {
                 result = new URL(logbackConfigFile);
                 return result;
             } catch (MalformedURLException e) {
-                // so, resource is not a URL:
-                // attempt to get the resource from the class path
                 result = Loader.getResource(logbackConfigFile, classLoader);
                 if (result != null) {
                     return result;
@@ -151,7 +138,7 @@ public class DefaultJoranConfiguratorExt extends DefaultJoranConfigurator {
         if (url == null) {
             sm.add(new InfoStatus("Could NOT find resource [" + resourceName + "]", context));
         } else {
-            sm.add(new InfoStatus("Found resource [" + resourceName + "] at [" + url.toString() + "]", context));
+            sm.add(new InfoStatus("Found resource [" + resourceName + "] at [" + url + "]", context));
             multiplicityWarning(resourceName, classLoader);
         }
     }
@@ -170,4 +157,5 @@ public class DefaultJoranConfiguratorExt extends DefaultJoranConfigurator {
             }
         }
     }
+
 }

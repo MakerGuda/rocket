@@ -1,41 +1,40 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.client.latency;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.impl.producer.TopicPublishInfo;
 import org.apache.rocketmq.client.impl.producer.TopicPublishInfo.QueueFilter;
 import org.apache.rocketmq.common.message.MessageQueue;
 
+@Getter
+@Setter
 public class MQFaultStrategy {
+
     private LatencyFaultTolerance<String> latencyFaultTolerance;
+
     private volatile boolean sendLatencyFaultEnable;
+
     private volatile boolean startDetectorEnable;
+
     private long[] latencyMax = {50L, 100L, 550L, 1800L, 3000L, 5000L, 15000L};
+
+    /**
+     * 不可用时长
+     */
     private long[] notAvailableDuration = {0L, 0L, 2000L, 5000L, 6000L, 10000L, 30000L};
 
+    @Setter
     public static class BrokerFilter implements QueueFilter {
+
+        /**
+         * 最后一次发送消息的broker名称
+         */
         private String lastBrokerName;
 
-        public void setLastBrokerName(String lastBrokerName) {
-            this.lastBrokerName = lastBrokerName;
-        }
-
+        /**
+         * 当前发送的queue所在的broker与上次发送的brokerName不相同时返回true，表示换一个broker发送
+         */
         @Override public boolean filter(MessageQueue mq) {
             if (lastBrokerName != null) {
                 return !mq.getBrokerName().equals(lastBrokerName);
@@ -44,24 +43,25 @@ public class MQFaultStrategy {
         }
     }
 
-    private ThreadLocal<BrokerFilter> threadBrokerFilter = new ThreadLocal<BrokerFilter>() {
-        @Override protected BrokerFilter initialValue() {
-            return new BrokerFilter();
-        }
-    };
+    private ThreadLocal<BrokerFilter> threadBrokerFilter = ThreadLocal.withInitial(BrokerFilter::new);
 
+    /**
+     * 判断当前mq所在的broker是否可达
+     */
     private QueueFilter reachableFilter = new QueueFilter() {
         @Override public boolean filter(MessageQueue mq) {
             return latencyFaultTolerance.isReachable(mq.getBrokerName());
         }
     };
 
+    /**
+     * 判断当前mq所在的broker是否可用
+     */
     private QueueFilter availableFilter = new QueueFilter() {
         @Override public boolean filter(MessageQueue mq) {
             return latencyFaultTolerance.isAvailable(mq.getBrokerName());
         }
     };
-
 
     public MQFaultStrategy(ClientConfig cc, Resolver fetcher, ServiceDetector serviceDetector) {
         this.latencyFaultTolerance = new LatencyFaultToleranceImpl(fetcher, serviceDetector);
@@ -71,70 +71,38 @@ public class MQFaultStrategy {
         this.setSendLatencyFaultEnable(cc.isSendLatencyEnable());
     }
 
-    // For unit test.
-    public MQFaultStrategy(ClientConfig cc, LatencyFaultTolerance<String> tolerance) {
-        this.setStartDetectorEnable(cc.isStartDetectorEnable());
-        this.setSendLatencyFaultEnable(cc.isSendLatencyEnable());
-        this.latencyFaultTolerance = tolerance;
-        this.latencyFaultTolerance.setDetectInterval(cc.getDetectInterval());
-        this.latencyFaultTolerance.setDetectTimeout(cc.getDetectTimeout());
-    }
-
-
-    public long[] getNotAvailableDuration() {
-        return notAvailableDuration;
-    }
-
-    public QueueFilter getAvailableFilter() {
-        return availableFilter;
-    }
-
-    public QueueFilter getReachableFilter() {
-        return reachableFilter;
-    }
-
-    public ThreadLocal<BrokerFilter> getThreadBrokerFilter() {
-        return threadBrokerFilter;
-    }
-
-    public void setNotAvailableDuration(final long[] notAvailableDuration) {
-        this.notAvailableDuration = notAvailableDuration;
-    }
-
-    public long[] getLatencyMax() {
-        return latencyMax;
-    }
-
-    public void setLatencyMax(final long[] latencyMax) {
-        this.latencyMax = latencyMax;
-    }
-
-    public boolean isSendLatencyFaultEnable() {
-        return sendLatencyFaultEnable;
-    }
-
-    public void setSendLatencyFaultEnable(final boolean sendLatencyFaultEnable) {
-        this.sendLatencyFaultEnable = sendLatencyFaultEnable;
-    }
-
-    public boolean isStartDetectorEnable() {
-        return startDetectorEnable;
-    }
-
+    /**
+     * 设置嗅探状态
+     */
     public void setStartDetectorEnable(boolean startDetectorEnable) {
         this.startDetectorEnable = startDetectorEnable;
         this.latencyFaultTolerance.setStartDetectorEnable(startDetectorEnable);
     }
 
+    /**
+     * 启动嗅探
+     */
     public void startDetector() {
         this.latencyFaultTolerance.startDetector();
     }
 
+    /**
+     * 关闭嗅探
+     */
     public void shutdown() {
         this.latencyFaultTolerance.shutdown();
     }
 
+    /**
+     * 选择一个mq
+     *
+     * @param tpInfo         主题路由信息
+     * @param lastBrokerName 最后一次选择的brokerName
+     * @param resetIndex     是否重置索引
+     * @return 选中的mq
+     */
     public MessageQueue selectOneMessageQueue(final TopicPublishInfo tpInfo, final String lastBrokerName, final boolean resetIndex) {
+        //获取当前的broker过滤器
         BrokerFilter brokerFilter = threadBrokerFilter.get();
         brokerFilter.setLastBrokerName(lastBrokerName);
         if (this.sendLatencyFaultEnable) {
@@ -145,15 +113,12 @@ public class MQFaultStrategy {
             if (mq != null) {
                 return mq;
             }
-
             mq = tpInfo.selectOneMessageQueue(reachableFilter, brokerFilter);
             if (mq != null) {
                 return mq;
             }
-
             return tpInfo.selectOneMessageQueue();
         }
-
         MessageQueue mq = tpInfo.selectOneMessageQueue(brokerFilter);
         if (mq != null) {
             return mq;
@@ -161,21 +126,26 @@ public class MQFaultStrategy {
         return tpInfo.selectOneMessageQueue();
     }
 
-    public void updateFaultItem(final String brokerName, final long currentLatency, boolean isolation,
-                                final boolean reachable) {
+    /**
+     * 更新broer容错实体
+     */
+    public void updateFaultItem(final String brokerName, final long currentLatency, boolean isolation, final boolean reachable) {
         if (this.sendLatencyFaultEnable) {
             long duration = computeNotAvailableDuration(isolation ? 10000 : currentLatency);
             this.latencyFaultTolerance.updateFaultItem(brokerName, currentLatency, duration, reachable);
         }
     }
 
+    /**
+     * 计算不可用时长
+     */
     private long computeNotAvailableDuration(final long currentLatency) {
         for (int i = latencyMax.length - 1; i >= 0; i--) {
             if (currentLatency >= latencyMax[i]) {
                 return this.notAvailableDuration[i];
             }
         }
-
         return 0;
     }
+
 }

@@ -1,22 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.common.attribute;
 
 import com.google.common.base.Strings;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,13 +17,16 @@ public class AttributeParser {
 
     private static final String ATTR_DELETE_MINUS_SIGN = "-";
 
+    /**
+     * 将属性转换为map
+     */
     public static Map<String, String> parseToMap(String attributesModification) {
         if (Strings.isNullOrEmpty(attributesModification)) {
             return new HashMap<>();
         }
-
-        // format: +key1=value1,+key2=value2,-key3,+key4=value4
+        //format: +key1=value1,+key2=value2,-key3,+key4=value4
         Map<String, String> attributes = new HashMap<>();
+        //format: {"+key1=value1", "+key2=value2", "-key3", "+key4=value4"}
         String[] kvs = attributesModification.split(ATTR_ARRAY_SEPARATOR_COMMA);
         for (String kv : kvs) {
             String key;
@@ -65,14 +53,15 @@ public class AttributeParser {
         return attributes;
     }
 
+    /**
+     * 将属性转换为字符串
+     */
     public static String parseToString(Map<String, String> attributes) {
-        if (attributes == null || attributes.size() == 0) {
+        if (attributes == null || attributes.isEmpty()) {
             return "";
         }
-
         List<String> kvs = new ArrayList<>();
         for (Map.Entry<String, String> entry : attributes.entrySet()) {
-
             String value = entry.getValue();
             if (Strings.isNullOrEmpty(value)) {
                 kvs.add(entry.getKey());
@@ -82,4 +71,5 @@ public class AttributeParser {
         }
         return String.join(ATTR_ARRAY_SEPARATOR_COMMA, kvs);
     }
+
 }

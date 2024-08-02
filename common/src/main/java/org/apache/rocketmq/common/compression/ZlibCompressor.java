@@ -1,37 +1,22 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.common.compression;
+
+import org.apache.rocketmq.common.constant.LoggerName;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
-import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.logging.org.slf4j.Logger;
-import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
 public class ZlibCompressor implements Compressor {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
 
     @Override
     public byte[] compress(byte[] src, int level) throws IOException {
-        byte[] result = src;
+        byte[] result;
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(src.length);
         java.util.zip.Deflater defeater = new java.util.zip.Deflater(level);
         DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(byteArrayOutputStream, defeater);
@@ -48,21 +33,18 @@ public class ZlibCompressor implements Compressor {
                 byteArrayOutputStream.close();
             } catch (IOException ignored) {
             }
-
             defeater.end();
         }
-
         return result;
     }
 
     @Override
     public byte[] decompress(byte[] src) throws IOException {
-        byte[] result = src;
+        byte[] result;
         byte[] uncompressData = new byte[src.length];
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(src);
         InflaterInputStream inflaterInputStream = new InflaterInputStream(byteArrayInputStream);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(src.length);
-
         try {
             while (true) {
                 int len = inflaterInputStream.read(uncompressData, 0, uncompressData.length);
@@ -73,8 +55,6 @@ public class ZlibCompressor implements Compressor {
             }
             byteArrayOutputStream.flush();
             result = byteArrayOutputStream.toByteArray();
-        } catch (IOException e) {
-            throw e;
         } finally {
             try {
                 byteArrayInputStream.close();
@@ -92,7 +72,7 @@ public class ZlibCompressor implements Compressor {
                 log.error("Failed to close the stream", e);
             }
         }
-
         return result;
     }
+
 }

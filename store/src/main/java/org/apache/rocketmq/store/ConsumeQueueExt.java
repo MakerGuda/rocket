@@ -17,16 +17,18 @@
 
 package org.apache.rocketmq.store;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+import org.apache.rocketmq.store.logfile.MappedFile;
 
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.rocketmq.store.logfile.MappedFile;
 
 /**
  * Extend of consume queue, to store something not important,
@@ -37,6 +39,8 @@ import org.apache.rocketmq.store.logfile.MappedFile;
  * <li>3. Be careful, address returned is always less than 0.</li>
  * <li>4. Pls keep this file small.</li>
  */
+@Getter
+@Setter
 public class ConsumeQueueExt {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
 

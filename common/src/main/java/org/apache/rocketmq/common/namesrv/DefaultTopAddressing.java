@@ -1,28 +1,8 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.common.namesrv;
 
 import com.google.common.base.Strings;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -31,14 +11,23 @@ import org.apache.rocketmq.common.utils.HttpTinyClient;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.*;
+
+@Getter
+@Setter
 public class DefaultTopAddressing implements TopAddressing {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
 
     private String nsAddr;
+
     private String wsAddr;
+
     private String unitName;
+
     private Map<String, String> para;
+
     private List<TopAddressing> topAddressingList;
 
     public DefaultTopAddressing(final String wsAddr) {
@@ -51,25 +40,16 @@ public class DefaultTopAddressing implements TopAddressing {
         this.topAddressingList = loadCustomTopAddressing();
     }
 
-    public DefaultTopAddressing(final String unitName, final Map<String, String> para, final String wsAddr) {
-        this.wsAddr = wsAddr;
-        this.unitName = unitName;
-        this.para = para;
-        this.topAddressingList = loadCustomTopAddressing();
-    }
-
     private static String clearNewLine(final String str) {
         String newString = str.trim();
         int index = newString.indexOf("\r");
         if (index != -1) {
             return newString.substring(0, index);
         }
-
         index = newString.indexOf("\n");
         if (index != -1) {
             return newString.substring(0, index);
         }
-
         return newString;
     }
 
@@ -93,7 +73,6 @@ public class DefaultTopAddressing implements TopAddressing {
                 }
             }
         }
-        // Return result of default implementation
         return fetchNSAddr(true, 3000);
     }
 
@@ -109,7 +88,7 @@ public class DefaultTopAddressing implements TopAddressing {
     public final String fetchNSAddr(boolean verbose, long timeoutMills) {
         StringBuilder url = new StringBuilder(this.wsAddr);
         try {
-            if (null != para && para.size() > 0) {
+            if (null != para && !para.isEmpty()) {
                 if (!UtilAll.isBlank(this.unitName)) {
                     url.append("-").append(this.unitName).append("?nofix=1&");
                 }
@@ -126,7 +105,6 @@ public class DefaultTopAddressing implements TopAddressing {
                     url.append("-").append(this.unitName).append("?nofix=1");
                 }
             }
-
             HttpTinyClient.HttpResult result = HttpTinyClient.httpGet(url.toString(), null, null, "UTF-8", timeoutMills);
             if (200 == result.code) {
                 String responseStr = result.content;
@@ -143,22 +121,13 @@ public class DefaultTopAddressing implements TopAddressing {
                 LOGGER.error("fetch name server address exception", e);
             }
         }
-
         if (verbose) {
             String errorMsg =
                 "connect to " + url + " failed, maybe the domain name " + MixAll.getWSAddr() + " not bind in /etc/hosts";
             errorMsg += FAQUrl.suggestTodo(FAQUrl.NAME_SERVER_ADDR_NOT_EXIST_URL);
-
             LOGGER.warn(errorMsg);
         }
         return null;
     }
 
-    public String getNsAddr() {
-        return nsAddr;
-    }
-
-    public void setNsAddr(String nsAddr) {
-        this.nsAddr = nsAddr;
-    }
 }

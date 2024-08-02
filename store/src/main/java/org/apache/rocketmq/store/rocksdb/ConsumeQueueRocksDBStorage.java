@@ -117,7 +117,7 @@ public class ConsumeQueueRocksDBStorage extends AbstractRocksDBStorage {
 
     public void manualCompaction(final long minPhyOffset) {
         try {
-            manualCompaction(minPhyOffset, this.compactRangeOptions);
+            manualCompaction(this.compactRangeOptions);
         } catch (Exception e) {
             LOGGER.error("manualCompaction Failed. minPhyOffset: {}", minPhyOffset, e);
         }

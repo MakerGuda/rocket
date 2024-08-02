@@ -1,316 +1,197 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.store.logfile;
+
+import org.apache.rocketmq.common.message.MessageExtBatch;
+import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.store.*;
+import org.apache.rocketmq.store.config.FlushDiskType;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.Iterator;
-import org.apache.rocketmq.common.message.MessageExtBatch;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
-import org.apache.rocketmq.store.AppendMessageCallback;
-import org.apache.rocketmq.store.AppendMessageResult;
-import org.apache.rocketmq.store.CompactionAppendMsgCallback;
-import org.apache.rocketmq.store.PutMessageContext;
-import org.apache.rocketmq.store.SelectMappedBufferResult;
-import org.apache.rocketmq.store.TransientStorePool;
-import org.apache.rocketmq.store.config.FlushDiskType;
 
 public interface MappedFile {
+
     /**
-     * Returns the file name of the {@code MappedFile}.
-     *
-     * @return the file name
+     * 返回文件名称
      */
     String getFileName();
 
     /**
-     * Change the file name of the {@code MappedFile}.
-     *
-     * @param fileName the new file name
+     * 重命名
      */
-    boolean renameTo(String fileName);
+    void renameTo(String fileName);
 
     /**
-     * Returns the file size of the {@code MappedFile}.
-     *
-     * @return the file size
+     * 返回mappedFile文件大小
      */
     int getFileSize();
 
     /**
-     * Returns the {@code FileChannel} behind the {@code MappedFile}.
-     *
-     * @return the file channel
-     */
-    FileChannel getFileChannel();
-
-    /**
-     * Returns true if this {@code MappedFile} is full and no new messages can be added.
-     *
-     * @return true if the file is full
+     * 判断当前mappedFile文件是否已满， 消息无法被追加
      */
     boolean isFull();
 
     /**
-     * Returns true if this {@code MappedFile} is available.
-     * <p>
-     * The mapped file will be not available if it's shutdown or destroyed.
-     *
-     * @return true if the file is available
+     * 判断当前mappedFile是否可用， 被关闭或销毁时不可用
      */
     boolean isAvailable();
 
     /**
-     * Appends a message object to the current {@code MappedFile} with a specific call back.
-     *
-     * @param message a message to append
-     * @param messageCallback the specific call back to execute the real append action
-     * @param putMessageContext
-     * @return the append result
+     * 往mappedFile追加消息
      */
     AppendMessageResult appendMessage(MessageExtBrokerInner message, AppendMessageCallback messageCallback, PutMessageContext putMessageContext);
 
     /**
-     * Appends a batch message object to the current {@code MappedFile} with a specific call back.
-     *
-     * @param message a message to append
-     * @param messageCallback the specific call back to execute the real append action
-     * @param putMessageContext
-     * @return the append result
+     * 往mappedFile追加批量消息
      */
     AppendMessageResult appendMessages(MessageExtBatch message, AppendMessageCallback messageCallback, PutMessageContext putMessageContext);
 
+    /**
+     * 追加消息
+     */
     AppendMessageResult appendMessage(final ByteBuffer byteBufferMsg, final CompactionAppendMsgCallback cb);
 
     /**
-     * Appends a raw message data represents by a byte array to the current {@code MappedFile}.
-     *
-     * @param data the byte array to append
-     * @return true if success; false otherwise.
+     * 追加消息
      */
     boolean appendMessage(byte[] data);
 
     /**
-     * Appends a raw message data represents by a byte array to the current {@code MappedFile}.
-     *
-     * @param data the byte buffer to append
-     * @return true if success; false otherwise.
-     */
-    boolean appendMessage(ByteBuffer data);
-
-    /**
-     * Appends a raw message data represents by a byte array to the current {@code MappedFile},
-     * starting at the given offset in the array.
-     *
-     * @param data the byte array to append
-     * @param offset the offset within the array of the first byte to be read
-     * @param length the number of bytes to be read from the given array
-     * @return true if success; false otherwise.
+     * 从指定索引位置追加消息
      */
     boolean appendMessage(byte[] data, int offset, int length);
 
     /**
-     * Returns the global offset of the current {code MappedFile}, it's a long value of the file name.
-     *
-     * @return the offset of this file
+     * 返回当前mappedFile全局偏移量， 等于文件名
      */
     long getFileFromOffset();
 
     /**
-     * Flushes the data in cache to disk immediately.
-     *
-     * @param flushLeastPages the least pages to flush
-     * @return the flushed position after the method call
+     * 消息数据写磁盘
      */
     int flush(int flushLeastPages);
 
     /**
-     * Flushes the data in the secondary cache to page cache or disk immediately.
-     *
-     * @param commitLeastPages the least pages to commit
-     * @return the committed position after the method call
+     * 将二级缓存里的数据写入到页缓存或者磁盘
      */
     int commit(int commitLeastPages);
 
     /**
-     * Selects a slice of the mapped byte buffer's sub-region behind the mapped file,
-     * starting at the given position.
-     *
-     * @param pos the given position
-     * @param size the size of the returned sub-region
-     * @return a {@code SelectMappedBufferResult} instance contains the selected slice
+     * 从指定开始位置和长度查找byteBuffer
      */
     SelectMappedBufferResult selectMappedBuffer(int pos, int size);
 
     /**
-     * Selects a slice of the mapped byte buffer's sub-region behind the mapped file,
-     * starting at the given position.
-     *
-     * @param pos the given position
-     * @return a {@code SelectMappedBufferResult} instance contains the selected slice
+     * 返回从指定位置开始的byteBuffer
      */
     SelectMappedBufferResult selectMappedBuffer(int pos);
 
     /**
-     * Returns the mapped byte buffer behind the mapped file.
-     *
-     * @return the mapped byte buffer
+     * 返回当前mappedFile对应的MappedByteBuffer
      */
     MappedByteBuffer getMappedByteBuffer();
 
     /**
-     * Returns a slice of the mapped byte buffer behind the mapped file.
-     *
-     * @return the slice of the mapped byte buffer
+     * 返回当前mappedFile对应的byteBuffer
      */
     ByteBuffer sliceByteBuffer();
 
     /**
-     * Returns the store timestamp of the last message.
-     *
-     * @return the store timestamp
+     * 返回最后一条消息的存储时间戳
      */
     long getStoreTimestamp();
 
     /**
-     * Returns the last modified timestamp of the file.
-     *
-     * @return the last modified timestamp
+     * 返回文件的最后修改时间
      */
     long getLastModifiedTimestamp();
 
     /**
-     * Get data from a certain pos offset with size byte
-     *
-     * @param pos a certain pos offset to get data
-     * @param size the size of data
-     * @param byteBuffer the data
-     * @return true if with data; false if no data;
+     * 获取指定偏移量指定大小的数据
      */
     boolean getData(int pos, int size, ByteBuffer byteBuffer);
 
     /**
-     * Destroys the file and delete it from the file system.
-     *
-     * @param intervalForcibly If {@code true} then this method will destroy the file forcibly and ignore the reference
-     * @return true if success; false otherwise.
+     * 销毁并从文件系统删除， intervalForcibly 设置为true时，该方法将强制销毁文件，忽略已存在的引用关系
      */
     boolean destroy(long intervalForcibly);
 
     /**
-     * Shutdowns the file and mark it unavailable.
-     *
-     * @param intervalForcibly If {@code true} then this method will shutdown the file forcibly and ignore the reference
+     * 关闭文件，使文件不可用 intervalForcibly 设置为true时，该方法将强制销毁文件，忽略已存在的引用关系
      */
     void shutdown(long intervalForcibly);
 
     /**
-     * Decreases the reference count by {@code 1} and clean up the mapped file if the reference count reaches at
-     * {@code 0}.
+     * 当引用数为0时，减少文件引用关系并清除文件
      */
     void release();
 
     /**
-     * Increases the reference count by {@code 1}.
-     *
-     * @return true if success; false otherwise.
+     * 增加引用关系
      */
     boolean hold();
 
     /**
-     * Returns true if the current file is first mapped file of some consume queue.
-     *
-     * @return true or false
+     * 判断当前mappedFile文件是否为消费队列中的第一个文件
      */
     boolean isFirstCreateInQueue();
 
     /**
-     * Sets the flag whether the current file is first mapped file of some consume queue.
-     *
-     * @param firstCreateInQueue true or false
+     * 当前mappedFile文件如果是消费队列中的第一个，设置为true
      */
     void setFirstCreateInQueue(boolean firstCreateInQueue);
 
     /**
-     * Returns the flushed position of this mapped file.
-     *
-     * @return the flushed posotion
+     * 返回当前mappedFile的刷盘指针
      */
     int getFlushedPosition();
 
     /**
-     * Sets the flushed position of this mapped file.
-     *
-     * @param flushedPosition the specific flushed position
+     * 设置当前mappedFile的刷盘指针
      */
     void setFlushedPosition(int flushedPosition);
 
     /**
-     * Returns the wrote position of this mapped file.
-     *
-     * @return the wrote position
+     * 返回当前mappedFile的写指针
      */
     int getWrotePosition();
 
     /**
-     * Sets the wrote position of this mapped file.
-     *
-     * @param wrotePosition the specific wrote position
+     * 设置当前mappedFile的写指针
      */
     void setWrotePosition(int wrotePosition);
 
     /**
-     * Returns the current max readable position of this mapped file.
-     *
-     * @return the max readable position
+     * 返回当前mappedFile的最大可读指针
      */
     int getReadPosition();
 
     /**
-     * Sets the committed position of this mapped file.
-     *
-     * @param committedPosition the specific committed position
+     * 设置当前mappedFile的提交指针
      */
     void setCommittedPosition(int committedPosition);
 
     /**
-     * Lock the mapped bytebuffer
+     * 锁定mapped byte buffer
      */
     void mlock();
 
     /**
-     * Unlock the mapped bytebuffer
+     * 解锁mapped byte buffer
      */
     void munlock();
 
     /**
      * Warm up the mapped bytebuffer
-     * @param type
-     * @param pages
      */
     void warmMappedFile(FlushDiskType type, int pages);
 
     /**
      * Swap map
      */
-    boolean swapMap();
+    void swapMap();
 
     /**
      * Clean pageTable
@@ -328,44 +209,37 @@ public interface MappedFile {
     long getMappedByteBufferAccessCountSinceLastSwap();
 
     /**
-     * Get the underlying file
-     * @return
+     * 获取mappedFile对应的文件
      */
     File getFile();
 
     /**
-     * rename file to add ".delete" suffix
+     * 重命名文件，添加 .deleted后缀
      */
     void renameToDelete();
 
     /**
-     * move the file to the parent directory
-     * @throws IOException
+     * 移动当前文件到父目录
      */
     void moveToParent() throws IOException;
 
     /**
-     * Get the last flush time
-     * @return
-     */
-    long getLastFlushTime();
-
-    /**
-     * Init mapped file
-     * @param fileName file name
-     * @param fileSize file size
-     * @param transientStorePool transient store pool
-     * @throws IOException
+     * 初始化mappedFile
+     *
+     * @param fileName  文件名称
+     * @param fileSize 文件大小
+     * @param transientStorePool 堆内存缓冲池
      */
     void init(String fileName, int fileSize, TransientStorePool transientStorePool) throws IOException;
 
+    /**
+     * 迭代
+     */
     Iterator<SelectMappedBufferResult> iterator(int pos);
 
     /**
-     * Check mapped file is loaded to memory with given position and size
-     * @param position start offset of data
-     * @param size data size
-     * @return data is resided in memory or not
+     * 检查指定位置和大小的mapped file是否已加载
      */
     boolean isLoaded(long position, int size);
+
 }

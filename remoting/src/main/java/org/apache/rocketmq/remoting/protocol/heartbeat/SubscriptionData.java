@@ -1,38 +1,49 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * $Id: SubscriptionData.java 1835 2013-05-16 02:00:50Z vintagewang@apache.org $
- */
 package org.apache.rocketmq.remoting.protocol.heartbeat;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import java.util.HashSet;
-import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.common.filter.ExpressionType;
 
+import java.util.HashSet;
+import java.util.Set;
+
+@Getter
+@Setter
 public class SubscriptionData implements Comparable<SubscriptionData> {
+
+    /**
+     * 表示订阅全部
+     */
     public final static String SUB_ALL = "*";
+
     private boolean classFilterMode = false;
+
+    /**
+     * 主题
+     */
     private String topic;
+
+    /**
+     * 订阅关系字符串
+     */
     private String subString;
+
+    /**
+     * tags集合
+     */
     private Set<String> tagsSet = new HashSet<>();
+
+    /**
+     * tags对应的code集合
+     */
     private Set<Integer> codeSet = new HashSet<>();
+
     private long subVersion = System.currentTimeMillis();
+
+    /**
+     * 表达式类型
+     */
     private String expressionType = ExpressionType.TAG;
 
     @JSONField(serialize = false)
@@ -46,70 +57,6 @@ public class SubscriptionData implements Comparable<SubscriptionData> {
         super();
         this.topic = topic;
         this.subString = subString;
-    }
-
-    public String getFilterClassSource() {
-        return filterClassSource;
-    }
-
-    public void setFilterClassSource(String filterClassSource) {
-        this.filterClassSource = filterClassSource;
-    }
-
-    public String getTopic() {
-        return topic;
-    }
-
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
-
-    public String getSubString() {
-        return subString;
-    }
-
-    public void setSubString(String subString) {
-        this.subString = subString;
-    }
-
-    public Set<String> getTagsSet() {
-        return tagsSet;
-    }
-
-    public void setTagsSet(Set<String> tagsSet) {
-        this.tagsSet = tagsSet;
-    }
-
-    public long getSubVersion() {
-        return subVersion;
-    }
-
-    public void setSubVersion(long subVersion) {
-        this.subVersion = subVersion;
-    }
-
-    public Set<Integer> getCodeSet() {
-        return codeSet;
-    }
-
-    public void setCodeSet(Set<Integer> codeSet) {
-        this.codeSet = codeSet;
-    }
-
-    public boolean isClassFilterMode() {
-        return classFilterMode;
-    }
-
-    public void setClassFilterMode(boolean classFilterMode) {
-        this.classFilterMode = classFilterMode;
-    }
-
-    public String getExpressionType() {
-        return expressionType;
-    }
-
-    public void setExpressionType(String expressionType) {
-        this.expressionType = expressionType;
     }
 
     @Override
@@ -159,18 +106,13 @@ public class SubscriptionData implements Comparable<SubscriptionData> {
         } else if (!topic.equals(other.topic))
             return false;
         if (expressionType == null) {
-            if (other.expressionType != null)
-                return false;
-        } else if (!expressionType.equals(other.expressionType))
-            return false;
-        return true;
+            return other.expressionType == null;
+        } else return expressionType.equals(other.expressionType);
     }
 
     @Override
     public String toString() {
-        return "SubscriptionData [classFilterMode=" + classFilterMode + ", topic=" + topic + ", subString="
-            + subString + ", tagsSet=" + tagsSet + ", codeSet=" + codeSet + ", subVersion=" + subVersion
-            + ", expressionType=" + expressionType + "]";
+        return "SubscriptionData [classFilterMode=" + classFilterMode + ", topic=" + topic + ", subString=" + subString + ", tagsSet=" + tagsSet + ", codeSet=" + codeSet + ", subVersion=" + subVersion + ", expressionType=" + expressionType + "]";
     }
 
     @Override
@@ -179,4 +121,5 @@ public class SubscriptionData implements Comparable<SubscriptionData> {
         String otherValue = other.topic + "@" + other.subString;
         return thisValue.compareTo(otherValue);
     }
+
 }

@@ -16,23 +16,19 @@
  */
 package org.apache.rocketmq.store;
 
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.concurrent.locks.ReentrantLock;
 import org.apache.rocketmq.common.BrokerIdentity;
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class StoreStatsService extends ServiceThread {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
@@ -652,14 +648,6 @@ public class StoreStatsService extends ServiceThread {
         return rs;
     }
 
-    public Map<String, LongAdder> getPutMessageTopicTimesTotal() {
-        return putMessageTopicTimesTotal;
-    }
-
-    public Map<String, LongAdder> getPutMessageTopicSizeTotal() {
-        return putMessageTopicSizeTotal;
-    }
-
     static class CallSnapshot {
         public final long timestamp;
         public final long callTimesTotal;
@@ -671,11 +659,10 @@ public class StoreStatsService extends ServiceThread {
 
         public static double getTPS(final CallSnapshot begin, final CallSnapshot end) {
             long total = end.callTimesTotal - begin.callTimesTotal;
-            Long time = end.timestamp - begin.timestamp;
-
-            double tps = total / time.doubleValue();
-
+            long time = end.timestamp - begin.timestamp;
+            double tps = total / (double) time;
             return tps * 1000;
         }
     }
+
 }

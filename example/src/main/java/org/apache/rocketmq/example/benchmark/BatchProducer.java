@@ -104,10 +104,10 @@ public class BatchProducer {
             int compressOverHowMuch = commandLine.hasOption("ch") ? Integer.parseInt(commandLine.getOptionValue("ch")) : 4096;
             producer.setCompressType(CompressionType.of(compressType));
             producer.setCompressLevel(compressLevel);
-            producer.setCompressMsgBodyOverHowmuch(compressOverHowMuch);
+            producer.setCompressMsgBodyOverHowMuch(compressOverHowMuch);
             System.out.printf("compressType: %s compressLevel: %s%n", compressType, compressLevel);
         } else {
-            producer.setCompressMsgBodyOverHowmuch(Integer.MAX_VALUE);
+            producer.setCompressMsgBodyOverHowMuch(Integer.MAX_VALUE);
         }
 
         producer.start();

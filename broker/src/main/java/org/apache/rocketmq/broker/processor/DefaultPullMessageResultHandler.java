@@ -278,7 +278,7 @@ public class DefaultPullMessageResultHandler implements PullMessageResultHandler
             msgInner.setBody(event.encode());
             msgInner.setFlag(0);
             msgInner.setPropertiesString(MessageDecoder.messageProperties2String(msgInner.getProperties()));
-            msgInner.setTagsCode(MessageExtBrokerInner.tagsString2tagsCode(TopicFilterType.SINGLE_TAG, msgInner.getTags()));
+            msgInner.setTagsCode(MessageExtBrokerInner.tagsString2tagsCode( msgInner.getTags()));
 
             msgInner.setQueueId(0);
             msgInner.setSysFlag(0);
