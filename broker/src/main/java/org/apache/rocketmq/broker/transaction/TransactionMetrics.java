@@ -19,20 +19,6 @@ package org.apache.rocketmq.broker.transaction;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.google.common.io.Files;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.rocketmq.common.ConfigManager;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.topic.TopicValidator;
@@ -41,15 +27,21 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
+
 public class TransactionMetrics extends ConfigManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
-
+    private final String configPath;
     private ConcurrentMap<String, Metric> transactionCounts =
             new ConcurrentHashMap<>(1024);
-
     private DataVersion dataVersion = new DataVersion();
-
-    private final String configPath;
 
     public TransactionMetrics(String configPath) {
         this.configPath = configPath;
@@ -74,6 +66,7 @@ public class TransactionMetrics extends ConfigManager {
         }
         return pair;
     }
+
     public long getTransactionCount(String topic) {
         Metric pair = transactionCounts.get(topic);
         if (null == pair) {
@@ -86,6 +79,7 @@ public class TransactionMetrics extends ConfigManager {
     public Map<String, Metric> getTransactionCounts() {
         return transactionCounts;
     }
+
     public void setTransactionCounts(ConcurrentMap<String, Metric> transactionCounts) {
         this.transactionCounts = transactionCounts;
     }
@@ -154,29 +148,6 @@ public class TransactionMetrics extends ConfigManager {
         }
     }
 
-    public static class TransactionMetricsSerializeWrapper extends RemotingSerializable {
-        private ConcurrentMap<String, Metric> transactionCount =
-                new ConcurrentHashMap<>(1024);
-        private DataVersion dataVersion = new DataVersion();
-
-        public ConcurrentMap<String, Metric> getTransactionCount() {
-            return transactionCount;
-        }
-
-        public void setTransactionCount(
-                ConcurrentMap<String, Metric> transactionCount) {
-            this.transactionCount = transactionCount;
-        }
-
-        public DataVersion getDataVersion() {
-            return dataVersion;
-        }
-
-        public void setDataVersion(DataVersion dataVersion) {
-            this.dataVersion = dataVersion;
-        }
-    }
-
     @Override
     public synchronized void persist() {
         String config = configFilePath();
@@ -222,6 +193,29 @@ public class TransactionMetrics extends ConfigManager {
                 } catch (IOException ignore) {
                 }
             }
+        }
+    }
+
+    public static class TransactionMetricsSerializeWrapper extends RemotingSerializable {
+        private ConcurrentMap<String, Metric> transactionCount =
+                new ConcurrentHashMap<>(1024);
+        private DataVersion dataVersion = new DataVersion();
+
+        public ConcurrentMap<String, Metric> getTransactionCount() {
+            return transactionCount;
+        }
+
+        public void setTransactionCount(
+                ConcurrentMap<String, Metric> transactionCount) {
+            this.transactionCount = transactionCount;
+        }
+
+        public DataVersion getDataVersion() {
+            return dataVersion;
+        }
+
+        public void setDataVersion(DataVersion dataVersion) {
+            this.dataVersion = dataVersion;
         }
     }
 

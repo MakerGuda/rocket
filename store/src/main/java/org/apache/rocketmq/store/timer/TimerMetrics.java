@@ -19,23 +19,6 @@ package org.apache.rocketmq.store.timer;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.google.common.io.Files;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import org.apache.rocketmq.common.ConfigManager;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageConst;
@@ -45,6 +28,15 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class TimerMetrics extends ConfigManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
@@ -56,20 +48,18 @@ public class TimerMetrics extends ConfigManager {
 
     private final ConcurrentMap<Integer, Metric> timingDistribution =
             new ConcurrentHashMap<>(1024);
-
-    public List<Integer> timerDist = new ArrayList<Integer>() {{
-            add(5);
-            add(60);
-            add(300); // 5s, 1min, 5min
-            add(900);
-            add(3600);
-            add(14400); // 15min, 1h, 4h
-            add(28800);
-            add(86400); // 8h, 24h
-        }};
     private final DataVersion dataVersion = new DataVersion();
-
     private final String configPath;
+    public List<Integer> timerDist = new ArrayList<Integer>() {{
+        add(5);
+        add(60);
+        add(300); // 5s, 1min, 5min
+        add(900);
+        add(3600);
+        add(14400); // 15min, 1h, 4h
+        add(28800);
+        add(86400); // 8h, 24h
+    }};
 
     public TimerMetrics(String configPath) {
         this.configPath = configPath;
@@ -156,7 +146,7 @@ public class TimerMetrics extends ConfigManager {
     public void decode(String jsonString) {
         if (jsonString != null) {
             TimerMetricsSerializeWrapper timerMetricsSerializeWrapper =
-                TimerMetricsSerializeWrapper.fromJson(jsonString, TimerMetricsSerializeWrapper.class);
+                    TimerMetricsSerializeWrapper.fromJson(jsonString, TimerMetricsSerializeWrapper.class);
             if (timerMetricsSerializeWrapper != null) {
                 this.timingCount.putAll(timerMetricsSerializeWrapper.getTimingCount());
                 this.dataVersion.assignNewOne(timerMetricsSerializeWrapper.getDataVersion());
@@ -196,29 +186,6 @@ public class TimerMetrics extends ConfigManager {
         }
     }
 
-    public static class TimerMetricsSerializeWrapper extends RemotingSerializable {
-        private ConcurrentMap<String, Metric> timingCount =
-                new ConcurrentHashMap<>(1024);
-        private DataVersion dataVersion = new DataVersion();
-
-        public ConcurrentMap<String, Metric> getTimingCount() {
-            return timingCount;
-        }
-
-        public void setTimingCount(
-                ConcurrentMap<String, Metric> timingCount) {
-            this.timingCount = timingCount;
-        }
-
-        public DataVersion getDataVersion() {
-            return dataVersion;
-        }
-
-        public void setDataVersion(DataVersion dataVersion) {
-            this.dataVersion = dataVersion;
-        }
-    }
-
     @Override
     public synchronized void persist() {
         String config = configFilePath();
@@ -242,7 +209,7 @@ public class TimerMetrics extends ConfigManager {
                 }
             }
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tmpFile, false),
-                StandardCharsets.UTF_8));
+                    StandardCharsets.UTF_8));
             write0(bufferedWriter);
             bufferedWriter.flush();
             bufferedWriter.close();
@@ -264,6 +231,29 @@ public class TimerMetrics extends ConfigManager {
                 } catch (IOException ignore) {
                 }
             }
+        }
+    }
+
+    public static class TimerMetricsSerializeWrapper extends RemotingSerializable {
+        private ConcurrentMap<String, Metric> timingCount =
+                new ConcurrentHashMap<>(1024);
+        private DataVersion dataVersion = new DataVersion();
+
+        public ConcurrentMap<String, Metric> getTimingCount() {
+            return timingCount;
+        }
+
+        public void setTimingCount(
+                ConcurrentMap<String, Metric> timingCount) {
+            this.timingCount = timingCount;
+        }
+
+        public DataVersion getDataVersion() {
+            return dataVersion;
+        }
+
+        public void setDataVersion(DataVersion dataVersion) {
+            this.dataVersion = dataVersion;
         }
     }
 

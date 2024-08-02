@@ -33,9 +33,6 @@ public class RemotingHelper {
     public static final String DEFAULT_CHARSET = "UTF-8";
 
     public static final String DEFAULT_CIDR_ALL = "0.0.0.0/0";
-
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_REMOTING_NAME);
-
     public static final Map<Integer, String> REQUEST_CODE_MAP = new HashMap<Integer, String>() {
         {
             try {
@@ -49,7 +46,6 @@ public class RemotingHelper {
             }
         }
     };
-
     public static final Map<Integer, String> RESPONSE_CODE_MAP = new HashMap<Integer, String>() {
         {
             try {
@@ -63,6 +59,7 @@ public class RemotingHelper {
             }
         }
     };
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_REMOTING_NAME);
 
     public static <T> T getAttributeValue(AttributeKey<T> key, final Channel channel) {
         if (channel.hasAttr(key)) {
@@ -87,8 +84,8 @@ public class RemotingHelper {
     }
 
     public static RemotingCommand invokeSync(final String addr, final RemotingCommand request,
-        final long timeoutMillis) throws InterruptedException, RemotingConnectException,
-        RemotingSendRequestException, RemotingTimeoutException, RemotingCommandException {
+                                             final long timeoutMillis) throws InterruptedException, RemotingConnectException,
+            RemotingSendRequestException, RemotingTimeoutException, RemotingCommandException {
         long beginTime = System.currentTimeMillis();
         SocketAddress socketAddress = NetworkUtil.string2SocketAddress(addr);
         SocketChannel socketChannel = connect(socketAddress);
@@ -250,9 +247,9 @@ public class RemotingHelper {
     public static int ipToInt(String ip) {
         String[] ips = ip.split("\\.");
         return (Integer.parseInt(ips[0]) << 24)
-            | (Integer.parseInt(ips[1]) << 16)
-            | (Integer.parseInt(ips[2]) << 8)
-            | Integer.parseInt(ips[3]);
+                | (Integer.parseInt(ips[1]) << 16)
+                | (Integer.parseInt(ips[2]) << 8)
+                | Integer.parseInt(ips[3]);
     }
 
     public static boolean ipInCIDR(String ip, String cidr) {

@@ -57,8 +57,8 @@ public class GetConsumeStatsRequestHeader extends TopicRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("topic", topic)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("topic", topic)
+                .toString();
     }
 }

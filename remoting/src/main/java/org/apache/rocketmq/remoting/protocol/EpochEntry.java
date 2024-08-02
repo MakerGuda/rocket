@@ -69,10 +69,10 @@ public class EpochEntry extends RemotingSerializable {
     @Override
     public String toString() {
         return "EpochEntry{" +
-            "epoch=" + epoch +
-            ", startOffset=" + startOffset +
-            ", endOffset=" + endOffset +
-            '}';
+                "epoch=" + epoch +
+                ", startOffset=" + startOffset +
+                ", endOffset=" + endOffset +
+                '}';
     }
 
     @Override

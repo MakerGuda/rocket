@@ -20,121 +20,21 @@ import java.util.concurrent.atomic.AtomicLong;
 @Setter
 public class ProduceAccumulator {
 
-    private long totalHoldSize = 32 * 1024 * 1024;
-
-    private long holdSize = 32 * 1024;
-
-    private int holdMs = 10;
-
     private final Logger log = LoggerFactory.getLogger(DefaultMQProducer.class);
-
     private final GuardForSyncSendService guardThreadForSyncSend;
-
     private final GuardForAsyncSendService guardThreadForAsyncSend;
-
-    private Map<AggregateKey, MessageAccumulation> syncSendBatchs = new ConcurrentHashMap<>();
-
-    private Map<AggregateKey, MessageAccumulation> asyncSendBatchs = new ConcurrentHashMap<>();
-
     private final AtomicLong currentlyHoldSize = new AtomicLong(0);
-
     private final String instanceName;
+    private long totalHoldSize = 32 * 1024 * 1024;
+    private long holdSize = 32 * 1024;
+    private int holdMs = 10;
+    private Map<AggregateKey, MessageAccumulation> syncSendBatchs = new ConcurrentHashMap<>();
+    private Map<AggregateKey, MessageAccumulation> asyncSendBatchs = new ConcurrentHashMap<>();
 
     public ProduceAccumulator(String instanceName) {
         this.instanceName = instanceName;
         this.guardThreadForSyncSend = new GuardForSyncSendService(this.instanceName);
         this.guardThreadForAsyncSend = new GuardForAsyncSendService(this.instanceName);
-    }
-
-    private class GuardForSyncSendService extends ServiceThread {
-
-        private final String serviceName;
-
-        public GuardForSyncSendService(String clientInstanceName) {
-            serviceName = String.format("Client_%s_GuardForSyncSend", clientInstanceName);
-        }
-
-        @Override
-        public String getServiceName() {
-            return serviceName;
-        }
-
-        @Override
-        public void run() {
-            log.info(this.getServiceName() + " service started");
-            while (!this.isStopped()) {
-                try {
-                    this.doWork();
-                } catch (Exception e) {
-                    log.warn(this.getServiceName() + " service has exception. ", e);
-                }
-            }
-            log.info(this.getServiceName() + " service end");
-        }
-
-        private void doWork() throws InterruptedException {
-            Collection<MessageAccumulation> values = syncSendBatchs.values();
-            final int sleepTime = Math.max(1, holdMs / 2);
-            for (MessageAccumulation v : values) {
-                v.wakeup();
-                synchronized (v) {
-                    synchronized (v.closed) {
-                        if (v.messagesSize.get() == 0) {
-                            v.closed.set(true);
-                            syncSendBatchs.remove(v.aggregateKey, v);
-                        } else {
-                            v.notify();
-                        }
-                    }
-                }
-            }
-            Thread.sleep(sleepTime);
-        }
-    }
-
-    private class GuardForAsyncSendService extends ServiceThread {
-
-        private final String serviceName;
-
-        public GuardForAsyncSendService(String clientInstanceName) {
-            serviceName = String.format("Client_%s_GuardForAsyncSend", clientInstanceName);
-        }
-
-        @Override public String getServiceName() {
-            return serviceName;
-        }
-
-        @Override public void run() {
-
-            log.info(this.getServiceName() + " service started");
-
-            while (!this.isStopped()) {
-                try {
-                    this.doWork();
-                } catch (Exception e) {
-                    log.warn(this.getServiceName() + " service has exception. ", e);
-                }
-            }
-
-            log.info(this.getServiceName() + " service end");
-        }
-
-        private void doWork() throws Exception {
-            Collection<MessageAccumulation> values = asyncSendBatchs.values();
-            final int sleepTime = Math.max(1, holdMs / 2);
-            for (MessageAccumulation v : values) {
-                if (v.readyToSend()) {
-                    v.send();
-                }
-                synchronized (v.closed) {
-                    if (v.messagesSize.get() == 0) {
-                        v.closed.set(true);
-                        asyncSendBatchs.remove(v.aggregateKey, v);
-                    }
-                }
-            }
-            Thread.sleep(sleepTime);
-        }
     }
 
     void start() {
@@ -191,7 +91,7 @@ public class ProduceAccumulator {
     }
 
     private MessageAccumulation getOrCreateAsyncSendBatch(AggregateKey aggregateKey,
-        DefaultMQProducer defaultMQProducer) {
+                                                          DefaultMQProducer defaultMQProducer) {
         MessageAccumulation batch = asyncSendBatchs.get(aggregateKey);
         if (batch != null) {
             return batch;
@@ -260,7 +160,8 @@ public class ProduceAccumulator {
             this.tag = tag;
         }
 
-        @Override public boolean equals(Object o) {
+        @Override
+        public boolean equals(Object o) {
             if (this == o)
                 return true;
             if (o == null || getClass() != o.getClass())
@@ -269,8 +170,102 @@ public class ProduceAccumulator {
             return waitStoreMsgOK == key.waitStoreMsgOK && topic.equals(key.topic) && Objects.equals(mq, key.mq) && Objects.equals(tag, key.tag);
         }
 
-        @Override public int hashCode() {
+        @Override
+        public int hashCode() {
             return Objects.hash(topic, mq, waitStoreMsgOK, tag);
+        }
+    }
+
+    private class GuardForSyncSendService extends ServiceThread {
+
+        private final String serviceName;
+
+        public GuardForSyncSendService(String clientInstanceName) {
+            serviceName = String.format("Client_%s_GuardForSyncSend", clientInstanceName);
+        }
+
+        @Override
+        public String getServiceName() {
+            return serviceName;
+        }
+
+        @Override
+        public void run() {
+            log.info(this.getServiceName() + " service started");
+            while (!this.isStopped()) {
+                try {
+                    this.doWork();
+                } catch (Exception e) {
+                    log.warn(this.getServiceName() + " service has exception. ", e);
+                }
+            }
+            log.info(this.getServiceName() + " service end");
+        }
+
+        private void doWork() throws InterruptedException {
+            Collection<MessageAccumulation> values = syncSendBatchs.values();
+            final int sleepTime = Math.max(1, holdMs / 2);
+            for (MessageAccumulation v : values) {
+                v.wakeup();
+                synchronized (v) {
+                    synchronized (v.closed) {
+                        if (v.messagesSize.get() == 0) {
+                            v.closed.set(true);
+                            syncSendBatchs.remove(v.aggregateKey, v);
+                        } else {
+                            v.notify();
+                        }
+                    }
+                }
+            }
+            Thread.sleep(sleepTime);
+        }
+    }
+
+    private class GuardForAsyncSendService extends ServiceThread {
+
+        private final String serviceName;
+
+        public GuardForAsyncSendService(String clientInstanceName) {
+            serviceName = String.format("Client_%s_GuardForAsyncSend", clientInstanceName);
+        }
+
+        @Override
+        public String getServiceName() {
+            return serviceName;
+        }
+
+        @Override
+        public void run() {
+
+            log.info(this.getServiceName() + " service started");
+
+            while (!this.isStopped()) {
+                try {
+                    this.doWork();
+                } catch (Exception e) {
+                    log.warn(this.getServiceName() + " service has exception. ", e);
+                }
+            }
+
+            log.info(this.getServiceName() + " service end");
+        }
+
+        private void doWork() throws Exception {
+            Collection<MessageAccumulation> values = asyncSendBatchs.values();
+            final int sleepTime = Math.max(1, holdMs / 2);
+            for (MessageAccumulation v : values) {
+                if (v.readyToSend()) {
+                    v.send();
+                }
+                synchronized (v.closed) {
+                    if (v.messagesSize.get() == 0) {
+                        v.closed.set(true);
+                        asyncSendBatchs.remove(v.aggregateKey, v);
+                    }
+                }
+            }
+            Thread.sleep(sleepTime);
         }
     }
 
@@ -279,15 +274,10 @@ public class ProduceAccumulator {
     private class MessageAccumulation {
 
         private final DefaultMQProducer defaultMQProducer;
-
-        private LinkedList<Message> messages;
-
-        private LinkedList<SendCallback> sendCallbacks;
-
-        private Set<String> keys;
-
         private final AtomicBoolean closed;
-
+        private LinkedList<Message> messages;
+        private LinkedList<SendCallback> sendCallbacks;
+        private Set<String> keys;
         private SendResult[] sendResults;
 
         private AggregateKey aggregateKey;
@@ -315,7 +305,7 @@ public class ProduceAccumulator {
         }
 
         public int add(
-            Message msg) throws InterruptedException, MQBrokerException, RemotingException, MQClientException {
+                Message msg) throws InterruptedException, MQBrokerException, RemotingException, MQClientException {
             int ret = -1;
             synchronized (this.closed) {
                 if (this.closed.get()) {

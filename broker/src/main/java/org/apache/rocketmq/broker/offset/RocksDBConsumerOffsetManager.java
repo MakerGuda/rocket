@@ -16,18 +16,17 @@
  */
 package org.apache.rocketmq.broker.offset;
 
-import java.io.File;
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentMap;
-
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.config.RocksDBConfigManager;
 import org.apache.rocketmq.common.utils.DataConverter;
 import org.rocksdb.WriteBatch;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+import java.io.File;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentMap;
 
 public class RocksDBConsumerOffsetManager extends ConsumerOffsetManager {
 

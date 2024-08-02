@@ -17,11 +17,12 @@
 
 package org.apache.rocketmq.acl.plain;
 
-import java.util.Map;
 import org.apache.rocketmq.acl.AccessResource;
 import org.apache.rocketmq.acl.PermissionChecker;
 import org.apache.rocketmq.acl.common.AclException;
 import org.apache.rocketmq.acl.common.Permission;
+
+import java.util.Map;
 
 public class PlainPermissionChecker implements PermissionChecker {
     public void check(AccessResource checkedAccess, AccessResource ownedAccess) {
@@ -52,7 +53,7 @@ public class PlainPermissionChecker implements PermissionChecker {
             if (ownedPermMap == null || !ownedPermMap.containsKey(resource)) {
                 // Check the default perm
                 byte ownedPerm = isGroup ? ownedPlainAccess.getDefaultGroupPerm() :
-                    ownedPlainAccess.getDefaultTopicPerm();
+                        ownedPlainAccess.getDefaultTopicPerm();
                 if (!Permission.checkPermission(neededPerm, ownedPerm)) {
                     throw new AclException(String.format("No default permission for %s", PlainAccessResource.printStr(resource, isGroup)));
                 }

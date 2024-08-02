@@ -17,15 +17,6 @@
 package org.apache.rocketmq.broker.client;
 
 import io.netty.channel.Channel;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.rocketmq.broker.util.PositiveAtomicCounter;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
@@ -35,16 +26,21 @@ import org.apache.rocketmq.remoting.protocol.body.ProducerInfo;
 import org.apache.rocketmq.remoting.protocol.body.ProducerTableInfo;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
 
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 public class ProducerManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private static final long CHANNEL_EXPIRED_TIMEOUT = 1000 * 120;
     private static final int GET_AVAILABLE_CHANNEL_RETRY_COUNT = 3;
-    private final ConcurrentHashMap<String /* group name */, ConcurrentHashMap<Channel, ClientChannelInfo>> groupChannelTable =
-        new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Channel> clientChannelTable = new ConcurrentHashMap<>();
     protected final BrokerStatsManager brokerStatsManager;
-    private PositiveAtomicCounter positiveAtomicCounter = new PositiveAtomicCounter();
+    private final ConcurrentHashMap<String /* group name */, ConcurrentHashMap<Channel, ClientChannelInfo>> groupChannelTable =
+            new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Channel> clientChannelTable = new ConcurrentHashMap<>();
     private final List<ProducerChangeListener> producerChangeListenerList = new CopyOnWriteArrayList<>();
+    private PositiveAtomicCounter positiveAtomicCounter = new PositiveAtomicCounter();
 
     public ProducerManager() {
         this.brokerStatsManager = null;
@@ -70,7 +66,7 @@ public class ProducerManager {
     public ProducerTableInfo getProducerTable() {
         Map<String, List<ProducerInfo>> map = new HashMap<>();
         for (String group : this.groupChannelTable.keySet()) {
-            for (Entry<Channel, ClientChannelInfo> entry: this.groupChannelTable.get(group).entrySet()) {
+            for (Entry<Channel, ClientChannelInfo> entry : this.groupChannelTable.get(group).entrySet()) {
                 ClientChannelInfo clientChannelInfo = entry.getValue();
                 if (map.containsKey(group)) {
                     map.get(group).add(new ProducerInfo(
@@ -82,11 +78,11 @@ public class ProducerManager {
                     ));
                 } else {
                     map.put(group, new ArrayList<>(Collections.singleton(new ProducerInfo(
-                        clientChannelInfo.getClientId(),
-                        clientChannelInfo.getChannel().remoteAddress().toString(),
-                        clientChannelInfo.getLanguage(),
-                        clientChannelInfo.getVersion(),
-                        clientChannelInfo.getLastUpdateTimestamp()
+                            clientChannelInfo.getClientId(),
+                            clientChannelInfo.getChannel().remoteAddress().toString(),
+                            clientChannelInfo.getLanguage(),
+                            clientChannelInfo.getVersion(),
+                            clientChannelInfo.getLastUpdateTimestamp()
                     ))));
                 }
             }
@@ -250,7 +246,7 @@ public class ProducerManager {
     }
 
     private void callProducerChangeListener(ProducerGroupEvent event, String group,
-        ClientChannelInfo clientChannelInfo) {
+                                            ClientChannelInfo clientChannelInfo) {
         for (ProducerChangeListener listener : producerChangeListenerList) {
             try {
                 listener.handle(event, group, clientChannelInfo);

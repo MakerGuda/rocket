@@ -17,16 +17,14 @@ import java.util.List;
 @Setter
 public class ServiceProvider {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
-
-    private static ClassLoader thisClassLoader;
-    
     public static final String PREFIX = "META-INF/service/";
-    
+    private static final Logger LOG = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
+    private static ClassLoader thisClassLoader;
+
     static {
         thisClassLoader = getClassLoader();
     }
-    
+
     protected static String objectId(Object o) {
         if (o == null) {
             return "null";
@@ -43,7 +41,7 @@ public class ServiceProvider {
             throw e;
         }
     }
-    
+
     protected static ClassLoader getContextClassLoader() {
         ClassLoader classLoader = null;
         try {
@@ -52,7 +50,7 @@ public class ServiceProvider {
         }
         return classLoader;
     }
-    
+
     protected static InputStream getResourceAsStream(ClassLoader loader, String name) {
         if (loader != null) {
             return loader.getResourceAsStream(name);
@@ -60,12 +58,12 @@ public class ServiceProvider {
             return ClassLoader.getSystemResourceAsStream(name);
         }
     }
-    
+
     public static <T> List<T> load(Class<?> clazz) {
         String fullName = PREFIX + clazz.getName();
         return load(fullName, clazz);
     }
-    
+
     public static <T> List<T> load(String name, Class<?> clazz) {
         LOG.info("Looking for a resource file of name [{}] ...", name);
         List<T> services = new ArrayList<>();
@@ -90,12 +88,12 @@ public class ServiceProvider {
         }
         return services;
     }
-    
+
     public static <T> T loadClass(Class<?> clazz) {
         String fullName = PREFIX + clazz.getName();
         return loadClass(fullName, clazz);
     }
-    
+
     public static <T> T loadClass(String name, Class<?> clazz) {
         LOG.info("Looking for a resource file of name [{}] ...", name);
         T s = null;

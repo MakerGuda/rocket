@@ -18,13 +18,14 @@
 package org.apache.rocketmq.acl;
 
 import com.google.protobuf.GeneratedMessageV3;
-import java.util.List;
-import java.util.Map;
 import org.apache.rocketmq.acl.common.AuthenticationHeader;
 import org.apache.rocketmq.common.AclConfig;
 import org.apache.rocketmq.common.PlainAccessConfig;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
+import java.util.List;
+import java.util.Map;
 
 public interface AccessValidator {
 
@@ -39,6 +40,7 @@ public interface AccessValidator {
 
     /**
      * Parse to get the AccessResource from gRPC protocol
+     *
      * @param messageV3
      * @param header
      * @return Plain access resource

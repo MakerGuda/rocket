@@ -19,6 +19,7 @@ package org.apache.rocketmq.tieredstore.core;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.PopAckConstants;
@@ -41,9 +42,9 @@ public class MessageStoreTopicFilter implements MessageStoreFilter {
             return true;
         }
         return TopicValidator.isSystemTopic(topicName) ||
-            PopAckConstants.isStartWithRevivePrefix(topicName) ||
-            this.topicBlackSet.contains(topicName) ||
-            MixAll.isLmq(topicName);
+                PopAckConstants.isStartWithRevivePrefix(topicName) ||
+                this.topicBlackSet.contains(topicName) ||
+                MixAll.isLmq(topicName);
     }
 
     @Override

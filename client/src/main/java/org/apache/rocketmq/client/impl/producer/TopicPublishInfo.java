@@ -24,10 +24,6 @@ public class TopicPublishInfo {
 
     private TopicRouteData topicRouteData;
 
-    public interface QueueFilter {
-        boolean filter(MessageQueue mq);
-    }
-
     public boolean ok() {
         return null != this.messageQueueList && !this.messageQueueList.isEmpty();
     }
@@ -35,14 +31,14 @@ public class TopicPublishInfo {
     /**
      * 根据过滤器筛选mq
      */
-    public MessageQueue selectOneMessageQueue(QueueFilter ...filter) {
+    public MessageQueue selectOneMessageQueue(QueueFilter... filter) {
         return selectOneMessageQueue(this.messageQueueList, this.sendWhichQueue, filter);
     }
 
     /**
      * 根据broker过滤器，从mq列表中筛选一个mq
      */
-    private MessageQueue selectOneMessageQueue(List<MessageQueue> messageQueueList, ThreadLocalIndex sendQueue, QueueFilter ...filter) {
+    private MessageQueue selectOneMessageQueue(List<MessageQueue> messageQueueList, ThreadLocalIndex sendQueue, QueueFilter... filter) {
         if (messageQueueList == null || messageQueueList.isEmpty()) {
             return null;
         }
@@ -52,7 +48,7 @@ public class TopicPublishInfo {
                 int index = Math.abs(sendQueue.incrementAndGet() % messageQueueList.size());
                 MessageQueue mq = messageQueueList.get(index);
                 boolean filterResult = true;
-                for (QueueFilter f: filter) {
+                for (QueueFilter f : filter) {
                     Preconditions.checkNotNull(f);
                     filterResult &= f.filter(mq);
                 }
@@ -104,6 +100,10 @@ public class TopicPublishInfo {
     @Override
     public String toString() {
         return "TopicPublishInfo [orderTopic=" + orderTopic + ", messageQueueList=" + messageQueueList + ", sendWhichQueue=" + sendWhichQueue + ", haveTopicRouterInfo=" + haveTopicRouterInfo + "]";
+    }
+
+    public interface QueueFilter {
+        boolean filter(MessageQueue mq);
     }
 
 }

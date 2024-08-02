@@ -39,88 +39,58 @@ public class ClientConfig {
     public static final String START_DETECTOR_ENABLE = "com.rocketmq.startDetectorEnable";
 
     public static final String HEART_BEAT_V2 = "com.rocketmq.heartbeat.v2";
-
+    @Deprecated
+    protected String namespace;
+    protected String namespaceV2;
+    protected AccessChannel accessChannel = AccessChannel.LOCAL;
+    protected boolean enableStreamRequestType = false;
+    protected boolean enableTrace = false;
+    protected String traceTopic;
     /**
      * 获取namesrv地址
      */
     private String namesrvAddr = NameServerAddressUtils.getNameServerAddresses();
-
     /**
      * 获取客户端ip
      */
     private String clientIP = NetworkUtil.getLocalAddress();
-
     /**
      * 获取客户端实例名称
      */
     private String instanceName = System.getProperty("rocketmq.client.name", "DEFAULT");
-
     private int clientCallbackExecutorThreads = Runtime.getRuntime().availableProcessors();
-
-    @Deprecated
-    protected String namespace;
-
     private boolean namespaceInitialized = false;
-
-    protected String namespaceV2;
-
-    protected AccessChannel accessChannel = AccessChannel.LOCAL;
-
     /**
      * 从namesrv拉取topic信息的时间间隔
      */
     private int pollNameServerInterval = 1000 * 30;
-
     /**
      * broker发送心跳检测的时间间隔
      */
     private int heartbeatBrokerInterval = 1000 * 30;
-
     /**
      * 持久化消费者组偏移量的时间间隔
      */
     private int persistConsumerOffsetInterval = 1000 * 5;
-
     /**
      * 发生异常时，拉取消息的延迟时间
      */
     private long pullTimeDelayMillsWhenException = 1000;
-
     private boolean unitMode = false;
-
     private String unitName;
-
     private boolean decodeReadBody = Boolean.parseBoolean(System.getProperty(DECODE_READ_BODY, "true"));
-
     private boolean decodeDecompressBody = Boolean.parseBoolean(System.getProperty(DECODE_DECOMPRESS_BODY, "true"));
-
     private boolean vipChannelEnabled = Boolean.parseBoolean(System.getProperty(SEND_MESSAGE_WITH_VIP_CHANNEL_PROPERTY, "false"));
-
     private boolean useHeartbeatV2 = Boolean.parseBoolean(System.getProperty(HEART_BEAT_V2, "false"));
-
     private boolean useTLS = TlsSystemConfig.tlsEnable;
-
     private String socksProxyConfig = System.getProperty(SOCKS_PROXY_CONFIG, "{}");
-
     private int mqClientApiTimeout = 3 * 1000;
-
     private int detectTimeout = 200;
-
     private int detectInterval = 2 * 1000;
-
     private LanguageCode language = LanguageCode.JAVA;
-
-    protected boolean enableStreamRequestType = false;
-
     private boolean sendLatencyEnable = Boolean.parseBoolean(System.getProperty(SEND_LATENCY_ENABLE, "false"));
-
     private boolean startDetectorEnable = Boolean.parseBoolean(System.getProperty(START_DETECTOR_ENABLE, "false"));
-
     private boolean enableHeartbeatChannelEventListener = true;
-
-    protected boolean enableTrace = false;
-
-    protected String traceTopic;
 
     /**
      * 构建客户端id
@@ -296,37 +266,37 @@ public class ClientConfig {
     @Override
     public String toString() {
         return "ClientConfig{" +
-            "namesrvAddr='" + namesrvAddr + '\'' +
-            ", clientIP='" + clientIP + '\'' +
-            ", instanceName='" + instanceName + '\'' +
-            ", clientCallbackExecutorThreads=" + clientCallbackExecutorThreads +
-            ", namespace='" + namespace + '\'' +
-            ", namespaceInitialized=" + namespaceInitialized +
-            ", namespaceV2='" + namespaceV2 + '\'' +
-            ", accessChannel=" + accessChannel +
-            ", pollNameServerInterval=" + pollNameServerInterval +
-            ", heartbeatBrokerInterval=" + heartbeatBrokerInterval +
-            ", persistConsumerOffsetInterval=" + persistConsumerOffsetInterval +
-            ", pullTimeDelayMillsWhenException=" + pullTimeDelayMillsWhenException +
-            ", unitMode=" + unitMode +
-            ", unitName='" + unitName + '\'' +
-            ", decodeReadBody=" + decodeReadBody +
-            ", decodeDecompressBody=" + decodeDecompressBody +
-            ", vipChannelEnabled=" + vipChannelEnabled +
-            ", useHeartbeatV2=" + useHeartbeatV2 +
-            ", useTLS=" + useTLS +
-            ", socksProxyConfig='" + socksProxyConfig + '\'' +
-            ", mqClientApiTimeout=" + mqClientApiTimeout +
-            ", detectTimeout=" + detectTimeout +
-            ", detectInterval=" + detectInterval +
-            ", language=" + language +
-            ", enableStreamRequestType=" + enableStreamRequestType +
-            ", sendLatencyEnable=" + sendLatencyEnable +
-            ", startDetectorEnable=" + startDetectorEnable +
-            ", enableHeartbeatChannelEventListener=" + enableHeartbeatChannelEventListener +
-            ", enableTrace=" + enableTrace +
-            ", traceTopic='" + traceTopic + '\'' +
-            '}';
+                "namesrvAddr='" + namesrvAddr + '\'' +
+                ", clientIP='" + clientIP + '\'' +
+                ", instanceName='" + instanceName + '\'' +
+                ", clientCallbackExecutorThreads=" + clientCallbackExecutorThreads +
+                ", namespace='" + namespace + '\'' +
+                ", namespaceInitialized=" + namespaceInitialized +
+                ", namespaceV2='" + namespaceV2 + '\'' +
+                ", accessChannel=" + accessChannel +
+                ", pollNameServerInterval=" + pollNameServerInterval +
+                ", heartbeatBrokerInterval=" + heartbeatBrokerInterval +
+                ", persistConsumerOffsetInterval=" + persistConsumerOffsetInterval +
+                ", pullTimeDelayMillsWhenException=" + pullTimeDelayMillsWhenException +
+                ", unitMode=" + unitMode +
+                ", unitName='" + unitName + '\'' +
+                ", decodeReadBody=" + decodeReadBody +
+                ", decodeDecompressBody=" + decodeDecompressBody +
+                ", vipChannelEnabled=" + vipChannelEnabled +
+                ", useHeartbeatV2=" + useHeartbeatV2 +
+                ", useTLS=" + useTLS +
+                ", socksProxyConfig='" + socksProxyConfig + '\'' +
+                ", mqClientApiTimeout=" + mqClientApiTimeout +
+                ", detectTimeout=" + detectTimeout +
+                ", detectInterval=" + detectInterval +
+                ", language=" + language +
+                ", enableStreamRequestType=" + enableStreamRequestType +
+                ", sendLatencyEnable=" + sendLatencyEnable +
+                ", startDetectorEnable=" + startDetectorEnable +
+                ", enableHeartbeatChannelEventListener=" + enableHeartbeatChannelEventListener +
+                ", enableTrace=" + enableTrace +
+                ", traceTopic='" + traceTopic + '\'' +
+                '}';
     }
 
 }

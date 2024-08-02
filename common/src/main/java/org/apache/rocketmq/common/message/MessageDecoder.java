@@ -100,19 +100,19 @@ public class MessageDecoder {
         int bornhostLength = (sysFlag & MessageSysFlag.BORNHOST_V6_FLAG) == 0 ? 8 : 20;
         int storeHostAddressLength = (sysFlag & MessageSysFlag.STOREHOSTADDRESS_V6_FLAG) == 0 ? 8 : 20;
         int bodySizePosition = 4 // 1 TOTALSIZE
-            + 4 // 2 MAGICCODE
-            + 4 // 3 BODYCRC
-            + 4 // 4 QUEUEID
-            + 4 // 5 FLAG
-            + 8 // 6 QUEUEOFFSET
-            + 8 // 7 PHYSICALOFFSET
-            + 4 // 8 SYSFLAG
-            + 8 // 9 BORNTIMESTAMP
-            + bornhostLength // 10 BORNHOST
-            + 8 // 11 STORETIMESTAMP
+                + 4 // 2 MAGICCODE
+                + 4 // 3 BODYCRC
+                + 4 // 4 QUEUEID
+                + 4 // 5 FLAG
+                + 8 // 6 QUEUEOFFSET
+                + 8 // 7 PHYSICALOFFSET
+                + 4 // 8 SYSFLAG
+                + 8 // 9 BORNTIMESTAMP
+                + bornhostLength // 10 BORNHOST
+                + 8 // 11 STORETIMESTAMP
                 + storeHostAddressLength // 12 STOREHOSTADDRESS
-            + 4 // 13 RECONSUMETIMES
-            + 8; // 14 Prepared Transaction Offset
+                + 4 // 13 RECONSUMETIMES
+                + 8; // 14 Prepared Transaction Offset
         int topicLengthPosition = bodySizePosition + 4 + byteBuffer.getInt(bodySizePosition);
         byteBuffer.position(topicLengthPosition);
         int topicLengthSize = version.getTopicLengthSize();
@@ -269,20 +269,20 @@ public class MessageDecoder {
             byteBuffer = ByteBuffer.allocate(storeSize - 8); // except size for store timestamp
         } else {
             storeSize = 4 +  // 1 TOTALSIZE
-                4 +  // 2 MAGICCODE
-                4 +  // 3 BODYCRC
-                4 +  // 4 QUEUEID
-                4 +  // 5 FLAG
-                8 +  // 6 QUEUEOFFSET
-                8 +  // 7 PHYSICALOFFSET
-                4 +  // 8 SYSFLAG
-                8 +  // 9 BORNTIMESTAMP
-                bornhostLength + // 10 BORNHOST
-                4 +  // 11 RECONSUMETIMES
-                8 +  // 12 Prepared Transaction Offset
-                4 + bodyLength +  // 13 BODY
+                    4 +  // 2 MAGICCODE
+                    4 +  // 3 BODYCRC
+                    4 +  // 4 QUEUEID
+                    4 +  // 5 FLAG
+                    8 +  // 6 QUEUEOFFSET
+                    8 +  // 7 PHYSICALOFFSET
+                    4 +  // 8 SYSFLAG
+                    8 +  // 9 BORNTIMESTAMP
+                    bornhostLength + // 10 BORNHOST
+                    4 +  // 11 RECONSUMETIMES
+                    8 +  // 12 Prepared Transaction Offset
+                    4 + bodyLength +  // 13 BODY
                     1 + topicLen +  // 14 TOPIC
-                2 + propertiesLength // 15 propertiesLength
+                    2 + propertiesLength // 15 propertiesLength
             ;
             byteBuffer = ByteBuffer.allocate(storeSize);
         }
@@ -333,7 +333,7 @@ public class MessageDecoder {
     }
 
     public static MessageExt decode(
-        ByteBuffer byteBuffer, final boolean readBody, final boolean deCompressBody) {
+            ByteBuffer byteBuffer, final boolean readBody, final boolean deCompressBody) {
         return decode(byteBuffer, readBody, deCompressBody, false);
     }
 
@@ -463,9 +463,9 @@ public class MessageDecoder {
     }
 
     public static List<MessageExt> decodesBatch(ByteBuffer byteBuffer,
-        final boolean readBody,
-        final boolean decompressBody,
-        final boolean isClient) {
+                                                final boolean readBody,
+                                                final boolean decompressBody,
+                                                final boolean isClient) {
         List<MessageExt> msgExts = new ArrayList<>();
         while (byteBuffer.hasRemaining()) {
             MessageExt msgExt = decode(byteBuffer, readBody, decompressBody, isClient);
@@ -562,11 +562,11 @@ public class MessageDecoder {
         //note properties length must not more than Short.MAX
         short propertiesLength = (short) propertiesBytes.length;
         int storeSize = 4 // 1 TOTALSIZE
-            + 4 // 2 MAGICCOD
-            + 4 // 3 BODYCRC
-            + 4 // 4 FLAG
-            + 4 + bodyLen // 4 BODY
-            + 2 + propertiesLength;
+                + 4 // 2 MAGICCOD
+                + 4 // 3 BODYCRC
+                + 4 // 4 FLAG
+                + 4 + bodyLen // 4 BODY
+                + 2 + propertiesLength;
         ByteBuffer byteBuffer = ByteBuffer.allocate(storeSize);
         // 1 TOTALSIZE
         byteBuffer.putInt(storeSize);

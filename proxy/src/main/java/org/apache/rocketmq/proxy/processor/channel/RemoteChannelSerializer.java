@@ -19,12 +19,13 @@ package org.apache.rocketmq.proxy.processor.channel;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RemoteChannelSerializer {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -51,11 +52,11 @@ public class RemoteChannelSerializer {
         try {
             JSONObject jsonObject = JSON.parseObject(jsonData);
             return new RemoteChannel(
-                jsonObject.getString(REMOTE_PROXY_IP_KEY),
-                jsonObject.getString(REMOTE_ADDRESS_KEY),
-                jsonObject.getString(LOCAL_ADDRESS_KEY),
-                jsonObject.getObject(TYPE_KEY, ChannelProtocolType.class),
-                jsonObject.getObject(EXTEND_ATTRIBUTE_KEY, String.class)
+                    jsonObject.getString(REMOTE_PROXY_IP_KEY),
+                    jsonObject.getString(REMOTE_ADDRESS_KEY),
+                    jsonObject.getString(LOCAL_ADDRESS_KEY),
+                    jsonObject.getObject(TYPE_KEY, ChannelProtocolType.class),
+                    jsonObject.getObject(EXTEND_ATTRIBUTE_KEY, String.class)
             );
         } catch (Throwable t) {
             log.error("decode remote channel data failed. data:{}", jsonData, t);

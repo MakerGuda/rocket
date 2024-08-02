@@ -27,43 +27,27 @@ public abstract class AbstractRocksDBStorage {
 
     private static final String SPACE = " | ";
 
-    protected String dbPath;
-
-    protected boolean readOnly;
-
-    protected RocksDB db;
-
-    protected DBOptions options;
-
-    protected WriteOptions writeOptions;
-
-    protected WriteOptions ableWalWriteOptions;
-
-    protected ReadOptions readOptions;
-
-    protected ReadOptions totalOrderReadOptions;
-
-    protected CompactionOptions compactionOptions;
-
-    protected CompactRangeOptions compactRangeOptions;
-
-    protected ColumnFamilyHandle defaultCFHandle;
-
-    protected final List<ColumnFamilyOptions> cfOptions = new ArrayList<>();
-
-    protected volatile boolean loaded;
-
-    private volatile boolean closed;
-
-    private final Semaphore reloadPermit = new Semaphore(1);
-
-    private final ScheduledExecutorService reloadScheduler = ThreadUtils.newScheduledThreadPool(1, new ThreadFactoryImpl("RocksDBStorageReloadService_"));
-
-    private final ThreadPoolExecutor manualCompactionThread = (ThreadPoolExecutor) ThreadUtils.newThreadPoolExecutor(1, 1, 1000 * 60, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1), new ThreadFactoryImpl("RocksDBManualCompactionService_"), new ThreadPoolExecutor.DiscardOldestPolicy());
-
     static {
         RocksDB.loadLibrary();
     }
+
+    protected final List<ColumnFamilyOptions> cfOptions = new ArrayList<>();
+    private final Semaphore reloadPermit = new Semaphore(1);
+    private final ScheduledExecutorService reloadScheduler = ThreadUtils.newScheduledThreadPool(1, new ThreadFactoryImpl("RocksDBStorageReloadService_"));
+    private final ThreadPoolExecutor manualCompactionThread = (ThreadPoolExecutor) ThreadUtils.newThreadPoolExecutor(1, 1, 1000 * 60, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1), new ThreadFactoryImpl("RocksDBManualCompactionService_"), new ThreadPoolExecutor.DiscardOldestPolicy());
+    protected String dbPath;
+    protected boolean readOnly;
+    protected RocksDB db;
+    protected DBOptions options;
+    protected WriteOptions writeOptions;
+    protected WriteOptions ableWalWriteOptions;
+    protected ReadOptions readOptions;
+    protected ReadOptions totalOrderReadOptions;
+    protected CompactionOptions compactionOptions;
+    protected CompactRangeOptions compactRangeOptions;
+    protected ColumnFamilyHandle defaultCFHandle;
+    protected volatile boolean loaded;
+    private volatile boolean closed;
 
     public boolean hold() {
         if (!this.loaded || this.db == null || this.closed) {

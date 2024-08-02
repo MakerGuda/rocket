@@ -16,23 +16,6 @@
  */
 package org.apache.rocketmq.store.queue;
 
-import java.io.File;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.TopicConfig;
@@ -42,11 +25,13 @@ import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.common.utils.QueueTypeUtils;
 import org.apache.rocketmq.common.utils.ThreadUtils;
-import org.apache.rocketmq.store.CommitLog;
-import org.apache.rocketmq.store.ConsumeQueue;
-import org.apache.rocketmq.store.DefaultMessageStore;
-import org.apache.rocketmq.store.DispatchRequest;
-import org.apache.rocketmq.store.SelectMappedBufferResult;
+import org.apache.rocketmq.store.*;
+
+import java.io.File;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.*;
 
 import static java.lang.String.format;
 import static org.apache.rocketmq.store.config.StorePathConfigHelper.getStorePathBatchConsumeQueue;
@@ -104,7 +89,7 @@ public class ConsumeQueueStore extends AbstractConsumeQueueStore {
                         } catch (Throwable e) {
                             ret = false;
                             log.error("Exception occurs while recover consume queue concurrently, " +
-                                "topic={}, queueId={}", logic.getTopic(), logic.getQueueId(), e);
+                                    "topic={}, queueId={}", logic.getTopic(), logic.getQueueId(), e);
                         } finally {
                             countDownLatch.countDown();
                         }
@@ -232,18 +217,18 @@ public class ConsumeQueueStore extends AbstractConsumeQueueStore {
     private ConsumeQueueInterface createConsumeQueueByType(CQType cqType, String topic, int queueId, String storePath) {
         if (Objects.equals(CQType.SimpleCQ, cqType)) {
             return new ConsumeQueue(
-                topic,
-                queueId,
-                storePath,
-                this.messageStoreConfig.getMappedFileSizeConsumeQueue(),
-                this.messageStore);
+                    topic,
+                    queueId,
+                    storePath,
+                    this.messageStoreConfig.getMappedFileSizeConsumeQueue(),
+                    this.messageStore);
         } else if (Objects.equals(CQType.BatchCQ, cqType)) {
             return new BatchConsumeQueue(
-                topic,
-                queueId,
-                storePath,
-                this.messageStoreConfig.getMapperFileSizeBatchConsumeQueue(),
-                this.messageStore);
+                    topic,
+                    queueId,
+                    storePath,
+                    this.messageStoreConfig.getMapperFileSizeBatchConsumeQueue(),
+                    this.messageStore);
         } else {
             throw new RuntimeException(format("queue type %s is not supported.", cqType.toString()));
         }
@@ -261,12 +246,12 @@ public class ConsumeQueueStore extends AbstractConsumeQueueStore {
 
     private ExecutorService buildExecutorService(BlockingQueue<Runnable> blockingQueue, String threadNamePrefix) {
         return ThreadUtils.newThreadPoolExecutor(
-            this.messageStore.getBrokerConfig().getRecoverThreadPoolNums(),
-            this.messageStore.getBrokerConfig().getRecoverThreadPoolNums(),
-            1000 * 60,
-            TimeUnit.MILLISECONDS,
-            blockingQueue,
-            new ThreadFactoryImpl(threadNamePrefix));
+                this.messageStore.getBrokerConfig().getRecoverThreadPoolNums(),
+                this.messageStore.getBrokerConfig().getRecoverThreadPoolNums(),
+                1000 * 60,
+                TimeUnit.MILLISECONDS,
+                blockingQueue,
+                new ThreadFactoryImpl(threadNamePrefix));
     }
 
     public void recover(ConsumeQueueInterface consumeQueue) {
@@ -344,7 +329,7 @@ public class ConsumeQueueStore extends AbstractConsumeQueueStore {
     }
 
     public void swapMap(ConsumeQueueInterface consumeQueue, int reserveNum, long forceSwapIntervalMs,
-        long normalSwapIntervalMs) {
+                        long normalSwapIntervalMs) {
         FileQueueLifeCycle fileQueueLifeCycle = getLifeCycle(consumeQueue.getTopic(), consumeQueue.getQueueId());
         fileQueueLifeCycle.swapMap(reserveNum, forceSwapIntervalMs, normalSwapIntervalMs);
     }
@@ -390,18 +375,18 @@ public class ConsumeQueueStore extends AbstractConsumeQueueStore {
         // TODO maybe the topic has been deleted.
         if (Objects.equals(CQType.BatchCQ, QueueTypeUtils.getCQType(topicConfig))) {
             newLogic = new BatchConsumeQueue(
-                topic,
-                queueId,
-                getStorePathBatchConsumeQueue(this.messageStoreConfig.getStorePathRootDir()),
-                this.messageStoreConfig.getMapperFileSizeBatchConsumeQueue(),
-                this.messageStore);
+                    topic,
+                    queueId,
+                    getStorePathBatchConsumeQueue(this.messageStoreConfig.getStorePathRootDir()),
+                    this.messageStoreConfig.getMapperFileSizeBatchConsumeQueue(),
+                    this.messageStore);
         } else {
             newLogic = new ConsumeQueue(
-                topic,
-                queueId,
-                getStorePathConsumeQueue(this.messageStoreConfig.getStorePathRootDir()),
-                this.messageStoreConfig.getMappedFileSizeConsumeQueue(),
-                this.messageStore);
+                    topic,
+                    queueId,
+                    getStorePathConsumeQueue(this.messageStoreConfig.getStorePathRootDir()),
+                    this.messageStoreConfig.getMappedFileSizeConsumeQueue(),
+                    this.messageStore);
         }
 
         ConsumeQueueInterface oldLogic = map.putIfAbsent(queueId, newLogic);
@@ -462,6 +447,7 @@ public class ConsumeQueueStore extends AbstractConsumeQueueStore {
         this.setTopicQueueTable(cqOffsetTable);
         this.setBatchTopicQueueTable(bcqOffsetTable);
     }
+
     private void compensateForHA(ConcurrentMap<String, Long> cqOffsetTable) {
         SelectMappedBufferResult lastBuffer = null;
         long startReadOffset = messageStore.getCommitLog().getConfirmOffset() == -1 ? 0 : messageStore.getCommitLog().getConfirmOffset();
@@ -527,20 +513,20 @@ public class ConsumeQueueStore extends AbstractConsumeQueueStore {
 
                     if (maxCLOffsetInConsumeQueue == -1) {
                         log.warn("maybe ConsumeQueue was created just now. topic={} queueId={} maxPhysicOffset={} minLogicOffset={}.",
-                            nextQT.getValue().getTopic(),
-                            nextQT.getValue().getQueueId(),
-                            nextQT.getValue().getMaxPhysicOffset(),
-                            nextQT.getValue().getMinLogicOffset());
+                                nextQT.getValue().getTopic(),
+                                nextQT.getValue().getQueueId(),
+                                nextQT.getValue().getMaxPhysicOffset(),
+                                nextQT.getValue().getMinLogicOffset());
                     } else if (maxCLOffsetInConsumeQueue < minCommitLogOffset) {
                         log.info(
-                            "cleanExpiredConsumerQueue: {} {} consumer queue destroyed, minCommitLogOffset: {} maxCLOffsetInConsumeQueue: {}",
-                            topic,
-                            nextQT.getKey(),
-                            minCommitLogOffset,
-                            maxCLOffsetInConsumeQueue);
+                                "cleanExpiredConsumerQueue: {} {} consumer queue destroyed, minCommitLogOffset: {} maxCLOffsetInConsumeQueue: {}",
+                                topic,
+                                nextQT.getKey(),
+                                minCommitLogOffset,
+                                maxCLOffsetInConsumeQueue);
 
                         removeTopicQueueTable(nextQT.getValue().getTopic(),
-                            nextQT.getValue().getQueueId());
+                                nextQT.getValue().getQueueId());
 
                         this.destroy(nextQT.getValue());
                         itQT.remove();

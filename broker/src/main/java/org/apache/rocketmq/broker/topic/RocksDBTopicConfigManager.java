@@ -16,15 +16,14 @@
  */
 package org.apache.rocketmq.broker.topic;
 
-import java.io.File;
-
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.common.config.RocksDBConfigManager;
 import org.apache.rocketmq.common.utils.DataConverter;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+import java.io.File;
 
 public class RocksDBTopicConfigManager extends TopicConfigManager {
 

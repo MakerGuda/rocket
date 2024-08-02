@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.consumer.AckCallback;
 import org.apache.rocketmq.client.consumer.AckResult;
@@ -90,10 +91,10 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     private final MqClientAdminImpl mqClientAdmin;
 
     public MQClientAPIExt(
-        ClientConfig clientConfig,
-        NettyClientConfig nettyClientConfig,
-        ClientRemotingProcessor clientRemotingProcessor,
-        RPCHook rpcHook
+            ClientConfig clientConfig,
+            NettyClientConfig nettyClientConfig,
+            ClientRemotingProcessor clientRemotingProcessor,
+            RPCHook rpcHook
     ) {
         super(nettyClientConfig, clientRemotingProcessor, rpcHook, clientConfig);
         this.clientConfig = clientConfig;
@@ -110,9 +111,9 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<Void> sendHeartbeatOneway(
-        String brokerAddr,
-        HeartbeatData heartbeatData,
-        long timeoutMillis
+            String brokerAddr,
+            HeartbeatData heartbeatData,
+            long timeoutMillis
     ) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         try {
@@ -128,9 +129,9 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<Integer> sendHeartbeatAsync(
-        String brokerAddr,
-        HeartbeatData heartbeatData,
-        long timeoutMillis
+            String brokerAddr,
+            HeartbeatData heartbeatData,
+            long timeoutMillis
     ) {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.HEART_BEAT, new HeartbeatRequestHeader());
         request.setLanguage(clientConfig.getLanguage());
@@ -148,11 +149,11 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<SendResult> sendMessageAsync(
-        String brokerAddr,
-        String brokerName,
-        Message msg,
-        SendMessageRequestHeader requestHeader,
-        long timeoutMillis
+            String brokerAddr,
+            String brokerName,
+            Message msg,
+            SendMessageRequestHeader requestHeader,
+            long timeoutMillis
     ) {
         SendMessageRequestHeaderV2 requestHeaderV2 = SendMessageRequestHeaderV2.createSendMessageRequestHeaderV2(requestHeader);
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE_V2, requestHeaderV2);
@@ -170,11 +171,11 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<SendResult> sendMessageAsync(
-        String brokerAddr,
-        String brokerName,
-        List<? extends Message> msgList,
-        SendMessageRequestHeader requestHeader,
-        long timeoutMillis
+            String brokerAddr,
+            String brokerName,
+            List<? extends Message> msgList,
+            SendMessageRequestHeader requestHeader,
+            long timeoutMillis
     ) {
         SendMessageRequestHeaderV2 requestHeaderV2 = SendMessageRequestHeaderV2.createSendMessageRequestHeaderV2(requestHeader);
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.SEND_BATCH_MESSAGE, requestHeaderV2);
@@ -204,19 +205,19 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<RemotingCommand> sendMessageBackAsync(
-        String brokerAddr,
-        ConsumerSendMsgBackRequestHeader requestHeader,
-        long timeoutMillis
+            String brokerAddr,
+            ConsumerSendMsgBackRequestHeader requestHeader,
+            long timeoutMillis
     ) {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.CONSUMER_SEND_MSG_BACK, requestHeader);
         return this.getRemotingClient().invoke(brokerAddr, request, timeoutMillis);
     }
 
     public CompletableFuture<PopResult> popMessageAsync(
-        String brokerAddr,
-        String brokerName,
-        PopMessageRequestHeader requestHeader,
-        long timeoutMillis
+            String brokerAddr,
+            String brokerName,
+            PopMessageRequestHeader requestHeader,
+            long timeoutMillis
     ) {
         CompletableFuture<PopResult> future = new CompletableFuture<>();
         try {
@@ -238,9 +239,9 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<AckResult> ackMessageAsync(
-        String brokerAddr,
-        AckMessageRequestHeader requestHeader,
-        long timeoutMillis
+            String brokerAddr,
+            AckMessageRequestHeader requestHeader,
+            long timeoutMillis
     ) {
         CompletableFuture<AckResult> future = new CompletableFuture<>();
         try {
@@ -262,11 +263,11 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<AckResult> batchAckMessageAsync(
-        String brokerAddr,
-        String topic,
-        String consumerGroup,
-        List<String> extraInfoList,
-        long timeoutMillis
+            String brokerAddr,
+            String topic,
+            String consumerGroup,
+            List<String> extraInfoList,
+            long timeoutMillis
     ) {
         CompletableFuture<AckResult> future = new CompletableFuture<>();
         try {
@@ -288,25 +289,25 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<AckResult> changeInvisibleTimeAsync(
-        String brokerAddr,
-        String brokerName,
-        ChangeInvisibleTimeRequestHeader requestHeader,
-        long timeoutMillis
+            String brokerAddr,
+            String brokerName,
+            ChangeInvisibleTimeRequestHeader requestHeader,
+            long timeoutMillis
     ) {
         CompletableFuture<AckResult> future = new CompletableFuture<>();
         try {
             this.changeInvisibleTimeAsync(brokerName, brokerAddr, requestHeader, timeoutMillis,
-                new AckCallback() {
-                    @Override
-                    public void onSuccess(AckResult ackResult) {
-                        future.complete(ackResult);
-                    }
+                    new AckCallback() {
+                        @Override
+                        public void onSuccess(AckResult ackResult) {
+                            future.complete(ackResult);
+                        }
 
-                    @Override
-                    public void onException(Throwable t) {
-                        future.completeExceptionally(t);
+                        @Override
+                        public void onException(Throwable t) {
+                            future.completeExceptionally(t);
+                        }
                     }
-                }
             );
         } catch (Throwable t) {
             future.completeExceptionally(t);
@@ -315,36 +316,36 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<PullResult> pullMessageAsync(
-        String brokerAddr,
-        PullMessageRequestHeader requestHeader,
-        long timeoutMillis
+            String brokerAddr,
+            PullMessageRequestHeader requestHeader,
+            long timeoutMillis
     ) {
         CompletableFuture<PullResult> future = new CompletableFuture<>();
         try {
             this.pullMessage(brokerAddr, requestHeader, timeoutMillis, CommunicationMode.ASYNC,
-                new PullCallback() {
-                    @Override
-                    public void onSuccess(PullResult pullResult) {
-                        if (pullResult instanceof PullResultExt) {
-                            PullResultExt pullResultExt = (PullResultExt) pullResult;
-                            if (PullStatus.FOUND.equals(pullResult.getPullStatus())) {
-                                List<MessageExt> messageExtList = MessageDecoder.decodesBatch(
-                                    ByteBuffer.wrap(pullResultExt.getMessageBinary()),
-                                    true,
-                                    false,
-                                    true
-                                );
-                                pullResult.setMsgFoundList(messageExtList);
+                    new PullCallback() {
+                        @Override
+                        public void onSuccess(PullResult pullResult) {
+                            if (pullResult instanceof PullResultExt) {
+                                PullResultExt pullResultExt = (PullResultExt) pullResult;
+                                if (PullStatus.FOUND.equals(pullResult.getPullStatus())) {
+                                    List<MessageExt> messageExtList = MessageDecoder.decodesBatch(
+                                            ByteBuffer.wrap(pullResultExt.getMessageBinary()),
+                                            true,
+                                            false,
+                                            true
+                                    );
+                                    pullResult.setMsgFoundList(messageExtList);
+                                }
                             }
+                            future.complete(pullResult);
                         }
-                        future.complete(pullResult);
-                    }
 
-                    @Override
-                    public void onException(Throwable t) {
-                        future.completeExceptionally(t);
+                        @Override
+                        public void onException(Throwable t) {
+                            future.completeExceptionally(t);
+                        }
                     }
-                }
             );
         } catch (Throwable t) {
             future.completeExceptionally(t);
@@ -353,9 +354,9 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<Long> queryConsumerOffsetWithFuture(
-        String brokerAddr,
-        QueryConsumerOffsetRequestHeader requestHeader,
-        long timeoutMillis
+            String brokerAddr,
+            QueryConsumerOffsetRequestHeader requestHeader,
+            long timeoutMillis
     ) {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.QUERY_CONSUMER_OFFSET, requestHeader);
         return this.getRemotingClient().invoke(brokerAddr, request, timeoutMillis).thenCompose(response -> {
@@ -364,7 +365,7 @@ public class MQClientAPIExt extends MQClientAPIImpl {
                 case ResponseCode.SUCCESS: {
                     try {
                         QueryConsumerOffsetResponseHeader responseHeader =
-                            (QueryConsumerOffsetResponseHeader) response.decodeCommandCustomHeader(QueryConsumerOffsetResponseHeader.class);
+                                (QueryConsumerOffsetResponseHeader) response.decodeCommandCustomHeader(QueryConsumerOffsetResponseHeader.class);
                         future0.complete(responseHeader.getOffset());
                     } catch (RemotingCommandException e) {
                         future0.completeExceptionally(e);
@@ -385,9 +386,9 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<Void> updateConsumerOffsetOneWay(
-        String brokerAddr,
-        UpdateConsumerOffsetRequestHeader header,
-        long timeoutMillis
+            String brokerAddr,
+            UpdateConsumerOffsetRequestHeader header,
+            long timeoutMillis
     ) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         try {
@@ -401,9 +402,9 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<List<String>> getConsumerListByGroupAsync(
-        String brokerAddr,
-        GetConsumerListByGroupRequestHeader requestHeader,
-        long timeoutMillis
+            String brokerAddr,
+            GetConsumerListByGroupRequestHeader requestHeader,
+            long timeoutMillis
     ) {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_CONSUMER_LIST_BY_GROUP, requestHeader);
 
@@ -421,7 +422,7 @@ public class MQClientAPIExt extends MQClientAPIImpl {
                         case ResponseCode.SUCCESS: {
                             if (response.getBody() != null) {
                                 GetConsumerListByGroupResponseBody body =
-                                    GetConsumerListByGroupResponseBody.decode(response.getBody(), GetConsumerListByGroupResponseBody.class);
+                                        GetConsumerListByGroupResponseBody.decode(response.getBody(), GetConsumerListByGroupResponseBody.class);
                                 future.complete(body.getConsumerIdList());
                                 return;
                             }
@@ -452,7 +453,7 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<Long> getMaxOffset(String brokerAddr, GetMaxOffsetRequestHeader requestHeader,
-        long timeoutMillis) {
+                                                long timeoutMillis) {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_MAX_OFFSET, requestHeader);
 
         CompletableFuture<Long> future = new CompletableFuture<>();
@@ -488,7 +489,7 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<Long> getMinOffset(String brokerAddr, GetMinOffsetRequestHeader requestHeader,
-        long timeoutMillis) {
+                                                long timeoutMillis) {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_MIN_OFFSET, requestHeader);
 
         CompletableFuture<Long> future = new CompletableFuture<>();
@@ -524,7 +525,7 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<Long> searchOffset(String brokerAddr, SearchOffsetRequestHeader requestHeader,
-        long timeoutMillis) {
+                                                long timeoutMillis) {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.SEARCH_OFFSET_BY_TIMESTAMP, requestHeader);
 
         return this.getRemotingClient().invoke(brokerAddr, request, timeoutMillis).thenCompose(response -> {
@@ -544,7 +545,7 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<Set<MessageQueue>> lockBatchMQWithFuture(String brokerAddr,
-        LockBatchRequestBody requestBody, long timeoutMillis) {
+                                                                      LockBatchRequestBody requestBody, long timeoutMillis) {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.LOCK_BATCH_MQ, new LockBatchMqRequestHeader());
         request.setBody(requestBody.encode());
         return this.getRemotingClient().invoke(brokerAddr, request, timeoutMillis).thenCompose(response -> {
@@ -565,7 +566,7 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<Void> unlockBatchMQOneway(String brokerAddr,
-        UnlockBatchRequestBody requestBody, long timeoutMillis) {
+                                                       UnlockBatchRequestBody requestBody, long timeoutMillis) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.UNLOCK_BATCH_MQ, new UnlockBatchMqRequestHeader());
         request.setBody(requestBody.encode());
@@ -579,7 +580,7 @@ public class MQClientAPIExt extends MQClientAPIImpl {
     }
 
     public CompletableFuture<Boolean> notification(String brokerAddr, NotificationRequestHeader requestHeader,
-        long timeoutMillis) {
+                                                   long timeoutMillis) {
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.NOTIFICATION, requestHeader);
         return this.getRemotingClient().invoke(brokerAddr, request, timeoutMillis).thenCompose(response -> {
             CompletableFuture<Boolean> future0 = new CompletableFuture<>();

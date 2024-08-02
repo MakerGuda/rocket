@@ -27,10 +27,6 @@ import java.util.Map;
 @Setter
 public class ConsumeQueue implements ConsumeQueueInterface, FileQueueLifeCycle {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
-
-    private static final Logger LOG_ERROR = LoggerFactory.getLogger(LoggerName.STORE_ERROR_LOGGER_NAME);
-
     /**
      * ConsumeQueue's store unit. Format:
      * <pre>
@@ -47,30 +43,24 @@ public class ConsumeQueue implements ConsumeQueueInterface, FileQueueLifeCycle {
      * tag hash: 对消息的tags进行hash的特殊字符串，固定长度8个字节。  tag相同，hash一定相同  hash相同，tag不一定相同
      */
     public static final int CQ_STORE_UNIT_SIZE = 20;
-
     public static final int MSG_TAG_OFFSET_INDEX = 12;
-
-    private final MessageStore messageStore;
-
-    private final MappedFileQueue mappedFileQueue;
-
-    /**
-     * 同一个消息队列中的所有主题都是相同的
-     */
-    private final String topic;
-
-    /**
-     * 当前队列id
-     */
-    private final int queueId;
-
-    private final ByteBuffer byteBufferIndex;
-
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
+    private static final Logger LOG_ERROR = LoggerFactory.getLogger(LoggerName.STORE_ERROR_LOGGER_NAME);
     /**
      * consumeQueue存储路径
      */
     protected final String storePath;
-
+    private final MessageStore messageStore;
+    private final MappedFileQueue mappedFileQueue;
+    /**
+     * 同一个消息队列中的所有主题都是相同的
+     */
+    private final String topic;
+    /**
+     * 当前队列id
+     */
+    private final int queueId;
+    private final ByteBuffer byteBufferIndex;
     /**
      * mappedFile文件大小
      */
@@ -647,7 +637,7 @@ public class ConsumeQueue implements ConsumeQueueInterface, FileQueueLifeCycle {
             boolean result = this.putMessagePositionInfo(request.getCommitLogOffset(), request.getMsgSize(), tagsCode, request.getConsumeQueueOffset());
             if (result) {
                 if (this.messageStore.getMessageStoreConfig().getBrokerRole() == BrokerRole.SLAVE ||
-                    this.messageStore.getMessageStoreConfig().isEnableDLegerCommitLog()) {
+                        this.messageStore.getMessageStoreConfig().isEnableDLegerCommitLog()) {
                     this.messageStore.getStoreCheckpoint().setPhysicMsgTimestamp(request.getStoreTimestamp());
                 }
                 this.messageStore.getStoreCheckpoint().setLogicsMsgTimestamp(request.getStoreTimestamp());
@@ -860,70 +850,6 @@ public class ConsumeQueue implements ConsumeQueueInterface, FileQueueLifeCycle {
         return false;
     }
 
-    private class ConsumeQueueIterator implements ReferredIterator<CqUnit> {
-        private SelectMappedBufferResult sbr;
-        private int relativePos = 0;
-
-        public ConsumeQueueIterator(SelectMappedBufferResult sbr) {
-            this.sbr = sbr;
-            if (sbr != null && sbr.getByteBuffer() != null) {
-                relativePos = sbr.getByteBuffer().position();
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            if (sbr == null || sbr.getByteBuffer() == null) {
-                return false;
-            }
-
-            return sbr.getByteBuffer().hasRemaining();
-        }
-
-        @Override
-        public CqUnit next() {
-            if (!hasNext()) {
-                return null;
-            }
-            long queueOffset = (sbr.getStartOffset() + sbr.getByteBuffer().position() - relativePos) / CQ_STORE_UNIT_SIZE;
-            CqUnit cqUnit = new CqUnit(queueOffset,
-                sbr.getByteBuffer().getLong(),
-                sbr.getByteBuffer().getInt(),
-                sbr.getByteBuffer().getLong());
-
-            if (isExtAddr(cqUnit.getTagsCode())) {
-                ConsumeQueueExt.CqExtUnit cqExtUnit = new ConsumeQueueExt.CqExtUnit();
-                boolean extRet = getExt(cqUnit.getTagsCode(), cqExtUnit);
-                if (extRet) {
-                    cqUnit.setTagsCode(cqExtUnit.getTagsCode());
-                    cqUnit.setCqExtUnit(cqExtUnit);
-                } else {
-                    // can't find ext content.Client will filter messages by tag also.
-                    log.error("[BUG] can't find consume queue extend file content! addr={}, offsetPy={}, sizePy={}, topic={}",
-                        cqUnit.getTagsCode(), cqUnit.getPos(), cqUnit.getPos(), getTopic());
-                }
-            }
-            return cqUnit;
-        }
-
-        @Override
-        public void release() {
-            if (sbr != null) {
-                sbr.release();
-                sbr = null;
-            }
-        }
-
-        @Override
-        public CqUnit nextAndRelease() {
-            try {
-                return next();
-            } finally {
-                release();
-            }
-        }
-    }
-
     public boolean getExt(final long offset, ConsumeQueueExt.CqExtUnit cqExtUnit) {
         if (isExtReadEnable()) {
             return this.consumeQueueExt.get(offset, cqExtUnit);
@@ -1101,6 +1027,70 @@ public class ConsumeQueue implements ConsumeQueueInterface, FileQueueLifeCycle {
         }
         log.debug("Result={}, raw={}, match={}, sample={}", result, raw, match, sample);
         return result;
+    }
+
+    private class ConsumeQueueIterator implements ReferredIterator<CqUnit> {
+        private SelectMappedBufferResult sbr;
+        private int relativePos = 0;
+
+        public ConsumeQueueIterator(SelectMappedBufferResult sbr) {
+            this.sbr = sbr;
+            if (sbr != null && sbr.getByteBuffer() != null) {
+                relativePos = sbr.getByteBuffer().position();
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (sbr == null || sbr.getByteBuffer() == null) {
+                return false;
+            }
+
+            return sbr.getByteBuffer().hasRemaining();
+        }
+
+        @Override
+        public CqUnit next() {
+            if (!hasNext()) {
+                return null;
+            }
+            long queueOffset = (sbr.getStartOffset() + sbr.getByteBuffer().position() - relativePos) / CQ_STORE_UNIT_SIZE;
+            CqUnit cqUnit = new CqUnit(queueOffset,
+                    sbr.getByteBuffer().getLong(),
+                    sbr.getByteBuffer().getInt(),
+                    sbr.getByteBuffer().getLong());
+
+            if (isExtAddr(cqUnit.getTagsCode())) {
+                ConsumeQueueExt.CqExtUnit cqExtUnit = new ConsumeQueueExt.CqExtUnit();
+                boolean extRet = getExt(cqUnit.getTagsCode(), cqExtUnit);
+                if (extRet) {
+                    cqUnit.setTagsCode(cqExtUnit.getTagsCode());
+                    cqUnit.setCqExtUnit(cqExtUnit);
+                } else {
+                    // can't find ext content.Client will filter messages by tag also.
+                    log.error("[BUG] can't find consume queue extend file content! addr={}, offsetPy={}, sizePy={}, topic={}",
+                            cqUnit.getTagsCode(), cqUnit.getPos(), cqUnit.getPos(), getTopic());
+                }
+            }
+            return cqUnit;
+        }
+
+        @Override
+        public void release() {
+            if (sbr != null) {
+                sbr.release();
+                sbr = null;
+            }
+        }
+
+        @Override
+        public CqUnit nextAndRelease() {
+            try {
+                return next();
+            } finally {
+                release();
+            }
+        }
     }
 
 }

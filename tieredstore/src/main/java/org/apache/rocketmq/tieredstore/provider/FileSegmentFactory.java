@@ -18,6 +18,7 @@
 package org.apache.rocketmq.tieredstore.provider;
 
 import java.lang.reflect.Constructor;
+
 import org.apache.rocketmq.tieredstore.MessageStoreConfig;
 import org.apache.rocketmq.tieredstore.common.FileSegmentType;
 import org.apache.rocketmq.tieredstore.metadata.MetadataStore;
@@ -33,9 +34,9 @@ public class FileSegmentFactory {
             this.storeConfig = storeConfig;
             this.metadataStore = metadataStore;
             Class<? extends FileSegment> clazz =
-                Class.forName(storeConfig.getTieredBackendServiceProvider()).asSubclass(FileSegment.class);
+                    Class.forName(storeConfig.getTieredBackendServiceProvider()).asSubclass(FileSegment.class);
             fileSegmentConstructor = clazz.getConstructor(
-                MessageStoreConfig.class, FileSegmentType.class, String.class, Long.TYPE);
+                    MessageStoreConfig.class, FileSegmentType.class, String.class, Long.TYPE);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

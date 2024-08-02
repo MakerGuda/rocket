@@ -17,8 +17,6 @@
 package org.apache.rocketmq.acl.plain;
 
 import com.google.protobuf.GeneratedMessageV3;
-import java.util.List;
-import java.util.Map;
 import org.apache.rocketmq.acl.AccessResource;
 import org.apache.rocketmq.acl.AccessValidator;
 import org.apache.rocketmq.acl.common.AuthenticationHeader;
@@ -26,6 +24,9 @@ import org.apache.rocketmq.common.AclConfig;
 import org.apache.rocketmq.common.PlainAccessConfig;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
+import java.util.List;
+import java.util.Map;
 
 public class PlainAccessValidator implements AccessValidator {
 

@@ -17,8 +17,6 @@
 
 package org.apache.rocketmq.broker.filter;
 
-import java.nio.ByteBuffer;
-import java.util.Map;
 import org.apache.rocketmq.common.KeyBuilder;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.filter.ExpressionType;
@@ -26,13 +24,16 @@ import org.apache.rocketmq.common.message.MessageConst;
 import org.apache.rocketmq.common.message.MessageDecoder;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 
+import java.nio.ByteBuffer;
+import java.util.Map;
+
 /**
  * Support filter to retry topic.
  * <br>It will decode properties first in order to get real topic.
  */
 public class ExpressionForRetryMessageFilter extends ExpressionMessageFilter {
     public ExpressionForRetryMessageFilter(SubscriptionData subscriptionData, ConsumerFilterData consumerFilterData,
-        ConsumerFilterManager consumerFilterManager) {
+                                           ConsumerFilterManager consumerFilterManager) {
         super(subscriptionData, consumerFilterData, consumerFilterManager);
     }
 
@@ -69,7 +70,7 @@ public class ExpressionForRetryMessageFilter extends ExpressionMessageFilter {
 
         // no expression
         if (realFilterData == null || realFilterData.getExpression() == null
-            || realFilterData.getCompiledExpression() == null) {
+                || realFilterData.getCompiledExpression() == null) {
             return true;
         }
 

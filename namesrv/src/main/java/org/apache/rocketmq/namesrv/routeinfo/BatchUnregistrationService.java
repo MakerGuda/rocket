@@ -17,14 +17,12 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class BatchUnregistrationService extends ServiceThread {
 
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
     private final RouteInfoManager routeInfoManager;
-
     /**
      * 阻塞队列
      */
     private final BlockingQueue<UnRegisterBrokerRequestHeader> unregistrationQueue;
-
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
 
     public BatchUnregistrationService(RouteInfoManager routeInfoManager, NamesrvConfig namesrvConfig) {
         this.routeInfoManager = routeInfoManager;

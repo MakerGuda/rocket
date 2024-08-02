@@ -16,13 +16,14 @@
  */
 package org.apache.rocketmq.store.queue;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.concurrent.ConcurrentMap;
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.message.MessageExtBrokerInner;
 import org.apache.rocketmq.store.DispatchRequest;
 import org.rocksdb.RocksDBException;
+
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.concurrent.ConcurrentMap;
 
 public interface ConsumeQueueStoreInterface {
 
@@ -33,6 +34,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * Load from file.
+     *
      * @return true if loaded successfully.
      */
     boolean load();
@@ -49,12 +51,14 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * Recover concurrently from file.
+     *
      * @return true if recovered successfully.
      */
     boolean recoverConcurrently();
 
     /**
      * Shutdown the consumeQueueStore
+     *
      * @return true if shutdown successfully.
      */
     boolean shutdown();
@@ -66,20 +70,23 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * destroy the specific consumeQueue
+     *
      * @throws RocksDBException only in rocksdb mode
      */
     void destroy(ConsumeQueueInterface consumeQueue) throws RocksDBException;
 
     /**
      * Flush cache to file.
-     * @param consumeQueue the consumeQueue will be flushed
-     * @param flushLeastPages  the minimum number of pages to be flushed
+     *
+     * @param consumeQueue    the consumeQueue will be flushed
+     * @param flushLeastPages the minimum number of pages to be flushed
      * @return true if any data has been flushed.
      */
     boolean flush(ConsumeQueueInterface consumeQueue, int flushLeastPages);
 
     /**
      * clean expired data from minPhyOffset
+     *
      * @param minPhyOffset
      */
     void cleanExpired(long minPhyOffset);
@@ -91,6 +98,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * Delete expired files ending at min commit log position.
+     *
      * @param consumeQueue
      * @param minCommitLogPos min commit log position
      * @return deleted file numbers.
@@ -99,6 +107,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * Is the first file available?
+     *
      * @param consumeQueue
      * @return true if it's available
      */
@@ -106,6 +115,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * Does the first file exist?
+     *
      * @param consumeQueue
      * @return true if it exists
      */
@@ -113,14 +123,16 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * Roll to next file.
+     *
      * @param consumeQueue
-     * @param offset next beginning offset
+     * @param offset       next beginning offset
      * @return the beginning offset of the next file
      */
     long rollNextFile(ConsumeQueueInterface consumeQueue, final long offset);
 
     /**
      * truncate dirty data
+     *
      * @param offsetToTruncate
      * @throws RocksDBException only in rocksdb mode
      */
@@ -130,7 +142,7 @@ public interface ConsumeQueueStoreInterface {
      * Apply the dispatched request and build the consume queue. This function should be idempotent.
      *
      * @param consumeQueue consume queue
-     * @param request dispatch request
+     * @param request      dispatch request
      */
     void putMessagePositionInfoWrapper(ConsumeQueueInterface consumeQueue, DispatchRequest request);
 
@@ -144,6 +156,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * range query cqUnit(ByteBuffer) in rocksdb
+     *
      * @param topic
      * @param queueId
      * @param startIndex
@@ -155,6 +168,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * query cqUnit(ByteBuffer) in rocksdb
+     *
      * @param topic
      * @param queueId
      * @param startIndex
@@ -165,12 +179,14 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get consumeQueue table
+     *
      * @return the consumeQueue table
      */
     ConcurrentMap<String, ConcurrentMap<Integer, ConsumeQueueInterface>> getConsumeQueueTable();
 
     /**
      * Assign queue offset.
+     *
      * @param msg message itself
      * @throws RocksDBException only in rocksdb mode
      */
@@ -178,13 +194,15 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * Increase queue offset.
-     * @param msg message itself
+     *
+     * @param msg        message itself
      * @param messageNum message number
      */
     void increaseQueueOffset(MessageExtBrokerInner msg, short messageNum);
 
     /**
      * Increase lmq offset
+     *
      * @param queueKey
      * @param messageNum
      */
@@ -192,6 +210,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get lmq queue offset
+     *
      * @param queueKey
      * @return
      */
@@ -199,18 +218,14 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * recover topicQueue table by minPhyOffset
+     *
      * @param minPhyOffset
      */
     void recoverOffsetTable(long minPhyOffset);
 
     /**
-     * set topicQueue table
-     * @param topicQueueTable
-     */
-    void setTopicQueueTable(ConcurrentMap<String, Long> topicQueueTable);
-
-    /**
      * remove topic-queueId from topicQueue table
+     *
      * @param topic
      * @param queueId
      */
@@ -218,12 +233,21 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get topicQueue table
+     *
      * @return the topicQueue table
      */
     ConcurrentMap getTopicQueueTable();
 
     /**
+     * set topicQueue table
+     *
+     * @param topicQueueTable
+     */
+    void setTopicQueueTable(ConcurrentMap<String, Long> topicQueueTable);
+
+    /**
      * get the max physical offset in consumeQueue
+     *
      * @param topic
      * @param queueId
      * @return
@@ -232,6 +256,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get maxOffset of specific topic-queueId in topicQueue table
+     *
      * @param topic
      * @param queueId
      * @return the max offset in QueueOffsetOperator
@@ -240,6 +265,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get max physic offset in consumeQueue
+     *
      * @return the max physic offset in consumeQueue
      * @throws RocksDBException only in rocksdb mode
      */
@@ -247,6 +273,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get min logic offset of specific topic-queueId in consumeQueue
+     *
      * @param topic
      * @param queueId
      * @return the min logic offset of specific topic-queueId in consumeQueue
@@ -256,6 +283,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get max logic offset of specific topic-queueId in consumeQueue
+     *
      * @param topic
      * @param queueId
      * @return the max logic offset of specific topic-queueId in consumeQueue
@@ -266,6 +294,7 @@ public interface ConsumeQueueStoreInterface {
     /**
      * Get the message whose timestamp is the smallest, greater than or equal to the given time and when there are more
      * than one message satisfy the condition, decide which one to return based on boundaryType.
+     *
      * @param timestamp    timestamp
      * @param boundaryType Lower or Upper
      * @return the offset(index)
@@ -275,6 +304,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * find or create the consumeQueue
+     *
      * @param topic
      * @param queueId
      * @return the consumeQueue
@@ -283,6 +313,7 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * find the consumeQueueMap of topic
+     *
      * @param topic
      * @return the consumeQueueMap of topic
      */
@@ -290,12 +321,14 @@ public interface ConsumeQueueStoreInterface {
 
     /**
      * get the total size of all consumeQueue
+     *
      * @return the total size of all consumeQueue
      */
     long getTotalSize();
 
     /**
      * Get store time from commitlog by cqUnit
+     *
      * @param cqUnit
      * @return
      */

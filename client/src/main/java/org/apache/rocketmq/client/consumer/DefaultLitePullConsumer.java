@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.consumer.rebalance.AllocateMessageQueueAveragely;
 import org.apache.rocketmq.client.consumer.store.OffsetStore;
@@ -44,9 +45,11 @@ import static org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData.S
 public class DefaultLitePullConsumer extends ClientConfig implements LitePullConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultLitePullConsumer.class);
-
+    /**
+     * Minimum commit offset interval time in milliseconds.
+     */
+    private static final long MIN_AUTOCOMMIT_INTERVAL_MILLIS = 1000;
     private final DefaultLitePullConsumerImpl defaultLitePullConsumerImpl;
-
     /**
      * Consumers belonging to the same consumer group share a group id. The consumers in a group then divides the topic
      * as fairly amongst themselves as possible by establishing that each queue is only consumed by a single consumer
@@ -56,23 +59,19 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
      * consumer groups.
      */
     private String consumerGroup;
-
     /**
      * Long polling mode, the Consumer connection max suspend time, it is not recommended to modify
      */
     private long brokerSuspendMaxTimeMillis = 1000 * 20;
-
     /**
      * Long polling mode, the Consumer connection timeout(must greater than brokerSuspendMaxTimeMillis), it is not
      * recommended to modify
      */
     private long consumerTimeoutMillisWhenSuspend = 1000 * 30;
-
     /**
      * The socket timeout in milliseconds
      */
     private long consumerPullTimeoutMillis = 1000 * 10;
-
     /**
      * Consumption pattern,default is clustering
      */
@@ -85,7 +84,6 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
      * Offset Storage
      */
     private OffsetStore offsetStore;
-
     /**
      * Queue allocation algorithm
      */
@@ -94,22 +92,14 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
      * Whether the unit of subscription group
      */
     private boolean unitMode = false;
-
     /**
      * The flag for auto commit offset
      */
     private boolean autoCommit = true;
-
     /**
      * Pull thread number
      */
     private int pullThreadNums = 20;
-
-    /**
-     * Minimum commit offset interval time in milliseconds.
-     */
-    private static final long MIN_AUTOCOMMIT_INTERVAL_MILLIS = 1000;
-
     /**
      * Maximum commit offset interval time in milliseconds.
      */
@@ -200,7 +190,7 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
      * Constructor specifying consumer group, RPC hook
      *
      * @param consumerGroup Consumer group.
-     * @param rpcHook RPC hook to execute before each remoting command.
+     * @param rpcHook       RPC hook to execute before each remoting command.
      */
     public DefaultLitePullConsumer(final String consumerGroup, RPCHook rpcHook) {
         this.consumerGroup = consumerGroup;
@@ -213,7 +203,7 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
      * Constructor specifying namespace, consumer group and RPC hook.
      *
      * @param consumerGroup Consumer group.
-     * @param rpcHook RPC hook to execute before each remoting command.
+     * @param rpcHook       RPC hook to execute before each remoting command.
      */
     @Deprecated
     public DefaultLitePullConsumer(final String namespace, final String consumerGroup, RPCHook rpcHook) {
@@ -270,6 +260,7 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
     public void unsubscribe(String topic) {
         this.defaultLitePullConsumerImpl.unsubscribe(withNamespace(topic));
     }
+
     @Override
     public void assign(Collection<MessageQueue> messageQueues) {
         defaultLitePullConsumerImpl.assign(queuesWithNamespace(messageQueues));
@@ -317,7 +308,7 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
 
     @Override
     public void registerTopicMessageQueueChangeListener(String topic,
-        TopicMessageQueueChangeListener topicMessageQueueChangeListener) throws MQClientException {
+                                                        TopicMessageQueueChangeListener topicMessageQueueChangeListener) throws MQClientException {
         this.defaultLitePullConsumerImpl.registerTopicMessageQueueChangeListener(withNamespace(topic), topicMessageQueueChangeListener);
     }
 
@@ -338,7 +329,8 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
         this.defaultLitePullConsumerImpl.commitAll();
     }
 
-    @Override public void commit(Map<MessageQueue, Long> offsetMap, boolean persist) {
+    @Override
+    public void commit(Map<MessageQueue, Long> offsetMap, boolean persist) {
         this.defaultLitePullConsumerImpl.commit(offsetMap, persist);
     }
 
@@ -525,6 +517,10 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
         return consumerGroup;
     }
 
+    public void setConsumerGroup(String consumerGroup) {
+        this.consumerGroup = consumerGroup;
+    }
+
     public MessageQueueListener getMessageQueueListener() {
         return messageQueueListener;
     }
@@ -557,18 +553,14 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
         this.topicMetadataCheckIntervalMillis = topicMetadataCheckIntervalMillis;
     }
 
-    public void setConsumerGroup(String consumerGroup) {
-        this.consumerGroup = consumerGroup;
-    }
-
     public ConsumeFromWhere getConsumeFromWhere() {
         return consumeFromWhere;
     }
 
     public void setConsumeFromWhere(ConsumeFromWhere consumeFromWhere) {
         if (consumeFromWhere != ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET
-            && consumeFromWhere != ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET
-            && consumeFromWhere != ConsumeFromWhere.CONSUME_FROM_TIMESTAMP) {
+                && consumeFromWhere != ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET
+                && consumeFromWhere != ConsumeFromWhere.CONSUME_FROM_TIMESTAMP) {
             throw new RuntimeException("Invalid ConsumeFromWhere Value", null);
         }
         this.consumeFromWhere = consumeFromWhere;
@@ -594,7 +586,7 @@ public class DefaultLitePullConsumer extends ClientConfig implements LitePullCon
                 traceDispatcher.setNamespaceV2(namespaceV2);
                 this.traceDispatcher = traceDispatcher;
                 this.defaultLitePullConsumerImpl.registerConsumeMessageHook(
-                    new ConsumeMessageTraceHookImpl(traceDispatcher));
+                        new ConsumeMessageTraceHookImpl(traceDispatcher));
             } catch (Throwable e) {
                 log.error("system mqtrace hook init failed ,maybe can't send msg trace data");
             }

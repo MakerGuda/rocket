@@ -17,6 +17,7 @@
 package org.apache.rocketmq.store.pop;
 
 import com.alibaba.fastjson.annotation.JSONField;
+
 import java.util.ArrayList;
 import java.util.List;
 

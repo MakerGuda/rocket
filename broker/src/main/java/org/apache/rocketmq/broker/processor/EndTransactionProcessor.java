@@ -24,11 +24,7 @@ import org.apache.rocketmq.broker.transaction.OperationResult;
 import org.apache.rocketmq.broker.transaction.queue.TransactionalMessageUtil;
 import org.apache.rocketmq.common.TopicFilterType;
 import org.apache.rocketmq.common.constant.LoggerName;
-import org.apache.rocketmq.common.message.MessageAccessor;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageExtBrokerInner;
+import org.apache.rocketmq.common.message.*;
 import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
@@ -56,10 +52,10 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
 
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx, RemotingCommand request) throws
-        RemotingCommandException {
+            RemotingCommandException {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         final EndTransactionRequestHeader requestHeader =
-            (EndTransactionRequestHeader) request.decodeCommandCustomHeader(EndTransactionRequestHeader.class);
+                (EndTransactionRequestHeader) request.decodeCommandCustomHeader(EndTransactionRequestHeader.class);
         LOGGER.debug("Transaction request:{}", requestHeader);
         if (BrokerRole.SLAVE == brokerController.getMessageStoreConfig().getBrokerRole()) {
             response.setCode(ResponseCode.SLAVE_NOT_AVAILABLE);
@@ -71,29 +67,29 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
             switch (requestHeader.getCommitOrRollback()) {
                 case MessageSysFlag.TRANSACTION_NOT_TYPE: {
                     LOGGER.warn("Check producer[{}] transaction state, but it's pending status."
-                            + "RequestHeader: {} Remark: {}",
-                        RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
-                        requestHeader.toString(),
-                        request.getRemark());
+                                    + "RequestHeader: {} Remark: {}",
+                            RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
+                            requestHeader.toString(),
+                            request.getRemark());
                     return null;
                 }
 
                 case MessageSysFlag.TRANSACTION_COMMIT_TYPE: {
                     LOGGER.warn("Check producer[{}] transaction state, the producer commit the message."
-                            + "RequestHeader: {} Remark: {}",
-                        RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
-                        requestHeader.toString(),
-                        request.getRemark());
+                                    + "RequestHeader: {} Remark: {}",
+                            RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
+                            requestHeader.toString(),
+                            request.getRemark());
 
                     break;
                 }
 
                 case MessageSysFlag.TRANSACTION_ROLLBACK_TYPE: {
                     LOGGER.warn("Check producer[{}] transaction state, the producer rollback the message."
-                            + "RequestHeader: {} Remark: {}",
-                        RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
-                        requestHeader.toString(),
-                        request.getRemark());
+                                    + "RequestHeader: {} Remark: {}",
+                            RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
+                            requestHeader.toString(),
+                            request.getRemark());
                     break;
                 }
                 default:
@@ -103,10 +99,10 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
             switch (requestHeader.getCommitOrRollback()) {
                 case MessageSysFlag.TRANSACTION_NOT_TYPE: {
                     LOGGER.warn("The producer[{}] end transaction in sending message,  and it's pending status."
-                            + "RequestHeader: {} Remark: {}",
-                        RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
-                        requestHeader.toString(),
-                        request.getRemark());
+                                    + "RequestHeader: {} Remark: {}",
+                            RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
+                            requestHeader.toString(),
+                            request.getRemark());
                     return null;
                 }
 
@@ -116,10 +112,10 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
 
                 case MessageSysFlag.TRANSACTION_ROLLBACK_TYPE: {
                     LOGGER.warn("The producer[{}] end transaction in sending message, rollback the message."
-                            + "RequestHeader: {} Remark: {}",
-                        RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
-                        requestHeader.toString(),
-                        request.getRemark());
+                                    + "RequestHeader: {} Remark: {}",
+                            RemotingHelper.parseChannelRemoteAddr(ctx.channel()),
+                            requestHeader.toString(),
+                            request.getRemark());
                     break;
                 }
                 default:
@@ -192,6 +188,7 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
      * If you specify a custom first check time CheckImmunityTimeInSeconds,
      * And the commit/rollback request whose validity period exceeds CheckImmunityTimeInSeconds and is not checked back will be processed and failed
      * returns ILLEGAL_OPERATION 604 error
+     *
      * @param requestHeader
      * @param messageExt
      * @return
@@ -261,9 +258,9 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
         msgInner.setTransactionId(msgExt.getUserProperty(MessageConst.PROPERTY_UNIQ_CLIENT_MESSAGE_ID_KEYIDX));
         msgInner.setSysFlag(msgExt.getSysFlag());
         TopicFilterType topicFilterType =
-            (msgInner.getSysFlag() & MessageSysFlag.MULTI_TAGS_FLAG) == MessageSysFlag.MULTI_TAGS_FLAG ? TopicFilterType.MULTI_TAG
-                : TopicFilterType.SINGLE_TAG;
-        long tagsCodeValue = MessageExtBrokerInner.tagsString2tagsCode( msgInner.getTags());
+                (msgInner.getSysFlag() & MessageSysFlag.MULTI_TAGS_FLAG) == MessageSysFlag.MULTI_TAGS_FLAG ? TopicFilterType.MULTI_TAG
+                        : TopicFilterType.SINGLE_TAG;
+        long tagsCodeValue = MessageExtBrokerInner.tagsString2tagsCode(msgInner.getTags());
         msgInner.setTagsCode(tagsCodeValue);
         MessageAccessor.setProperties(msgInner, msgExt.getProperties());
         msgInner.setPropertiesString(MessageDecoder.messageProperties2String(msgExt.getProperties()));
@@ -297,7 +294,7 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
                 case PROPERTIES_SIZE_EXCEEDED:
                     response.setCode(ResponseCode.MESSAGE_ILLEGAL);
                     response.setRemark(String.format("The message is illegal, maybe msg body or properties length not matched. msg body length limit %dB, msg properties length limit 32KB.",
-                        this.brokerController.getMessageStoreConfig().getMaxMessageSize()));
+                            this.brokerController.getMessageStoreConfig().getMaxMessageSize()));
                     break;
                 case SERVICE_NOT_AVAILABLE:
                     response.setCode(ResponseCode.SERVICE_NOT_AVAILABLE);
@@ -310,17 +307,17 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
                 case WHEEL_TIMER_MSG_ILLEGAL:
                     response.setCode(ResponseCode.MESSAGE_ILLEGAL);
                     response.setRemark(String.format("timer message illegal, the delay time should not be bigger than the max delay %dms; or if set del msg, the delay time should be bigger than the current time",
-                        this.brokerController.getMessageStoreConfig().getTimerMaxDelaySec() * 1000L));
+                            this.brokerController.getMessageStoreConfig().getTimerMaxDelaySec() * 1000L));
                     break;
                 case WHEEL_TIMER_FLOW_CONTROL:
                     response.setCode(ResponseCode.SYSTEM_ERROR);
                     response.setRemark(String.format("timer message is under flow control, max num limit is %d or the current value is greater than %d and less than %d, trigger random flow control",
-                        this.brokerController.getMessageStoreConfig().getTimerCongestNumEachSlot() * 2L, this.brokerController.getMessageStoreConfig().getTimerCongestNumEachSlot(), this.brokerController.getMessageStoreConfig().getTimerCongestNumEachSlot() * 2L));
+                            this.brokerController.getMessageStoreConfig().getTimerCongestNumEachSlot() * 2L, this.brokerController.getMessageStoreConfig().getTimerCongestNumEachSlot(), this.brokerController.getMessageStoreConfig().getTimerCongestNumEachSlot() * 2L));
                     break;
                 case WHEEL_TIMER_NOT_ENABLE:
                     response.setCode(ResponseCode.SYSTEM_ERROR);
                     response.setRemark(String.format("accurate timer message is not enabled, timerWheelEnable is %s",
-                        this.brokerController.getMessageStoreConfig().isTimerWheelEnable()));
+                            this.brokerController.getMessageStoreConfig().isTimerWheelEnable()));
                     break;
                 case UNKNOWN_ERROR:
                     response.setCode(ResponseCode.SYSTEM_ERROR);

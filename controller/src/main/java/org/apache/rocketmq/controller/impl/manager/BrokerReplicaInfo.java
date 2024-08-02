@@ -17,6 +17,7 @@
 package org.apache.rocketmq.controller.impl.manager;
 
 import java.io.Serializable;
+
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.Pair;
 

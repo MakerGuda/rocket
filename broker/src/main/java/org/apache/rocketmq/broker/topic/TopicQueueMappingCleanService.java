@@ -16,12 +16,6 @@
  */
 package org.apache.rocketmq.broker.topic;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.out.BrokerOuterAPI;
 import org.apache.rocketmq.common.BrokerConfig;
@@ -47,6 +41,8 @@ import org.apache.rocketmq.remoting.rpc.RpcClient;
 import org.apache.rocketmq.remoting.rpc.RpcRequest;
 import org.apache.rocketmq.remoting.rpc.RpcResponse;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
+
+import java.util.*;
 
 public class TopicQueueMappingCleanService extends ServiceThread {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
@@ -99,7 +95,6 @@ public class TopicQueueMappingCleanService extends ServiceThread {
     }
 
 
-
     public void cleanItemExpired() {
         String when = messageStoreConfig.getDeleteWhen();
         if (!UtilAll.isItTimeToDo(when)) {
@@ -123,7 +118,7 @@ public class TopicQueueMappingCleanService extends ServiceThread {
                         continue;
                     }
                     Set<String> brokers = new HashSet<>();
-                    for (List<LogicQueueMappingItem> items: mappingDetail.getHostedQueues().values()) {
+                    for (List<LogicQueueMappingItem> items : mappingDetail.getHostedQueues().values()) {
                         if (items.size() <= 1) {
                             continue;
                         }
@@ -134,7 +129,7 @@ public class TopicQueueMappingCleanService extends ServiceThread {
                         brokers.add(earlistItem.getBname());
                     }
                     Map<String, TopicStatsTable> statsTable = new HashMap<>();
-                    for (String broker: brokers) {
+                    for (String broker : brokers) {
                         GetTopicStatsInfoRequestHeader header = new GetTopicStatsInfoRequestHeader();
                         header.setTopic(topic);
                         header.setBrokerName(broker);
@@ -169,12 +164,12 @@ public class TopicQueueMappingCleanService extends ServiceThread {
                         TopicOffset topicOffset = topicStats.getOffsetTable().get(new MessageQueue(topic, earlistItem.getBname(), earlistItem.getQueueId()));
                         if (topicOffset == null) {
                             //this may should not happen
-                            log.error("Get null topicOffset for {} {}",topic,  earlistItem);
+                            log.error("Get null topicOffset for {} {}", topic, earlistItem);
                             continue;
                         }
                         //ignore the maxOffset < 0, which may in case of some error
                         if (topicOffset.getMaxOffset() == topicOffset.getMinOffset()
-                            || topicOffset.getMaxOffset() == 0) {
+                                || topicOffset.getMaxOffset() == 0) {
                             List<LogicQueueMappingItem> newItems = new ArrayList<>(items);
                             boolean result = newItems.remove(earlistItem);
                             if (result) {
@@ -308,7 +303,7 @@ public class TopicQueueMappingCleanService extends ServiceThread {
                     }
                     for (Integer qid : ids2delete) {
                         List<LogicQueueMappingItem> items = mappingDetail.getHostedQueues().remove(qid);
-                        changed =  true;
+                        changed = true;
                         if (items != null) {
                             log.info("Remove the ItemListMoreThanSecondGen topic {} qid {} items {}", topic, qid, items);
                         }
@@ -329,8 +324,6 @@ public class TopicQueueMappingCleanService extends ServiceThread {
             log.info("Try cleanItemListMoreThanSecondGen cost {} ms", System.currentTimeMillis() - start);
         }
     }
-
-
 
 
 }

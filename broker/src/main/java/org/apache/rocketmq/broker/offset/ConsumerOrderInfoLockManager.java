@@ -23,27 +23,28 @@ import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timeout;
 import io.netty.util.Timer;
 import io.netty.util.TimerTask;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
 public class ConsumerOrderInfoLockManager {
     private static final Logger POP_LOGGER = LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);
+    private static final int TIMER_TICK_MS = 100;
     private final BrokerController brokerController;
     private final Map<Key, Timeout> timeoutMap = new ConcurrentHashMap<>();
     private final Timer timer;
-    private static final int TIMER_TICK_MS = 100;
 
     public ConsumerOrderInfoLockManager(BrokerController brokerController) {
         this.brokerController = brokerController;
         this.timer = new HashedWheelTimer(
-            new ThreadFactoryImpl("ConsumerOrderInfoLockManager_"),
-            TIMER_TICK_MS, TimeUnit.MILLISECONDS);
+                new ThreadFactoryImpl("ConsumerOrderInfoLockManager_"),
+                TIMER_TICK_MS, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -100,7 +101,7 @@ public class ConsumerOrderInfoLockManager {
             });
         } catch (Exception e) {
             POP_LOGGER.error("unexpect error when updateLockFreeTimestamp. topic:{}, group:{}, queueId:{}, lockFreeTimestamp:{}",
-                topic, group, queueId, lockFreeTimestamp, e);
+                    topic, group, queueId, lockFreeTimestamp, e);
         }
     }
 
@@ -119,30 +120,6 @@ public class ConsumerOrderInfoLockManager {
     @VisibleForTesting
     protected Map<Key, Timeout> getTimeoutMap() {
         return timeoutMap;
-    }
-
-    private class NotifyLockFreeTimerTask implements TimerTask {
-
-        private final Key key;
-
-        private NotifyLockFreeTimerTask(Key key) {
-            this.key = key;
-        }
-
-        @Override
-        public void run(Timeout timeout) throws Exception {
-            if (timeout.isCancelled() || !brokerController.getBrokerConfig().isEnableNotifyAfterPopOrderLockRelease()) {
-                return;
-            }
-            notifyLockIsFree(key);
-            timeoutMap.computeIfPresent(key, (key1, curTimeout) -> {
-                if (curTimeout == timeout) {
-                    // remove from map
-                    return null;
-                }
-                return curTimeout;
-            });
-        }
     }
 
     private static class Key {
@@ -176,10 +153,34 @@ public class ConsumerOrderInfoLockManager {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("topic", topic)
-                .add("group", group)
-                .add("queueId", queueId)
-                .toString();
+                    .add("topic", topic)
+                    .add("group", group)
+                    .add("queueId", queueId)
+                    .toString();
+        }
+    }
+
+    private class NotifyLockFreeTimerTask implements TimerTask {
+
+        private final Key key;
+
+        private NotifyLockFreeTimerTask(Key key) {
+            this.key = key;
+        }
+
+        @Override
+        public void run(Timeout timeout) throws Exception {
+            if (timeout.isCancelled() || !brokerController.getBrokerConfig().isEnableNotifyAfterPopOrderLockRelease()) {
+                return;
+            }
+            notifyLockIsFree(key);
+            timeoutMap.computeIfPresent(key, (key1, curTimeout) -> {
+                if (curTimeout == timeout) {
+                    // remove from map
+                    return null;
+                }
+                return curTimeout;
+            });
         }
     }
 }

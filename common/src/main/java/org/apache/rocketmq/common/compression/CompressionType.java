@@ -7,15 +7,14 @@ import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 public enum CompressionType {
 
     /**
-     *    Compression types number can be extended to seven {@link MessageSysFlag}
-     *
-     *    Benchmarks from <a href="https://github.com/facebook/zstd">...</a>
-     *    |   Compressor   |  Ratio  | Compression | Decompress |
-     *    |----------------|---------|-------------|------------|
-     *    |   zstd 1.5.1   |  2.887  |   530 MB/s  |  1700 MB/s |
-     *    |  zlib 1.2.11   |  2.743  |    95 MB/s  |   400 MB/s |
-     *    |    lz4 1.9.3   |  2.101  |   740 MB/s  |  4500 MB/s |
-     *
+     * Compression types number can be extended to seven {@link MessageSysFlag}
+     * <p>
+     * Benchmarks from <a href="https://github.com/facebook/zstd">...</a>
+     * |   Compressor   |  Ratio  | Compression | Decompress |
+     * |----------------|---------|-------------|------------|
+     * |   zstd 1.5.1   |  2.887  |   530 MB/s  |  1700 MB/s |
+     * |  zlib 1.2.11   |  2.743  |    95 MB/s  |   400 MB/s |
+     * |    lz4 1.9.3   |  2.101  |   740 MB/s  |  4500 MB/s |
      */
 
     LZ4(1), ZSTD(2), ZLIB(3);

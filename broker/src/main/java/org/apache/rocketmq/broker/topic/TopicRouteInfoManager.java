@@ -17,16 +17,6 @@
 package org.apache.rocketmq.broker.topic;
 
 import com.google.common.collect.Sets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.impl.factory.MQClientInstance;
@@ -44,6 +34,17 @@ import org.apache.rocketmq.remoting.protocol.ResponseCode;
 import org.apache.rocketmq.remoting.protocol.route.BrokerData;
 import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class TopicRouteInfoManager {
 
     private static final long GET_TOPIC_ROUTE_TIMEOUT = 3000L;
@@ -53,7 +54,7 @@ public class TopicRouteInfoManager {
     private final Lock lockNamesrv = new ReentrantLock();
     private final ConcurrentMap<String/* Topic */, TopicRouteData> topicRouteTable = new ConcurrentHashMap<>();
     private final ConcurrentMap<String/* Broker Name */, HashMap<Long/* brokerId */, String/* address */>> brokerAddrTable =
-        new ConcurrentHashMap<>();
+            new ConcurrentHashMap<>();
     private final ConcurrentMap<String/* topic */, TopicPublishInfo> topicPublishInfoTable = new ConcurrentHashMap<>();
 
     private final ConcurrentHashMap<String, Set<MessageQueue>> topicSubscribeInfoTable = new ConcurrentHashMap<>();
@@ -90,12 +91,12 @@ public class TopicRouteInfoManager {
     }
 
     public void updateTopicRouteInfoFromNameServer(String topic, boolean isNeedUpdatePublishInfo,
-        boolean isNeedUpdateSubscribeInfo) {
+                                                   boolean isNeedUpdateSubscribeInfo) {
         try {
             if (this.lockNamesrv.tryLock(LOCK_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
                 try {
                     final TopicRouteData topicRouteData = this.brokerController.getBrokerOuterAPI()
-                        .getTopicRouteInfoFromNameServer(topic, GET_TOPIC_ROUTE_TIMEOUT);
+                            .getTopicRouteInfoFromNameServer(topic, GET_TOPIC_ROUTE_TIMEOUT);
                     if (null == topicRouteData) {
                         log.warn("TopicRouteInfoManager: updateTopicRouteInfoFromNameServer, getTopicRouteInfoFromNameServer return null, Topic: {}.", topic);
                         return;
@@ -113,7 +114,7 @@ public class TopicRouteInfoManager {
                 } catch (MQBrokerException e) {
                     log.error("updateTopicRouteInfoFromNameServer Exception", e);
                     if (!NamespaceUtil.isRetryTopic(topic)
-                        && ResponseCode.TOPIC_NOT_EXIST == e.getResponseCode()) {
+                            && ResponseCode.TOPIC_NOT_EXIST == e.getResponseCode()) {
                         // clean no used topic
                         cleanNoneRouteTopic(topic);
                     }
@@ -215,9 +216,9 @@ public class TopicRouteInfoManager {
     }
 
     public String findBrokerAddressInSubscribe(
-        final String brokerName,
-        final long brokerId,
-        final boolean onlyThisBroker
+            final String brokerName,
+            final long brokerId,
+            final boolean onlyThisBroker
     ) {
         if (brokerName == null) {
             return null;

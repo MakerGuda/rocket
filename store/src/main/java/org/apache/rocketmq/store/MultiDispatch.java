@@ -26,9 +26,9 @@ import org.apache.rocketmq.common.message.MessageExtBrokerInner;
  * MultiDispatch for lmq, not-thread-safe
  */
 public class MultiDispatch {
+    private static final short VALUE_OF_EACH_INCREMENT = 1;
     private final StringBuilder keyBuilder = new StringBuilder();
     private final DefaultMessageStore messageStore;
-    private static final short VALUE_OF_EACH_INCREMENT = 1;
 
     public MultiDispatch(DefaultMessageStore messageStore) {
         this.messageStore = messageStore;

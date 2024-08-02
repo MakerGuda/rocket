@@ -17,20 +17,13 @@
 package org.apache.rocketmq.proxy.common;
 
 import com.google.common.net.HostAndPort;
+
 import java.util.Objects;
 
 public class Address {
 
-    public enum AddressScheme {
-        IPv4,
-        IPv6,
-        DOMAIN_NAME,
-        UNRECOGNIZED
-    }
-
     private AddressScheme addressScheme;
     private HostAndPort hostAndPort;
-
     public Address(AddressScheme addressScheme, HostAndPort hostAndPort) {
         this.addressScheme = addressScheme;
         this.hostAndPort = hostAndPort;
@@ -67,5 +60,12 @@ public class Address {
     @Override
     public int hashCode() {
         return Objects.hash(addressScheme, hostAndPort);
+    }
+
+    public enum AddressScheme {
+        IPv4,
+        IPv6,
+        DOMAIN_NAME,
+        UNRECOGNIZED
     }
 }

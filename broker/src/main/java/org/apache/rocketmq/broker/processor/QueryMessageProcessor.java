@@ -20,7 +20,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.FileRegion;
 import io.opentelemetry.api.common.Attributes;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.pagecache.OneMessageTransfer;
 import org.apache.rocketmq.broker.pagecache.QueryMessageTransfer;
@@ -41,9 +40,9 @@ import org.apache.rocketmq.remoting.protocol.header.ViewMessageRequestHeader;
 import org.apache.rocketmq.store.QueryMessageResult;
 import org.apache.rocketmq.store.SelectMappedBufferResult;
 
-import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL_REQUEST_CODE;
-import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL_RESPONSE_CODE;
-import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL_RESULT;
+import java.util.concurrent.TimeUnit;
+
+import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.*;
 
 public class QueryMessageProcessor implements NettyRequestProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
@@ -55,7 +54,7 @@ public class QueryMessageProcessor implements NettyRequestProcessor {
 
     @Override
     public RemotingCommand processRequest(ChannelHandlerContext ctx, RemotingCommand request)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
         switch (request.getCode()) {
             case RequestCode.QUERY_MESSAGE:
                 return this.queryMessage(ctx, request);
@@ -74,14 +73,14 @@ public class QueryMessageProcessor implements NettyRequestProcessor {
     }
 
     public RemotingCommand queryMessage(ChannelHandlerContext ctx, RemotingCommand request)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
         final RemotingCommand response =
-            RemotingCommand.createResponseCommand(QueryMessageResponseHeader.class);
+                RemotingCommand.createResponseCommand(QueryMessageResponseHeader.class);
         final QueryMessageResponseHeader responseHeader =
-            (QueryMessageResponseHeader) response.readCustomHeader();
+                (QueryMessageResponseHeader) response.readCustomHeader();
         final QueryMessageRequestHeader requestHeader =
-            (QueryMessageRequestHeader) request
-                .decodeCommandCustomHeader(QueryMessageRequestHeader.class);
+                (QueryMessageRequestHeader) request
+                        .decodeCommandCustomHeader(QueryMessageRequestHeader.class);
 
         response.setOpaque(request.getOpaque());
 
@@ -91,9 +90,9 @@ public class QueryMessageProcessor implements NettyRequestProcessor {
         }
 
         final QueryMessageResult queryMessageResult =
-            this.brokerController.getMessageStore().queryMessage(requestHeader.getTopic(),
-                requestHeader.getKey(), requestHeader.getMaxNum(), requestHeader.getBeginTimestamp(),
-                requestHeader.getEndTimestamp());
+                this.brokerController.getMessageStore().queryMessage(requestHeader.getTopic(),
+                        requestHeader.getKey(), requestHeader.getMaxNum(), requestHeader.getBeginTimestamp(),
+                        requestHeader.getEndTimestamp());
         assert queryMessageResult != null;
 
         responseHeader.setIndexLastUpdatePhyoffset(queryMessageResult.getIndexLastUpdatePhyoffset());
@@ -105,22 +104,22 @@ public class QueryMessageProcessor implements NettyRequestProcessor {
 
             try {
                 FileRegion fileRegion =
-                    new QueryMessageTransfer(response.encodeHeader(queryMessageResult
-                        .getBufferTotalSize()), queryMessageResult);
+                        new QueryMessageTransfer(response.encodeHeader(queryMessageResult
+                                .getBufferTotalSize()), queryMessageResult);
                 ctx.channel()
-                    .writeAndFlush(fileRegion)
-                    .addListener((ChannelFutureListener) future -> {
-                        queryMessageResult.release();
-                        Attributes attributes = RemotingMetricsManager.newAttributesBuilder()
-                            .put(LABEL_REQUEST_CODE, RemotingHelper.getRequestCodeDesc(request.getCode()))
-                            .put(LABEL_RESPONSE_CODE, RemotingHelper.getResponseCodeDesc(response.getCode()))
-                            .put(LABEL_RESULT, RemotingMetricsManager.getWriteAndFlushResult(future))
-                            .build();
-                        RemotingMetricsManager.rpcLatency.record(request.getProcessTimer().elapsed(TimeUnit.MILLISECONDS), attributes);
-                        if (!future.isSuccess()) {
-                            LOGGER.error("transfer query message by page cache failed, ", future.cause());
-                        }
-                    });
+                        .writeAndFlush(fileRegion)
+                        .addListener((ChannelFutureListener) future -> {
+                            queryMessageResult.release();
+                            Attributes attributes = RemotingMetricsManager.newAttributesBuilder()
+                                    .put(LABEL_REQUEST_CODE, RemotingHelper.getRequestCodeDesc(request.getCode()))
+                                    .put(LABEL_RESPONSE_CODE, RemotingHelper.getResponseCodeDesc(response.getCode()))
+                                    .put(LABEL_RESULT, RemotingMetricsManager.getWriteAndFlushResult(future))
+                                    .build();
+                            RemotingMetricsManager.rpcLatency.record(request.getProcessTimer().elapsed(TimeUnit.MILLISECONDS), attributes);
+                            if (!future.isSuccess()) {
+                                LOGGER.error("transfer query message by page cache failed, ", future.cause());
+                            }
+                        });
             } catch (Throwable e) {
                 LOGGER.error("", e);
                 queryMessageResult.release();
@@ -135,37 +134,37 @@ public class QueryMessageProcessor implements NettyRequestProcessor {
     }
 
     public RemotingCommand viewMessageById(ChannelHandlerContext ctx, RemotingCommand request)
-        throws RemotingCommandException {
+            throws RemotingCommandException {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         final ViewMessageRequestHeader requestHeader =
-            (ViewMessageRequestHeader) request.decodeCommandCustomHeader(ViewMessageRequestHeader.class);
+                (ViewMessageRequestHeader) request.decodeCommandCustomHeader(ViewMessageRequestHeader.class);
 
         response.setOpaque(request.getOpaque());
 
         final SelectMappedBufferResult selectMappedBufferResult =
-            this.brokerController.getMessageStore().selectOneMessageByOffset(requestHeader.getOffset());
+                this.brokerController.getMessageStore().selectOneMessageByOffset(requestHeader.getOffset());
         if (selectMappedBufferResult != null) {
             response.setCode(ResponseCode.SUCCESS);
             response.setRemark(null);
 
             try {
                 FileRegion fileRegion =
-                    new OneMessageTransfer(response.encodeHeader(selectMappedBufferResult.getSize()),
-                        selectMappedBufferResult);
+                        new OneMessageTransfer(response.encodeHeader(selectMappedBufferResult.getSize()),
+                                selectMappedBufferResult);
                 ctx.channel()
-                    .writeAndFlush(fileRegion)
-                    .addListener((ChannelFutureListener) future -> {
-                        selectMappedBufferResult.release();
-                        Attributes attributes = RemotingMetricsManager.newAttributesBuilder()
-                            .put(LABEL_REQUEST_CODE, RemotingHelper.getRequestCodeDesc(request.getCode()))
-                            .put(LABEL_RESPONSE_CODE, RemotingHelper.getResponseCodeDesc(response.getCode()))
-                            .put(LABEL_RESULT, RemotingMetricsManager.getWriteAndFlushResult(future))
-                            .build();
-                        RemotingMetricsManager.rpcLatency.record(request.getProcessTimer().elapsed(TimeUnit.MILLISECONDS), attributes);
-                        if (!future.isSuccess()) {
-                            LOGGER.error("Transfer one message from page cache failed, ", future.cause());
-                        }
-                    });
+                        .writeAndFlush(fileRegion)
+                        .addListener((ChannelFutureListener) future -> {
+                            selectMappedBufferResult.release();
+                            Attributes attributes = RemotingMetricsManager.newAttributesBuilder()
+                                    .put(LABEL_REQUEST_CODE, RemotingHelper.getRequestCodeDesc(request.getCode()))
+                                    .put(LABEL_RESPONSE_CODE, RemotingHelper.getResponseCodeDesc(response.getCode()))
+                                    .put(LABEL_RESULT, RemotingMetricsManager.getWriteAndFlushResult(future))
+                                    .build();
+                            RemotingMetricsManager.rpcLatency.record(request.getProcessTimer().elapsed(TimeUnit.MILLISECONDS), attributes);
+                            if (!future.isSuccess()) {
+                                LOGGER.error("Transfer one message from page cache failed, ", future.cause());
+                            }
+                        });
             } catch (Throwable e) {
                 LOGGER.error("", e);
                 selectMappedBufferResult.release();

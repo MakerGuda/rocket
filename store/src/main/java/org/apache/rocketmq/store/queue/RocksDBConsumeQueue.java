@@ -16,9 +16,6 @@
  */
 package org.apache.rocketmq.store.queue;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.attribute.CQType;
@@ -31,6 +28,9 @@ import org.apache.rocketmq.store.DispatchRequest;
 import org.apache.rocketmq.store.MessageFilter;
 import org.apache.rocketmq.store.MessageStore;
 import org.rocksdb.RocksDBException;
+
+import java.nio.ByteBuffer;
+import java.util.List;
 
 public class RocksDBConsumeQueue implements ConsumeQueueInterface {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
@@ -136,10 +136,11 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
 
     /**
      * We already implement it in RocksDBConsumeQueueStore.
-     * @see RocksDBConsumeQueueStore#getOffsetInQueueByTime
+     *
      * @param timestamp    timestamp
      * @param boundaryType Lower or Upper
      * @return
+     * @see RocksDBConsumeQueueStore#getOffsetInQueueByTime
      */
     @Override
     public long getOffsetInQueueByTime(long timestamp, BoundaryType boundaryType) {
@@ -176,6 +177,7 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
 
     /**
      * Ignored, we already implement this method
+     *
      * @see org.apache.rocketmq.store.queue.RocksDBConsumeQueueOffsetTable#getMinCqOffset(String, int)
      */
     @Override
@@ -185,6 +187,7 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
 
     /**
      * Ignored, in rocksdb mode, we build cq in RocksDBConsumeQueueStore
+     *
      * @see org.apache.rocketmq.store.queue.RocksDBConsumeQueueStore#putMessagePosition()
      */
     @Override
@@ -248,7 +251,7 @@ public class RocksDBConsumeQueue implements ConsumeQueueInterface {
     public ReferredIterator<CqUnit> iterateFrom(long startIndex, int count) throws RocksDBException {
         long maxCqOffset = getMaxOffsetInQueue();
         if (startIndex < maxCqOffset) {
-            int num = Math.min((int)(maxCqOffset - startIndex), count);
+            int num = Math.min((int) (maxCqOffset - startIndex), count);
             return iterateFrom0(startIndex, num);
         }
         return null;

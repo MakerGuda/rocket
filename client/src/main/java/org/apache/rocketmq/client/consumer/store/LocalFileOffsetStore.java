@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.impl.factory.MQClientInstance;
@@ -41,22 +42,22 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
  */
 public class LocalFileOffsetStore implements OffsetStore {
     public final static String LOCAL_OFFSET_STORE_DIR = System.getProperty(
-        "rocketmq.client.localOffsetStoreDir",
-        System.getProperty("user.home") + File.separator + ".rocketmq_offsets");
+            "rocketmq.client.localOffsetStoreDir",
+            System.getProperty("user.home") + File.separator + ".rocketmq_offsets");
     private final static Logger log = LoggerFactory.getLogger(LocalFileOffsetStore.class);
     private final MQClientInstance mQClientFactory;
     private final String groupName;
     private final String storePath;
     private ConcurrentMap<MessageQueue, ControllableOffset> offsetTable =
-        new ConcurrentHashMap<>();
+            new ConcurrentHashMap<>();
 
     public LocalFileOffsetStore(MQClientInstance mQClientFactory, String groupName) {
         this.mQClientFactory = mQClientFactory;
         this.groupName = groupName;
         this.storePath = LOCAL_OFFSET_STORE_DIR + File.separator +
-            this.mQClientFactory.getClientId() + File.separator +
-            this.groupName + File.separator +
-            "offsets.json";
+                this.mQClientFactory.getClientId() + File.separator +
+                this.groupName + File.separator +
+                "offsets.json";
     }
 
     @Override
@@ -96,7 +97,7 @@ public class LocalFileOffsetStore implements OffsetStore {
     public void updateAndFreezeOffset(MessageQueue mq, long offset) {
         if (mq != null) {
             this.offsetTable.computeIfAbsent(mq, k -> new ControllableOffset(offset))
-                .updateAndFreeze(offset);
+                    .updateAndFreeze(offset);
         }
     }
 
@@ -203,13 +204,13 @@ public class LocalFileOffsetStore implements OffsetStore {
         if (mq != null) {
             this.offsetTable.remove(mq);
             log.info("remove unnecessary messageQueue offset. group={}, mq={}, offsetTableSize={}", this.groupName, mq,
-                offsetTable.size());
+                    offsetTable.size());
         }
     }
 
     @Override
     public void updateConsumeOffsetToBroker(final MessageQueue mq, final long offset, final boolean isOneway)
-        throws RemotingException, MQBrokerException, InterruptedException, MQClientException {
+            throws RemotingException, MQBrokerException, InterruptedException, MQClientException {
 
     }
 
@@ -240,7 +241,7 @@ public class LocalFileOffsetStore implements OffsetStore {
             OffsetSerializeWrapper offsetSerializeWrapper = null;
             try {
                 offsetSerializeWrapper =
-                    OffsetSerializeWrapper.fromJson(content, OffsetSerializeWrapper.class);
+                        OffsetSerializeWrapper.fromJson(content, OffsetSerializeWrapper.class);
             } catch (Exception e) {
                 log.warn("readLocalOffset Exception, and try to correct", e);
                 return this.readLocalOffsetBak();
@@ -261,12 +262,12 @@ public class LocalFileOffsetStore implements OffsetStore {
             OffsetSerializeWrapper offsetSerializeWrapper = null;
             try {
                 offsetSerializeWrapper =
-                    OffsetSerializeWrapper.fromJson(content, OffsetSerializeWrapper.class);
+                        OffsetSerializeWrapper.fromJson(content, OffsetSerializeWrapper.class);
             } catch (Exception e) {
                 log.warn("readLocalOffset Exception", e);
                 throw new MQClientException("readLocalOffset Exception, maybe fastjson version too low"
-                    + FAQUrl.suggestTodo(FAQUrl.LOAD_JSON_EXCEPTION),
-                    e);
+                        + FAQUrl.suggestTodo(FAQUrl.LOAD_JSON_EXCEPTION),
+                        e);
             }
             return offsetSerializeWrapper;
         }

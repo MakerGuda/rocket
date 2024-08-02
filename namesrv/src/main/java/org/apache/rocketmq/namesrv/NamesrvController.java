@@ -46,23 +46,14 @@ public class NamesrvController {
     private final KVConfigManager kvConfigManager;
 
     private final RouteInfoManager routeInfoManager;
-
-    private RemotingClient remotingClient;
-
-    private RemotingServer remotingServer;
-
     private final BrokerHousekeepingService brokerHousekeepingService;
-
-    private ExecutorService defaultExecutor;
-
-    private ExecutorService clientRequestExecutor;
-
-    private BlockingQueue<Runnable> defaultThreadPoolQueue;
-
-    private BlockingQueue<Runnable> clientRequestThreadPoolQueue;
-
     private final Configuration configuration;
-
+    private RemotingClient remotingClient;
+    private RemotingServer remotingServer;
+    private ExecutorService defaultExecutor;
+    private ExecutorService clientRequestExecutor;
+    private BlockingQueue<Runnable> defaultThreadPoolQueue;
+    private BlockingQueue<Runnable> clientRequestThreadPoolQueue;
     private FileWatchService fileWatchService;
 
     public NamesrvController(NamesrvConfig namesrvConfig, NettyServerConfig nettyServerConfig) {
@@ -163,6 +154,7 @@ public class NamesrvController {
         String[] watchFiles = {TlsSystemConfig.tlsServerCertPath, TlsSystemConfig.tlsServerKeyPath, TlsSystemConfig.tlsServerTrustCertPath};
         FileWatchService.Listener listener = new FileWatchService.Listener() {
             boolean certChanged, keyChanged = false;
+
             @Override
             public void onChanged(String path) {
                 if (path.equals(TlsSystemConfig.tlsServerTrustCertPath)) {

@@ -10,23 +10,16 @@ import java.util.concurrent.ConcurrentMap;
 public class TopicQueueMappingInfo extends RemotingSerializable {
 
     public static final int LEVEL_0 = 0;
-
-    String topic;
-
-    String scope = MixAll.METADATA_SCOPE_GLOBAL;
-
-    int totalQueues;
-
-    String bname;
-
-    long epoch;
-
-    boolean dirty;
-
     /**
      * key: logicId value:physicalId
      */
     protected ConcurrentMap<Integer, Integer> currIdMap = new ConcurrentHashMap<>();
+    String topic;
+    String scope = MixAll.METADATA_SCOPE_GLOBAL;
+    int totalQueues;
+    String bname;
+    long epoch;
+    boolean dirty;
 
     public TopicQueueMappingInfo() {
 
@@ -52,12 +45,24 @@ public class TopicQueueMappingInfo extends RemotingSerializable {
         return totalQueues;
     }
 
+    public void setTotalQueues(int totalQueues) {
+        this.totalQueues = totalQueues;
+    }
+
     public String getBname() {
         return bname;
     }
 
+    public void setBname(String bname) {
+        this.bname = bname;
+    }
+
     public String getTopic() {
         return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
     public long getEpoch() {
@@ -68,20 +73,8 @@ public class TopicQueueMappingInfo extends RemotingSerializable {
         this.epoch = epoch;
     }
 
-    public void setTotalQueues(int totalQueues) {
-        this.totalQueues = totalQueues;
-    }
-
     public ConcurrentMap<Integer, Integer> getCurrIdMap() {
         return currIdMap;
-    }
-
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
-
-    public void setBname(String bname) {
-        this.bname = bname;
     }
 
     public String getScope() {

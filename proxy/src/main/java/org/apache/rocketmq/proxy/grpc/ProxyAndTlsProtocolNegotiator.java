@@ -17,12 +17,7 @@
 package org.apache.rocketmq.proxy.grpc;
 
 import io.grpc.Attributes;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcHttp2ConnectionHandler;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.shaded.io.grpc.netty.InternalProtocolNegotiationEvent;
-import io.grpc.netty.shaded.io.grpc.netty.InternalProtocolNegotiator;
-import io.grpc.netty.shaded.io.grpc.netty.InternalProtocolNegotiators;
-import io.grpc.netty.shaded.io.grpc.netty.ProtocolNegotiationEvent;
+import io.grpc.netty.shaded.io.grpc.netty.*;
 import io.grpc.netty.shaded.io.netty.buffer.ByteBuf;
 import io.grpc.netty.shaded.io.netty.buffer.ByteBufUtil;
 import io.grpc.netty.shaded.io.netty.channel.ChannelHandler;
@@ -42,10 +37,6 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactor
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.grpc.netty.shaded.io.netty.util.AsciiString;
 import io.grpc.netty.shaded.io.netty.util.CharsetUtil;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.constant.HAProxyConstants;
@@ -58,6 +49,11 @@ import org.apache.rocketmq.proxy.config.ProxyConfig;
 import org.apache.rocketmq.proxy.grpc.constant.AttributeKeys;
 import org.apache.rocketmq.remoting.common.TlsMode;
 import org.apache.rocketmq.remoting.netty.TlsSystemConfig;
+
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 public class ProxyAndTlsProtocolNegotiator implements InternalProtocolNegotiator.ProtocolNegotiator {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -74,20 +70,6 @@ public class ProxyAndTlsProtocolNegotiator implements InternalProtocolNegotiator
 
     public ProxyAndTlsProtocolNegotiator() {
         sslContext = loadSslContext();
-    }
-
-    @Override
-    public AsciiString scheme() {
-        return AsciiString.of("https");
-    }
-
-    @Override
-    public ChannelHandler newHandler(GrpcHttp2ConnectionHandler grpcHandler) {
-        return new ProxyAndTlsProtocolHandler(grpcHandler);
-    }
-
-    @Override
-    public void close() {
     }
 
     private static SslContext loadSslContext() {
@@ -120,6 +102,30 @@ public class ProxyAndTlsProtocolNegotiator implements InternalProtocolNegotiator
             log.error("grpc tls set failed. msg: {}, e:", e.getMessage(), e);
             throw new RuntimeException("grpc tls set failed: " + e.getMessage());
         }
+    }
+
+    @Override
+    public AsciiString scheme() {
+        return AsciiString.of("https");
+    }
+
+    @Override
+    public ChannelHandler newHandler(GrpcHttp2ConnectionHandler grpcHandler) {
+        return new ProxyAndTlsProtocolHandler(grpcHandler);
+    }
+
+    @Override
+    public void close() {
+    }
+
+    protected void handleHAProxyTLV(HAProxyTLV tlv, Attributes.Builder builder) {
+        byte[] valueBytes = ByteBufUtil.getBytes(tlv.content());
+        if (!BinaryUtil.isAscii(valueBytes)) {
+            return;
+        }
+        Attributes.Key<String> key = AttributeKeys.valueOf(
+                HAProxyConstants.PROXY_PROTOCOL_TLV_PREFIX + String.format("%02x", tlv.typeByteValue()));
+        builder.set(key, new String(valueBytes, CharsetUtil.UTF_8));
     }
 
     private class ProxyAndTlsProtocolHandler extends ByteToMessageDecoder {
@@ -225,22 +231,11 @@ public class ProxyAndTlsProtocolNegotiator implements InternalProtocolNegotiator
         }
     }
 
-    protected void handleHAProxyTLV(HAProxyTLV tlv, Attributes.Builder builder) {
-        byte[] valueBytes = ByteBufUtil.getBytes(tlv.content());
-        if (!BinaryUtil.isAscii(valueBytes)) {
-            return;
-        }
-        Attributes.Key<String> key = AttributeKeys.valueOf(
-            HAProxyConstants.PROXY_PROTOCOL_TLV_PREFIX + String.format("%02x", tlv.typeByteValue()));
-        builder.set(key, new String(valueBytes, CharsetUtil.UTF_8));
-    }
-
     private class TlsModeHandler extends ByteToMessageDecoder {
-
-        private ProtocolNegotiationEvent pne = InternalProtocolNegotiationEvent.getDefault();
 
         private final ChannelHandler ssl;
         private final ChannelHandler plaintext;
+        private ProtocolNegotiationEvent pne = InternalProtocolNegotiationEvent.getDefault();
 
         public TlsModeHandler(GrpcHttp2ConnectionHandler grpcHandler) {
             this.ssl = InternalProtocolNegotiators.serverTls(sslContext)

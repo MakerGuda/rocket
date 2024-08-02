@@ -16,28 +16,8 @@
  */
 package org.apache.rocketmq.proxy.grpc.v2.route;
 
-import apache.rocketmq.v2.Address;
-import apache.rocketmq.v2.AddressScheme;
-import apache.rocketmq.v2.Assignment;
-import apache.rocketmq.v2.Broker;
-import apache.rocketmq.v2.Code;
-import apache.rocketmq.v2.Endpoints;
-import apache.rocketmq.v2.MessageQueue;
-import apache.rocketmq.v2.MessageType;
-import apache.rocketmq.v2.Permission;
-import apache.rocketmq.v2.QueryAssignmentRequest;
-import apache.rocketmq.v2.QueryAssignmentResponse;
-import apache.rocketmq.v2.QueryRouteRequest;
-import apache.rocketmq.v2.QueryRouteResponse;
-import apache.rocketmq.v2.Resource;
+import apache.rocketmq.v2.*;
 import com.google.common.net.HostAndPort;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.attribute.TopicMessageType;
 import org.apache.rocketmq.common.constant.PermName;
@@ -52,10 +32,13 @@ import org.apache.rocketmq.proxy.service.route.ProxyTopicRouteData;
 import org.apache.rocketmq.remoting.protocol.route.QueueData;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+
 public class RouteActivity extends AbstractMessingActivity {
 
     public RouteActivity(MessagingProcessor messagingProcessor,
-        GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
+                         GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
         super(messagingProcessor, grpcClientSettingsManager, grpcChannelManager);
     }
 
@@ -67,7 +50,7 @@ public class RouteActivity extends AbstractMessingActivity {
 
             String topicName = request.getTopic().getName();
             ProxyTopicRouteData proxyTopicRouteData = this.messagingProcessor.getTopicRouteDataForProxy(
-                ctx, addressList, topicName);
+                    ctx, addressList, topicName);
 
             List<MessageQueue> messageQueueList = new ArrayList<>();
             Map<String, Map<Long, Broker>> brokerMap = buildBrokerMap(proxyTopicRouteData.getBrokerDatas());
@@ -85,9 +68,9 @@ public class RouteActivity extends AbstractMessingActivity {
             }
 
             QueryRouteResponse response = QueryRouteResponse.newBuilder()
-                .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
-                .addAllMessageQueues(messageQueueList)
-                .build();
+                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
+                    .addAllMessageQueues(messageQueueList)
+                    .build();
             future.complete(response);
         } catch (Throwable t) {
             future.completeExceptionally(t);
@@ -96,7 +79,7 @@ public class RouteActivity extends AbstractMessingActivity {
     }
 
     public CompletableFuture<QueryAssignmentResponse> queryAssignment(ProxyContext ctx,
-        QueryAssignmentRequest request) {
+                                                                      QueryAssignmentRequest request) {
         CompletableFuture<QueryAssignmentResponse> future = new CompletableFuture<>();
 
         try {
@@ -104,13 +87,13 @@ public class RouteActivity extends AbstractMessingActivity {
             List<org.apache.rocketmq.proxy.common.Address> addressList = this.convertToAddressList(request.getEndpoints());
 
             ProxyTopicRouteData proxyTopicRouteData = this.messagingProcessor.getTopicRouteDataForProxy(
-                ctx,
-                addressList,
-                request.getTopic().getName());
+                    ctx,
+                    addressList,
+                    request.getTopic().getName());
 
             boolean fifo = false;
             SubscriptionGroupConfig config = this.messagingProcessor.getSubscriptionGroupConfig(ctx,
-                request.getGroup().getName());
+                    request.getGroup().getName());
             if (config != null && config.isConsumeMessageOrderly()) {
                 fifo = true;
             }
@@ -126,25 +109,25 @@ public class RouteActivity extends AbstractMessingActivity {
                         if (fifo) {
                             for (int i = 0; i < queueData.getReadQueueNums(); i++) {
                                 MessageQueue defaultMessageQueue = MessageQueue.newBuilder()
-                                    .setTopic(request.getTopic())
-                                    .setId(i)
-                                    .setPermission(permission)
-                                    .setBroker(broker)
-                                    .build();
+                                        .setTopic(request.getTopic())
+                                        .setId(i)
+                                        .setPermission(permission)
+                                        .setBroker(broker)
+                                        .build();
                                 assignments.add(Assignment.newBuilder()
-                                    .setMessageQueue(defaultMessageQueue)
-                                    .build());
+                                        .setMessageQueue(defaultMessageQueue)
+                                        .build());
                             }
                         } else {
                             MessageQueue defaultMessageQueue = MessageQueue.newBuilder()
-                                .setTopic(request.getTopic())
-                                .setId(-1)
-                                .setPermission(permission)
-                                .setBroker(broker)
-                                .build();
+                                    .setTopic(request.getTopic())
+                                    .setId(-1)
+                                    .setPermission(permission)
+                                    .setBroker(broker)
+                                    .build();
                             assignments.add(Assignment.newBuilder()
-                                .setMessageQueue(defaultMessageQueue)
-                                .build());
+                                    .setMessageQueue(defaultMessageQueue)
+                                    .build());
                         }
 
                     }
@@ -154,13 +137,13 @@ public class RouteActivity extends AbstractMessingActivity {
             QueryAssignmentResponse response;
             if (assignments.isEmpty()) {
                 response = QueryAssignmentResponse.newBuilder()
-                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.FORBIDDEN, "no readable queue"))
-                    .build();
+                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.FORBIDDEN, "no readable queue"))
+                        .build();
             } else {
                 response = QueryAssignmentResponse.newBuilder()
-                    .addAllAssignments(assignments)
-                    .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
-                    .build();
+                        .addAllAssignments(assignments)
+                        .setStatus(ResponseBuilder.getInstance().buildStatus(Code.OK, Code.OK.name()))
+                        .build();
             }
             future.complete(response);
         } catch (Throwable t) {
@@ -195,8 +178,8 @@ public class RouteActivity extends AbstractMessingActivity {
                 port = address.getPort();
             }
             addressList.add(new org.apache.rocketmq.proxy.common.Address(
-                org.apache.rocketmq.proxy.common.Address.AddressScheme.valueOf(endpoints.getScheme().name()),
-                HostAndPort.fromParts(address.getHost(), port)));
+                    org.apache.rocketmq.proxy.common.Address.AddressScheme.valueOf(endpoints.getScheme().name()),
+                    HostAndPort.fromParts(address.getHost(), port)));
         }
 
         return addressList;
@@ -204,7 +187,7 @@ public class RouteActivity extends AbstractMessingActivity {
     }
 
     protected Map<String /*brokerName*/, Map<Long /*brokerID*/, Broker>> buildBrokerMap(
-        List<ProxyTopicRouteData.ProxyBrokerData> brokerDataList) {
+            List<ProxyTopicRouteData.ProxyBrokerData> brokerDataList) {
         Map<String, Map<Long, Broker>> brokerMap = new HashMap<>();
         for (ProxyTopicRouteData.ProxyBrokerData brokerData : brokerDataList) {
             Map<Long, Broker> brokerIdMap = new HashMap<>();
@@ -216,19 +199,19 @@ public class RouteActivity extends AbstractMessingActivity {
                 for (org.apache.rocketmq.proxy.common.Address address : entry.getValue()) {
                     addressScheme = AddressScheme.valueOf(address.getAddressScheme().name());
                     addressList.add(Address.newBuilder()
-                        .setHost(address.getHostAndPort().getHost())
-                        .setPort(address.getHostAndPort().getPort())
-                        .build());
+                            .setHost(address.getHostAndPort().getHost())
+                            .setPort(address.getHostAndPort().getPort())
+                            .build());
                 }
 
                 Broker broker = Broker.newBuilder()
-                    .setName(brokerName)
-                    .setId(Math.toIntExact(brokerId))
-                    .setEndpoints(Endpoints.newBuilder()
-                        .setScheme(addressScheme)
-                        .addAllAddresses(addressList)
-                        .build())
-                    .build();
+                        .setName(brokerName)
+                        .setId(Math.toIntExact(brokerId))
+                        .setEndpoints(Endpoints.newBuilder()
+                                .setScheme(addressScheme)
+                                .addAllAddresses(addressList)
+                                .build())
+                        .build();
 
                 brokerIdMap.put(brokerId, broker);
             }
@@ -238,7 +221,7 @@ public class RouteActivity extends AbstractMessingActivity {
     }
 
     protected List<MessageQueue> genMessageQueueFromQueueData(QueueData queueData, Resource topic,
-        TopicMessageType topicMessageType, Broker broker) {
+                                                              TopicMessageType topicMessageType, Broker broker) {
         List<MessageQueue> messageQueueList = new ArrayList<>();
 
         int r = 0;
@@ -258,28 +241,28 @@ public class RouteActivity extends AbstractMessingActivity {
         int queueIdIndex = 0;
         for (int i = 0; i < r; i++) {
             MessageQueue messageQueue = MessageQueue.newBuilder().setBroker(broker).setTopic(topic)
-                .setId(queueIdIndex++)
-                .setPermission(Permission.READ)
-                .addAllAcceptMessageTypes(parseTopicMessageType(topicMessageType))
-                .build();
+                    .setId(queueIdIndex++)
+                    .setPermission(Permission.READ)
+                    .addAllAcceptMessageTypes(parseTopicMessageType(topicMessageType))
+                    .build();
             messageQueueList.add(messageQueue);
         }
 
         for (int i = 0; i < w; i++) {
             MessageQueue messageQueue = MessageQueue.newBuilder().setBroker(broker).setTopic(topic)
-                .setId(queueIdIndex++)
-                .setPermission(Permission.WRITE)
-                .addAllAcceptMessageTypes(parseTopicMessageType(topicMessageType))
-                .build();
+                    .setId(queueIdIndex++)
+                    .setPermission(Permission.WRITE)
+                    .addAllAcceptMessageTypes(parseTopicMessageType(topicMessageType))
+                    .build();
             messageQueueList.add(messageQueue);
         }
 
         for (int i = 0; i < rw; i++) {
             MessageQueue messageQueue = MessageQueue.newBuilder().setBroker(broker).setTopic(topic)
-                .setId(queueIdIndex++)
-                .setPermission(Permission.READ_WRITE)
-                .addAllAcceptMessageTypes(parseTopicMessageType(topicMessageType))
-                .build();
+                    .setId(queueIdIndex++)
+                    .setPermission(Permission.READ_WRITE)
+                    .addAllAcceptMessageTypes(parseTopicMessageType(topicMessageType))
+                    .build();
             messageQueueList.add(messageQueue);
         }
 

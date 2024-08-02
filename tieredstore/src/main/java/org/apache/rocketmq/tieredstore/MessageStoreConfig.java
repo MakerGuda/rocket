@@ -25,66 +25,9 @@ public class MessageStoreConfig {
     private String brokerName = localHostName();
     private String brokerClusterName = "DefaultCluster";
     private TieredStorageLevel tieredStorageLevel = TieredStorageLevel.NOT_IN_DISK;
-
-    /**
-     * All fetch requests are judged against this level first,
-     * and if the message cannot be read from the TiredMessageStore,
-     * these requests will still go to the next store for fallback processing.
-     */
-    public enum TieredStorageLevel {
-        /**
-         * Disable tiered storage, all fetch request will be handled by default message store.
-         */
-        DISABLE(0),
-        /**
-         * Only fetch request with offset not in disk will be handled by tiered storage.
-         */
-        NOT_IN_DISK(1),
-        /**
-         * Only fetch request with offset not in memory(page cache) will be handled by tiered storage.
-         */
-        NOT_IN_MEM(2),
-        /**
-         * All fetch request will be handled by tiered storage.
-         */
-        FORCE(3);
-
-        private final int value;
-
-        TieredStorageLevel(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-
-        public static TieredStorageLevel valueOf(int value) {
-            switch (value) {
-                case 1:
-                    return NOT_IN_DISK;
-                case 2:
-                    return NOT_IN_MEM;
-                case 3:
-                    return FORCE;
-                default:
-                    return DISABLE;
-            }
-        }
-
-        public boolean isEnable() {
-            return this.value > 0;
-        }
-
-        public boolean check(TieredStorageLevel targetLevel) {
-            return this.value >= targetLevel.value;
-        }
-    }
-
     private String storePathRootDir = System.getProperty("user.home") + File.separator + "store";
     private boolean messageIndexEnable = true;
     private boolean recordGetMessageResult = false;
-
     // CommitLog file size, default is 1G
     private long tieredStoreCommitLogMaxSize = 1024 * 1024 * 1024;
     // ConsumeQueue file size, default is 100M
@@ -103,7 +46,6 @@ public class MessageStoreConfig {
     private int commitLogRollingMinimumSize = 128 * 1024 * 1024;
     // default is 100, unit is millisecond
     private int maxCommitJitter = 100;
-
     private boolean tieredStoreGroupCommit = true;
     private int tieredStoreGroupCommitTimeout = 30 * 1000;
     // Cached message count larger than this value will trigger async commit. default is 4096
@@ -113,16 +55,13 @@ public class MessageStoreConfig {
     // Cached message count larger than this value will suspend append. default is 10000
     private int tieredStoreMaxGroupCommitCount = 10000;
     private long tieredStoreMaxFallBehindSize = 128 * 1024 * 1024;
-
     private boolean readAheadCacheEnable = true;
     private int readAheadMessageCountThreshold = 4096;
     private int readAheadMessageSizeThreshold = 16 * 1024 * 1024;
     private long readAheadCacheExpireDuration = 15 * 1000;
     private double readAheadCacheSizeThresholdRate = 0.3;
-
     private int tieredStoreMaxPendingLimit = 10000;
     private boolean tieredStoreCrcCheckEnable = false;
-
     private String tieredStoreFilePath = "";
     private String objectStoreEndpoint = "";
     private String objectStoreBucket = "";
@@ -394,10 +333,6 @@ public class MessageStoreConfig {
         this.tieredStoreFilePath = tieredStoreFilePath;
     }
 
-    public void setObjectStoreEndpoint(String objectStoreEndpoint) {
-        this.objectStoreEndpoint = objectStoreEndpoint;
-    }
-
     public String getObjectStoreBucket() {
         return objectStoreBucket;
     }
@@ -424,5 +359,64 @@ public class MessageStoreConfig {
 
     public String getObjectStoreEndpoint() {
         return objectStoreEndpoint;
+    }
+
+    public void setObjectStoreEndpoint(String objectStoreEndpoint) {
+        this.objectStoreEndpoint = objectStoreEndpoint;
+    }
+
+    /**
+     * All fetch requests are judged against this level first,
+     * and if the message cannot be read from the TiredMessageStore,
+     * these requests will still go to the next store for fallback processing.
+     */
+    public enum TieredStorageLevel {
+        /**
+         * Disable tiered storage, all fetch request will be handled by default message store.
+         */
+        DISABLE(0),
+        /**
+         * Only fetch request with offset not in disk will be handled by tiered storage.
+         */
+        NOT_IN_DISK(1),
+        /**
+         * Only fetch request with offset not in memory(page cache) will be handled by tiered storage.
+         */
+        NOT_IN_MEM(2),
+        /**
+         * All fetch request will be handled by tiered storage.
+         */
+        FORCE(3);
+
+        private final int value;
+
+        TieredStorageLevel(int value) {
+            this.value = value;
+        }
+
+        public static TieredStorageLevel valueOf(int value) {
+            switch (value) {
+                case 1:
+                    return NOT_IN_DISK;
+                case 2:
+                    return NOT_IN_MEM;
+                case 3:
+                    return FORCE;
+                default:
+                    return DISABLE;
+            }
+        }
+
+        public int getValue() {
+            return value;
+        }
+
+        public boolean isEnable() {
+            return this.value > 0;
+        }
+
+        public boolean check(TieredStorageLevel targetLevel) {
+            return this.value >= targetLevel.value;
+        }
     }
 }

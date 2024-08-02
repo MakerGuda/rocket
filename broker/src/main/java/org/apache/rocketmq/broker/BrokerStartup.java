@@ -32,9 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class BrokerStartup {
 
-    public static Logger log;
-
     public static final SystemConfigFileHelper CONFIG_FILE_HELPER = new SystemConfigFileHelper();
+    public static Logger log;
 
     public static void main(String[] args) {
         start(createBrokerController(args));
@@ -187,8 +186,8 @@ public class BrokerStartup {
 
     public static Runnable buildShutdownHook(BrokerController brokerController) {
         return new Runnable() {
-            private volatile boolean hasShutdown = false;
             private final AtomicInteger shutdownTimes = new AtomicInteger(0);
+            private volatile boolean hasShutdown = false;
 
             @Override
             public void run() {

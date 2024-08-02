@@ -19,20 +19,13 @@ public class Configuration {
     private final Logger log;
 
     private final List<Object> configObjectList = new ArrayList<>(4);
-
-    private String storePath;
-
-    private boolean storePathFromConfig = false;
-
-    private Object storePathObject;
-
-    private Field storePathField;
-
     private final DataVersion dataVersion = new DataVersion();
-
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-
     private final Properties allConfigs = new Properties();
+    private String storePath;
+    private boolean storePathFromConfig = false;
+    private Object storePathObject;
+    private Field storePathField;
 
     public Configuration(Logger log) {
         this.log = log;

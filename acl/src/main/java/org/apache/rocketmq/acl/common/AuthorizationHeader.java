@@ -82,28 +82,28 @@ public class AuthorizationHeader {
         return this.method;
     }
 
-    public String getAccessKey() {
-        return this.accessKey;
-    }
-
-    public String[] getSignedHeaders() {
-        return this.signedHeaders;
-    }
-
-    public String getSignature() {
-        return this.signature;
-    }
-
     public void setMethod(final String method) {
         this.method = method;
+    }
+
+    public String getAccessKey() {
+        return this.accessKey;
     }
 
     public void setAccessKey(final String accessKey) {
         this.accessKey = accessKey;
     }
 
+    public String[] getSignedHeaders() {
+        return this.signedHeaders;
+    }
+
     public void setSignedHeaders(final String[] signedHeaders) {
         this.signedHeaders = signedHeaders;
+    }
+
+    public String getSignature() {
+        return this.signature;
     }
 
     public void setSignature(final String signature) {
@@ -113,10 +113,10 @@ public class AuthorizationHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("method", method)
-            .add("accessKey", accessKey)
-            .add("signedHeaders", signedHeaders)
-            .add("signature", signature)
-            .toString();
+                .add("method", method)
+                .add("accessKey", accessKey)
+                .add("signedHeaders", signedHeaders)
+                .add("signature", signature)
+                .toString();
     }
 }

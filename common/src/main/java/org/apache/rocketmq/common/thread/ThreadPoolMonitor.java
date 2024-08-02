@@ -13,16 +13,12 @@ import java.util.concurrent.*;
 
 public class ThreadPoolMonitor {
 
-    private static Logger jstackLogger = LoggerFactory.getLogger(ThreadPoolMonitor.class);
-
-    private static Logger waterMarkLogger = LoggerFactory.getLogger(ThreadPoolMonitor.class);
-
     private static final List<ThreadPoolWrapper> MONITOR_EXECUTOR = new CopyOnWriteArrayList<>();
-
     private static final ScheduledExecutorService MONITOR_SCHEDULED = ThreadUtils.newSingleThreadScheduledExecutor(
-        new ThreadFactoryBuilder().setNameFormat("ThreadPoolMonitor-%d").build()
+            new ThreadFactoryBuilder().setNameFormat("ThreadPoolMonitor-%d").build()
     );
-
+    private static Logger jstackLogger = LoggerFactory.getLogger(ThreadPoolMonitor.class);
+    private static Logger waterMarkLogger = LoggerFactory.getLogger(ThreadPoolMonitor.class);
     private static volatile long threadPoolStatusPeriodTime = TimeUnit.SECONDS.toMillis(3);
 
     private static volatile boolean enablePrintJstack = true;
@@ -65,7 +61,7 @@ public class ThreadPoolMonitor {
                 waterMarkLogger.info("{}{}{}", nameFormatted, descFormatted, value);
                 if (enablePrintJstack) {
                     if (monitor.needPrintJstack(threadPoolWrapper.getThreadPoolExecutor(), value) &&
-                        System.currentTimeMillis() - jstackTime > jstackPeriodTime) {
+                            System.currentTimeMillis() - jstackTime > jstackPeriodTime) {
                         jstackTime = System.currentTimeMillis();
                         jstackLogger.warn("js tack start\n{}", UtilAll.jstack());
                     }

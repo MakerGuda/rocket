@@ -15,16 +15,11 @@ import java.util.concurrent.TimeUnit;
 @Setter
 public class StatisticsManager {
 
-    private Map<String, StatisticsKindMeta> kindMetaMap;
-
-    private Pair<String, long[][]>[] briefMetas;
-
-    private final ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItem>> statsTable = new ConcurrentHashMap<>();
-
     private static final int MAX_IDLE_TIME = 10 * 60 * 1000;
-
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItem>> statsTable = new ConcurrentHashMap<>();
     private final ScheduledExecutorService executor = ThreadUtils.newSingleThreadScheduledExecutor("StatisticsManagerCleaner", true);
-
+    private Map<String, StatisticsKindMeta> kindMetaMap;
+    private Pair<String, long[][]>[] briefMetas;
     private StatisticsItemStateGetter statisticsItemStateGetter;
 
     public StatisticsManager() {

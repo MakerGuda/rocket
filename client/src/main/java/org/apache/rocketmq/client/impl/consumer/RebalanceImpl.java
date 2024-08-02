@@ -46,27 +46,24 @@ import java.util.concurrent.ConcurrentMap;
 @Setter
 public abstract class RebalanceImpl {
     protected static final Logger log = LoggerFactory.getLogger(RebalanceImpl.class);
-
+    private static final int TIMEOUT_CHECK_TIMES = 3;
+    private static final int QUERY_ASSIGNMENT_TIMEOUT = 3000;
     protected final ConcurrentMap<MessageQueue, ProcessQueue> processQueueTable = new ConcurrentHashMap<>(64);
     protected final ConcurrentMap<MessageQueue, PopProcessQueue> popProcessQueueTable = new ConcurrentHashMap<>(64);
-
     protected final ConcurrentMap<String/* topic */, Set<MessageQueue>> topicSubscribeInfoTable =
-        new ConcurrentHashMap<>();
+            new ConcurrentHashMap<>();
     protected final ConcurrentMap<String /* topic */, SubscriptionData> subscriptionInner =
-        new ConcurrentHashMap<>();
+            new ConcurrentHashMap<>();
     protected String consumerGroup;
     protected MessageModel messageModel;
     protected AllocateMessageQueueStrategy allocateMessageQueueStrategy;
     protected MQClientInstance mQClientFactory;
-    private static final int TIMEOUT_CHECK_TIMES = 3;
-    private static final int QUERY_ASSIGNMENT_TIMEOUT = 3000;
-
     private Map<String, String> topicBrokerRebalance = new ConcurrentHashMap<>();
     private Map<String, String> topicClientRebalance = new ConcurrentHashMap<>();
 
     public RebalanceImpl(String consumerGroup, MessageModel messageModel,
-        AllocateMessageQueueStrategy allocateMessageQueueStrategy,
-        MQClientInstance mQClientFactory) {
+                         AllocateMessageQueueStrategy allocateMessageQueueStrategy,
+                         MQClientInstance mQClientFactory) {
         this.consumerGroup = consumerGroup;
         this.messageModel = messageModel;
         this.allocateMessageQueueStrategy = allocateMessageQueueStrategy;
@@ -84,9 +81,9 @@ public abstract class RebalanceImpl {
             try {
                 this.mQClientFactory.getMQClientAPIImpl().unlockBatchMQ(findBrokerResult.getBrokerAddr(), requestBody, 1000, oneway);
                 log.warn("unlock messageQueue. group:{}, clientId:{}, mq:{}",
-                    this.consumerGroup,
-                    this.mQClientFactory.getClientId(),
-                    mq);
+                        this.consumerGroup,
+                        this.mQClientFactory.getClientId(),
+                        mq);
             } catch (Exception e) {
                 log.error("unlockBatchMQ exception, " + mq, e);
             }
@@ -162,7 +159,7 @@ public abstract class RebalanceImpl {
 
             try {
                 Set<MessageQueue> lockedMq =
-                    this.mQClientFactory.getMQClientAPIImpl().lockBatchMQ(findBrokerResult.getBrokerAddr(), requestBody, 1000);
+                        this.mQClientFactory.getMQClientAPIImpl().lockBatchMQ(findBrokerResult.getBrokerAddr(), requestBody, 1000);
                 for (MessageQueue mmqq : lockedMq) {
                     ProcessQueue processQueue = this.processQueueTable.get(mmqq);
                     if (processQueue != null) {
@@ -204,7 +201,7 @@ public abstract class RebalanceImpl {
 
                 try {
                     Set<MessageQueue> lockOKMQSet =
-                        this.mQClientFactory.getMQClientAPIImpl().lockBatchMQ(findBrokerResult.getBrokerAddr(), requestBody, 1000);
+                            this.mQClientFactory.getMQClientAPIImpl().lockBatchMQ(findBrokerResult.getBrokerAddr(), requestBody, 1000);
 
                     for (MessageQueue mq : mqs) {
                         ProcessQueue processQueue = this.processQueueTable.get(mq);
@@ -277,7 +274,7 @@ public abstract class RebalanceImpl {
         while (retryTimes++ < TIMEOUT_CHECK_TIMES) {
             try {
                 Set<MessageQueueAssignment> resultSet = mQClientFactory.queryAssignment(topic, consumerGroup,
-                    strategyName, messageModel, QUERY_ASSIGNMENT_TIMEOUT / TIMEOUT_CHECK_TIMES * retryTimes);
+                        strategyName, messageModel, QUERY_ASSIGNMENT_TIMEOUT / TIMEOUT_CHECK_TIMES * retryTimes);
                 topicBrokerRebalance.put(topic, topic);
                 return true;
             } catch (Throwable t) {
@@ -341,10 +338,10 @@ public abstract class RebalanceImpl {
                     List<MessageQueue> allocateResult = null;
                     try {
                         allocateResult = strategy.allocate(
-                            this.consumerGroup,
-                            this.mQClientFactory.getClientId(),
-                            mqAll,
-                            cidAll);
+                                this.consumerGroup,
+                                this.mQClientFactory.getClientId(),
+                                mqAll,
+                                cidAll);
                     } catch (Throwable e) {
                         log.error("allocate message queue exception. strategy name: {}, ex: {}", strategy.getName(), e);
                         return false;
@@ -358,9 +355,9 @@ public abstract class RebalanceImpl {
                     boolean changed = this.updateProcessQueueTableInRebalance(topic, allocateResultSet, isOrder);
                     if (changed) {
                         log.info(
-                            "client rebalanced result changed. allocateMessageQueueStrategyName={}, group={}, topic={}, clientId={}, mqAllSize={}, cidAllSize={}, rebalanceResultSize={}, rebalanceResultSet={}",
-                            strategy.getName(), consumerGroup, topic, this.mQClientFactory.getClientId(), mqSet.size(), cidAll.size(),
-                            allocateResultSet.size(), allocateResultSet);
+                                "client rebalanced result changed. allocateMessageQueueStrategyName={}, group={}, topic={}, clientId={}, mqAllSize={}, cidAllSize={}, rebalanceResultSize={}, rebalanceResultSet={}",
+                                strategy.getName(), consumerGroup, topic, this.mQClientFactory.getClientId(), mqSet.size(), cidAll.size(),
+                                allocateResultSet.size(), allocateResultSet);
                         this.messageQueueChanged(topic, mqSet, allocateResultSet);
                     }
 
@@ -380,7 +377,7 @@ public abstract class RebalanceImpl {
         Set<MessageQueueAssignment> messageQueueAssignments;
         try {
             messageQueueAssignments = this.mQClientFactory.queryAssignment(topic, consumerGroup,
-                strategyName, messageModel, QUERY_ASSIGNMENT_TIMEOUT);
+                    strategyName, messageModel, QUERY_ASSIGNMENT_TIMEOUT);
         } catch (Exception e) {
             log.error("allocate message queue exception. strategy name: {}, ex: {}", strategyName, e);
             return false;
@@ -400,7 +397,7 @@ public abstract class RebalanceImpl {
         boolean changed = this.updateMessageQueueAssignment(topic, messageQueueAssignments, isOrder);
         if (changed) {
             log.info("broker rebalanced result changed. allocateMessageQueueStrategyName={}, group={}, topic={}, clientId={}, assignmentSet={}",
-                strategyName, consumerGroup, topic, this.mQClientFactory.getClientId(), messageQueueAssignments);
+                    strategyName, consumerGroup, topic, this.mQClientFactory.getClientId(), messageQueueAssignments);
             this.messageQueueChanged(topic, mqAll, mqSet);
         }
 
@@ -471,7 +468,7 @@ public abstract class RebalanceImpl {
     }
 
     private boolean updateProcessQueueTableInRebalance(final String topic, final Set<MessageQueue> mqSet,
-        final boolean isOrder) {
+                                                       final boolean isOrder) {
         boolean changed = false;
 
         // drop process queues no longer belong me
@@ -490,7 +487,7 @@ public abstract class RebalanceImpl {
                     pq.setDropped(true);
                     removeQueueMap.put(mq, pq);
                     log.error("[BUG]doRebalance, {}, try remove unnecessary mq, {}, because pull is pause, so try to fixed it",
-                        consumerGroup, mq);
+                            consumerGroup, mq);
                 }
             }
         }
@@ -553,7 +550,7 @@ public abstract class RebalanceImpl {
     }
 
     private boolean updateMessageQueueAssignment(final String topic, final Set<MessageQueueAssignment> assignments,
-        final boolean isOrder) {
+                                                 final boolean isOrder) {
         boolean changed = false;
 
         Map<MessageQueue, MessageQueueAssignment> mq2PushAssignment = new HashMap<>();
@@ -610,7 +607,7 @@ public abstract class RebalanceImpl {
                         pq.setDropped(true);
                         removeQueueMap.put(mq, pq);
                         log.error("[BUG]doRebalance, {}, try remove unnecessary mq, {}, because pull is pause, so try to fixed it",
-                            consumerGroup, mq);
+                                consumerGroup, mq);
                     }
                 }
             }
@@ -644,7 +641,7 @@ public abstract class RebalanceImpl {
                         pq.setDropped(true);
                         removeQueueMap.put(mq, pq);
                         log.error("[BUG]doRebalance, {}, try remove unnecessary pop mq, {}, because pop is pause, so try to fixed it",
-                            consumerGroup, mq);
+                                consumerGroup, mq);
                     }
                 }
             }
@@ -740,7 +737,7 @@ public abstract class RebalanceImpl {
     }
 
     public abstract void messageQueueChanged(final String topic, final Set<MessageQueue> mqAll,
-        final Set<MessageQueue> mqDivided);
+                                             final Set<MessageQueue> mqDivided);
 
     public abstract boolean removeUnnecessaryMessageQueue(final MessageQueue mq, final ProcessQueue pq);
 
@@ -755,6 +752,7 @@ public abstract class RebalanceImpl {
     /**
      * When the network is unstable, using this interface may return wrong offset.
      * It is recommended to use computePullFromWhereWithException instead.
+     *
      * @param mq
      * @return offset
      */

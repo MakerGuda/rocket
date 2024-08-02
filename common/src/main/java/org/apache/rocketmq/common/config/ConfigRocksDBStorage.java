@@ -29,6 +29,16 @@ public class ConfigRocksDBStorage extends AbstractRocksDBStorage {
         this.readOnly = readOnly;
     }
 
+    public static String getDBLogDir() {
+        String rootPath = System.getProperty("user.home");
+        if (StringUtils.isEmpty(rootPath)) {
+            return "";
+        }
+        rootPath = rootPath + File.separator + "logs";
+        UtilAll.ensureDirOK(rootPath);
+        return rootPath + File.separator + "rocketmqlogs" + File.separator;
+    }
+
     private void initOptions() {
         this.options = createConfigDBOptions();
         this.writeOptions = new WriteOptions();
@@ -86,35 +96,35 @@ public class ConfigRocksDBStorage extends AbstractRocksDBStorage {
 
     private ColumnFamilyOptions createConfigOptions() {
         BlockBasedTableConfig blockBasedTableConfig = new BlockBasedTableConfig().
-            setFormatVersion(5).
-            setIndexType(IndexType.kBinarySearch).
-            setDataBlockIndexType(DataBlockIndexType.kDataBlockBinarySearch).
-            setBlockSize(32 * SizeUnit.KB).
-            setFilterPolicy(new BloomFilter(16, false)).
-            setCacheIndexAndFilterBlocks(false).
-            setCacheIndexAndFilterBlocksWithHighPriority(true).
-            setPinL0FilterAndIndexBlocksInCache(false).
-            setPinTopLevelIndexAndFilter(true).
-            setBlockCache(new LRUCache(4 * SizeUnit.MB, 8, false)).
-            setWholeKeyFiltering(true);
+                setFormatVersion(5).
+                setIndexType(IndexType.kBinarySearch).
+                setDataBlockIndexType(DataBlockIndexType.kDataBlockBinarySearch).
+                setBlockSize(32 * SizeUnit.KB).
+                setFilterPolicy(new BloomFilter(16, false)).
+                setCacheIndexAndFilterBlocks(false).
+                setCacheIndexAndFilterBlocksWithHighPriority(true).
+                setPinL0FilterAndIndexBlocksInCache(false).
+                setPinTopLevelIndexAndFilter(true).
+                setBlockCache(new LRUCache(4 * SizeUnit.MB, 8, false)).
+                setWholeKeyFiltering(true);
         ColumnFamilyOptions options = new ColumnFamilyOptions();
         return options.setMaxWriteBufferNumber(2).
-            setWriteBufferSize(8 * SizeUnit.MB).
-            setMinWriteBufferNumberToMerge(1).
-            setTableFormatConfig(blockBasedTableConfig).
-            setMemTableConfig(new SkipListMemTableConfig()).
-            setCompressionType(CompressionType.NO_COMPRESSION).
-            setNumLevels(7).
-            setCompactionStyle(CompactionStyle.LEVEL).
-            setLevel0FileNumCompactionTrigger(4).
-            setLevel0SlowdownWritesTrigger(8).
-            setLevel0StopWritesTrigger(12).
-            setTargetFileSizeBase(64 * SizeUnit.MB).
-            setTargetFileSizeMultiplier(2).
-            setMaxBytesForLevelBase(256 * SizeUnit.MB).
-            setMaxBytesForLevelMultiplier(2).
-            setMergeOperator(new StringAppendOperator()).
-            setInplaceUpdateSupport(true);
+                setWriteBufferSize(8 * SizeUnit.MB).
+                setMinWriteBufferNumberToMerge(1).
+                setTableFormatConfig(blockBasedTableConfig).
+                setMemTableConfig(new SkipListMemTableConfig()).
+                setCompressionType(CompressionType.NO_COMPRESSION).
+                setNumLevels(7).
+                setCompactionStyle(CompactionStyle.LEVEL).
+                setLevel0FileNumCompactionTrigger(4).
+                setLevel0SlowdownWritesTrigger(8).
+                setLevel0StopWritesTrigger(12).
+                setTargetFileSizeBase(64 * SizeUnit.MB).
+                setTargetFileSizeMultiplier(2).
+                setMaxBytesForLevelBase(256 * SizeUnit.MB).
+                setMaxBytesForLevelMultiplier(2).
+                setMergeOperator(new StringAppendOperator()).
+                setInplaceUpdateSupport(true);
     }
 
     private DBOptions createConfigDBOptions() {
@@ -122,27 +132,17 @@ public class ConfigRocksDBStorage extends AbstractRocksDBStorage {
         Statistics statistics = new Statistics();
         statistics.setStatsLevel(StatsLevel.EXCEPT_DETAILED_TIMERS);
         return options.setDbLogDir(getDBLogDir()).setInfoLogLevel(InfoLogLevel.INFO_LEVEL).setWalRecoveryMode(WALRecoveryMode.SkipAnyCorruptedRecords).setManualWalFlush(true).setMaxTotalWalSize(500 * SizeUnit.MB).setWalSizeLimitMB(0).setWalTtlSeconds(0).setCreateIfMissing(true).setCreateMissingColumnFamilies(true).setMaxOpenFiles(-1).setMaxLogFileSize(SizeUnit.GB).setKeepLogFileNum(5).setMaxManifestFileSize(SizeUnit.GB).
-            setAllowConcurrentMemtableWrite(false).
-            setStatistics(statistics).
-            setStatsDumpPeriodSec(600).
-            setAtomicFlush(true).
-            setMaxBackgroundJobs(32).
-            setMaxSubcompactions(4).
-            setParanoidChecks(true).
-            setDelayedWriteRate(16 * SizeUnit.MB).
-            setRateLimiter(new RateLimiter(100 * SizeUnit.MB)).
-            setUseDirectIoForFlushAndCompaction(true).
-            setUseDirectReads(true);
-    }
-
-    public static String getDBLogDir() {
-        String rootPath = System.getProperty("user.home");
-        if (StringUtils.isEmpty(rootPath)) {
-            return "";
-        }
-        rootPath = rootPath + File.separator + "logs";
-        UtilAll.ensureDirOK(rootPath);
-        return rootPath + File.separator + "rocketmqlogs" + File.separator;
+                setAllowConcurrentMemtableWrite(false).
+                setStatistics(statistics).
+                setStatsDumpPeriodSec(600).
+                setAtomicFlush(true).
+                setMaxBackgroundJobs(32).
+                setMaxSubcompactions(4).
+                setParanoidChecks(true).
+                setDelayedWriteRate(16 * SizeUnit.MB).
+                setRateLimiter(new RateLimiter(100 * SizeUnit.MB)).
+                setUseDirectIoForFlushAndCompaction(true).
+                setUseDirectReads(true);
     }
 
     public void put(final byte[] keyBytes, final int keyLen, final byte[] valueBytes) throws Exception {

@@ -18,24 +18,7 @@ package org.apache.rocketmq.store.rocksdb;
 
 import org.apache.rocketmq.common.config.ConfigRocksDBStorage;
 import org.apache.rocketmq.store.MessageStore;
-import org.rocksdb.BlockBasedTableConfig;
-import org.rocksdb.BloomFilter;
-import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.CompactionOptionsUniversal;
-import org.rocksdb.CompactionStopStyle;
-import org.rocksdb.CompactionStyle;
-import org.rocksdb.CompressionType;
-import org.rocksdb.DBOptions;
-import org.rocksdb.DataBlockIndexType;
-import org.rocksdb.IndexType;
-import org.rocksdb.InfoLogLevel;
-import org.rocksdb.LRUCache;
-import org.rocksdb.RateLimiter;
-import org.rocksdb.SkipListMemTableConfig;
-import org.rocksdb.Statistics;
-import org.rocksdb.StatsLevel;
-import org.rocksdb.StringAppendOperator;
-import org.rocksdb.WALRecoveryMode;
+import org.rocksdb.*;
 import org.rocksdb.util.SizeUnit;
 
 public class RocksDBOptionsFactory {
@@ -125,6 +108,7 @@ public class RocksDBOptionsFactory {
 
     /**
      * Create a rocksdb db options, the user must take care to close it after closing db.
+     *
      * @return
      */
     public static DBOptions createDBOptions() {

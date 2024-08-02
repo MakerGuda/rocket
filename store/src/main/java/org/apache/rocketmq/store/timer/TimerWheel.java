@@ -31,11 +31,10 @@ import java.nio.channels.FileChannel;
 
 public class TimerWheel {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     public static final int BLANK = -1, IGNORE = -2;
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     public final int slotsTotal;
     public final int precisionMs;
-    private String fileName;
     private final RandomAccessFile randomAccessFile;
     private final FileChannel fileChannel;
     private final MappedByteBuffer mappedByteBuffer;
@@ -47,6 +46,7 @@ public class TimerWheel {
         }
     };
     private final int wheelLength;
+    private String fileName;
 
     public TimerWheel(String fileName, int slotsTotal, int precisionMs) throws IOException {
         this.slotsTotal = slotsTotal;
@@ -60,9 +60,9 @@ public class TimerWheel {
         try {
             randomAccessFile = new RandomAccessFile(this.fileName, "rw");
             if (file.exists() && randomAccessFile.length() != 0 &&
-                randomAccessFile.length() != wheelLength) {
+                    randomAccessFile.length() != wheelLength) {
                 throw new RuntimeException(String.format("Timer wheel length:%d != expected:%s",
-                    randomAccessFile.length(), wheelLength));
+                        randomAccessFile.length(), wheelLength));
             }
             randomAccessFile.setLength(wheelLength);
             fileChannel = randomAccessFile.getChannel();
@@ -124,7 +124,7 @@ public class TimerWheel {
     public Slot getRawSlot(long timeMs) {
         localBuffer.get().position(getSlotIndex(timeMs) * Slot.SIZE);
         return new Slot(localBuffer.get().getLong() * precisionMs,
-            localBuffer.get().getLong(), localBuffer.get().getLong(), localBuffer.get().getInt(), localBuffer.get().getInt());
+                localBuffer.get().getLong(), localBuffer.get().getLong(), localBuffer.get().getInt(), localBuffer.get().getInt());
     }
 
     public int getSlotIndex(long timeMs) {
@@ -139,6 +139,7 @@ public class TimerWheel {
         localBuffer.get().putLong(firstPos);
         localBuffer.get().putLong(lastPos);
     }
+
     public void putSlot(long timeMs, long firstPos, long lastPos, int num, int magic) {
         localBuffer.get().position(getSlotIndex(timeMs) * Slot.SIZE);
         localBuffer.get().putLong(timeMs / precisionMs);

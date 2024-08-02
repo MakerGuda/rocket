@@ -68,13 +68,6 @@ public class Message implements Serializable {
         this(topic, tags, keys, 0, body, true);
     }
 
-    /**
-     * 设置消息属性 keys
-     */
-    public void setKeys(String keys) {
-        this.putProperty(MessageConst.PROPERTY_KEYS, keys);
-    }
-
     void putProperty(final String name, final String value) {
         if (null == this.properties) {
             this.properties = new HashMap<>();
@@ -143,6 +136,13 @@ public class Message implements Serializable {
     }
 
     /**
+     * 设置消息属性 keys
+     */
+    public void setKeys(String keys) {
+        this.putProperty(MessageConst.PROPERTY_KEYS, keys);
+    }
+
+    /**
      * 设置消息keys，用空格进行分割
      */
     public void setKeys(Collection<String> keyCollection) {
@@ -201,19 +201,12 @@ public class Message implements Serializable {
     @Override
     public String toString() {
         return "Message{" +
-            "topic='" + topic + '\'' +
-            ", flag=" + flag +
-            ", properties=" + properties +
-            ", body=" + Arrays.toString(body) +
-            ", transactionId='" + transactionId + '\'' +
-            '}';
-    }
-
-    /**
-     * 设置消息的延迟时间
-     */
-    public void setDelayTimeSec(long sec) {
-        this.putProperty(MessageConst.PROPERTY_TIMER_DELAY_SEC, String.valueOf(sec));
+                "topic='" + topic + '\'' +
+                ", flag=" + flag +
+                ", properties=" + properties +
+                ", body=" + Arrays.toString(body) +
+                ", transactionId='" + transactionId + '\'' +
+                '}';
     }
 
     /**
@@ -228,10 +221,25 @@ public class Message implements Serializable {
     }
 
     /**
+     * 设置消息的延迟时间
+     */
+    public void setDelayTimeSec(long sec) {
+        this.putProperty(MessageConst.PROPERTY_TIMER_DELAY_SEC, String.valueOf(sec));
+    }
+
+    /**
      * 获取消息的延迟时间，毫秒
      */
     public long getDelayTimeMs() {
         String t = this.getProperty(MessageConst.PROPERTY_TIMER_DELAY_MS);
+        if (t != null) {
+            return Long.parseLong(t);
+        }
+        return 0;
+    }
+
+    public long getDeliverTimeMs() {
+        String t = this.getProperty(MessageConst.PROPERTY_TIMER_DELIVER_MS);
         if (t != null) {
             return Long.parseLong(t);
         }
@@ -243,14 +251,6 @@ public class Message implements Serializable {
      */
     public void setDeliverTimeMs(long timeMs) {
         this.putProperty(MessageConst.PROPERTY_TIMER_DELIVER_MS, String.valueOf(timeMs));
-    }
-
-    public long getDeliverTimeMs() {
-        String t = this.getProperty(MessageConst.PROPERTY_TIMER_DELIVER_MS);
-        if (t != null) {
-            return Long.parseLong(t);
-        }
-        return 0;
     }
 
 }

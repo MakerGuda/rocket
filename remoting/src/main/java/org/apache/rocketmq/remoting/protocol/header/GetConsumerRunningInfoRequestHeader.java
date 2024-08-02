@@ -69,9 +69,9 @@ public class GetConsumerRunningInfoRequestHeader extends RpcRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .add("clientId", clientId)
-            .add("jstackEnable", jstackEnable)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .add("clientId", clientId)
+                .add("jstackEnable", jstackEnable)
+                .toString();
     }
 }

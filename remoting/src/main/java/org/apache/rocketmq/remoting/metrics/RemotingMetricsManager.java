@@ -27,10 +27,12 @@ import io.opentelemetry.sdk.metrics.InstrumentSelector;
 import io.opentelemetry.sdk.metrics.InstrumentType;
 import io.opentelemetry.sdk.metrics.View;
 import io.opentelemetry.sdk.metrics.ViewBuilder;
+
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
+
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.metrics.NopLongHistogram;
 
@@ -50,36 +52,36 @@ public class RemotingMetricsManager {
             return Attributes.builder();
         }
         return attributesBuilderSupplier.get()
-            .put(LABEL_PROTOCOL_TYPE, PROTOCOL_TYPE_REMOTING);
+                .put(LABEL_PROTOCOL_TYPE, PROTOCOL_TYPE_REMOTING);
     }
 
     public static void initMetrics(Meter meter, Supplier<AttributesBuilder> attributesBuilderSupplier) {
         RemotingMetricsManager.attributesBuilderSupplier = attributesBuilderSupplier;
         rpcLatency = meter.histogramBuilder(HISTOGRAM_RPC_LATENCY)
-            .setDescription("Rpc latency")
-            .setUnit("milliseconds")
-            .ofLongs()
-            .build();
+                .setDescription("Rpc latency")
+                .setUnit("milliseconds")
+                .ofLongs()
+                .build();
     }
 
     public static List<Pair<InstrumentSelector, ViewBuilder>> getMetricsView() {
         List<Double> rpcCostTimeBuckets = Arrays.asList(
-            (double) Duration.ofMillis(1).toMillis(),
-            (double) Duration.ofMillis(3).toMillis(),
-            (double) Duration.ofMillis(5).toMillis(),
-            (double) Duration.ofMillis(7).toMillis(),
-            (double) Duration.ofMillis(10).toMillis(),
-            (double) Duration.ofMillis(100).toMillis(),
-            (double) Duration.ofSeconds(1).toMillis(),
-            (double) Duration.ofSeconds(2).toMillis(),
-            (double) Duration.ofSeconds(3).toMillis()
+                (double) Duration.ofMillis(1).toMillis(),
+                (double) Duration.ofMillis(3).toMillis(),
+                (double) Duration.ofMillis(5).toMillis(),
+                (double) Duration.ofMillis(7).toMillis(),
+                (double) Duration.ofMillis(10).toMillis(),
+                (double) Duration.ofMillis(100).toMillis(),
+                (double) Duration.ofSeconds(1).toMillis(),
+                (double) Duration.ofSeconds(2).toMillis(),
+                (double) Duration.ofSeconds(3).toMillis()
         );
         InstrumentSelector selector = InstrumentSelector.builder()
-            .setType(InstrumentType.HISTOGRAM)
-            .setName(HISTOGRAM_RPC_LATENCY)
-            .build();
+                .setType(InstrumentType.HISTOGRAM)
+                .setName(HISTOGRAM_RPC_LATENCY)
+                .build();
         ViewBuilder viewBuilder = View.builder()
-            .setAggregation(Aggregation.explicitBucketHistogram(rpcCostTimeBuckets));
+                .setAggregation(Aggregation.explicitBucketHistogram(rpcCostTimeBuckets));
         return Lists.newArrayList(new Pair<>(selector, viewBuilder));
     }
 

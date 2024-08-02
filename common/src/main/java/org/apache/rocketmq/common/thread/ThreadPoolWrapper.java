@@ -19,48 +19,10 @@ public class ThreadPoolWrapper {
     private List<ThreadPoolStatusMonitor> statusPrinters;
 
     ThreadPoolWrapper(final String name, final ThreadPoolExecutor threadPoolExecutor,
-        final List<ThreadPoolStatusMonitor> statusPrinters) {
+                      final List<ThreadPoolStatusMonitor> statusPrinters) {
         this.name = name;
         this.threadPoolExecutor = threadPoolExecutor;
         this.statusPrinters = statusPrinters;
-    }
-
-    public static class ThreadPoolWrapperBuilder {
-
-        private String name;
-
-        private ThreadPoolExecutor threadPoolExecutor;
-
-        private List<ThreadPoolStatusMonitor> statusPrinters;
-
-        ThreadPoolWrapperBuilder() {
-        }
-
-        public ThreadPoolWrapper.ThreadPoolWrapperBuilder name(final String name) {
-            this.name = name;
-            return this;
-        }
-
-        public ThreadPoolWrapper.ThreadPoolWrapperBuilder threadPoolExecutor(
-            final ThreadPoolExecutor threadPoolExecutor) {
-            this.threadPoolExecutor = threadPoolExecutor;
-            return this;
-        }
-
-        public ThreadPoolWrapper.ThreadPoolWrapperBuilder statusPrinters(
-            final List<ThreadPoolStatusMonitor> statusPrinters) {
-            this.statusPrinters = statusPrinters;
-            return this;
-        }
-
-        public ThreadPoolWrapper build() {
-            return new ThreadPoolWrapper(this.name, this.threadPoolExecutor, this.statusPrinters);
-        }
-
-        @java.lang.Override
-        public java.lang.String toString() {
-            return "ThreadPoolWrapper.ThreadPoolWrapperBuilder(name=" + this.name + ", threadPoolExecutor=" + this.threadPoolExecutor + ", statusPrinters=" + this.statusPrinters + ")";
-        }
     }
 
     public static ThreadPoolWrapper.ThreadPoolWrapperBuilder builder() {
@@ -85,6 +47,44 @@ public class ThreadPoolWrapper {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this).add("name", name).add("threadPoolExecutor", threadPoolExecutor).add("statusPrinters", statusPrinters).toString();
+    }
+
+    public static class ThreadPoolWrapperBuilder {
+
+        private String name;
+
+        private ThreadPoolExecutor threadPoolExecutor;
+
+        private List<ThreadPoolStatusMonitor> statusPrinters;
+
+        ThreadPoolWrapperBuilder() {
+        }
+
+        public ThreadPoolWrapper.ThreadPoolWrapperBuilder name(final String name) {
+            this.name = name;
+            return this;
+        }
+
+        public ThreadPoolWrapper.ThreadPoolWrapperBuilder threadPoolExecutor(
+                final ThreadPoolExecutor threadPoolExecutor) {
+            this.threadPoolExecutor = threadPoolExecutor;
+            return this;
+        }
+
+        public ThreadPoolWrapper.ThreadPoolWrapperBuilder statusPrinters(
+                final List<ThreadPoolStatusMonitor> statusPrinters) {
+            this.statusPrinters = statusPrinters;
+            return this;
+        }
+
+        public ThreadPoolWrapper build() {
+            return new ThreadPoolWrapper(this.name, this.threadPoolExecutor, this.statusPrinters);
+        }
+
+        @java.lang.Override
+        public java.lang.String toString() {
+            return "ThreadPoolWrapper.ThreadPoolWrapperBuilder(name=" + this.name + ", threadPoolExecutor=" + this.threadPoolExecutor + ", statusPrinters=" + this.statusPrinters + ")";
+        }
     }
 
 }

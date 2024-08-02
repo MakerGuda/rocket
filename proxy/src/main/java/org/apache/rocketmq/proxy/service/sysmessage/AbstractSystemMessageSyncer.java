@@ -18,33 +18,34 @@
 package org.apache.rocketmq.proxy.service.sysmessage;
 
 import com.alibaba.fastjson.JSON;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.client.exception.MQClientException;
+import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageDecoder;
 import org.apache.rocketmq.common.topic.TopicValidator;
+import org.apache.rocketmq.common.utils.StartAndShutdown;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.common.ProxyException;
 import org.apache.rocketmq.proxy.common.ProxyExceptionCode;
-import org.apache.rocketmq.common.utils.StartAndShutdown;
 import org.apache.rocketmq.proxy.config.ConfigurationManager;
 import org.apache.rocketmq.proxy.config.ProxyConfig;
 import org.apache.rocketmq.proxy.service.admin.AdminService;
-import org.apache.rocketmq.client.impl.mqclient.MQClientAPIFactory;
 import org.apache.rocketmq.proxy.service.route.AddressableMessageQueue;
 import org.apache.rocketmq.proxy.service.route.TopicRouteService;
 import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.remoting.protocol.header.SendMessageRequestHeader;
 import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
+
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 public abstract class AbstractSystemMessageSyncer implements StartAndShutdown, MessageListenerConcurrently {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
@@ -94,18 +95,18 @@ public abstract class AbstractSystemMessageSyncer implements StartAndShutdown, M
         String targetTopic = this.getBroadcastTopicName();
         try {
             Message message = new Message(
-                targetTopic,
-                JSON.toJSONString(data).getBytes(StandardCharsets.UTF_8)
+                    targetTopic,
+                    JSON.toJSONString(data).getBytes(StandardCharsets.UTF_8)
             );
 
             AddressableMessageQueue messageQueue = this.topicRouteService.getAllMessageQueueView(ProxyContext.createForInner(this.getClass()), targetTopic)
-                .getWriteSelector().selectOne(true);
+                    .getWriteSelector().selectOne(true);
             this.mqClientAPIFactory.getClient().sendMessageAsync(
-                messageQueue.getBrokerAddr(),
-                messageQueue.getBrokerName(),
-                message,
-                buildSendMessageRequestHeader(message, this.getSystemMessageProducerId(), messageQueue.getQueueId()),
-                Duration.ofSeconds(3).toMillis()
+                    messageQueue.getBrokerAddr(),
+                    messageQueue.getBrokerName(),
+                    message,
+                    buildSendMessageRequestHeader(message, this.getSystemMessageProducerId(), messageQueue.getQueueId()),
+                    Duration.ofSeconds(3).toMillis()
             ).whenCompleteAsync((result, throwable) -> {
                 if (throwable != null) {
                     log.error("send system message failed. data: {}, topic: {}", data, getBroadcastTopicName(), throwable);
@@ -121,7 +122,7 @@ public abstract class AbstractSystemMessageSyncer implements StartAndShutdown, M
     }
 
     protected SendMessageRequestHeader buildSendMessageRequestHeader(Message message,
-        String producerGroup, int queueId) {
+                                                                     String producerGroup, int queueId) {
         SendMessageRequestHeader requestHeader = new SendMessageRequestHeader();
 
         requestHeader.setProducerGroup(producerGroup);
@@ -166,12 +167,12 @@ public abstract class AbstractSystemMessageSyncer implements StartAndShutdown, M
         }
 
         boolean createSuccess = this.adminService.createTopicOnTopicBrokerIfNotExist(
-            this.getBroadcastTopicName(),
-            clusterName,
-            this.getBroadcastTopicQueueNum(),
-            this.getBroadcastTopicQueueNum(),
-            true,
-            3
+                this.getBroadcastTopicName(),
+                clusterName,
+                this.getBroadcastTopicQueueNum(),
+                this.getBroadcastTopicQueueNum(),
+                true,
+                3
         );
         if (!createSuccess) {
             throw new ProxyException(ProxyExceptionCode.INTERNAL_SERVER_ERROR, "create system broadcast topic " + this.getBroadcastTopicName() + " failed on cluster " + clusterName);

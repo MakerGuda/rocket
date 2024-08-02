@@ -16,9 +16,6 @@
  */
 package org.apache.rocketmq.broker.slave;
 
-import java.io.IOException;
-import java.util.concurrent.ConcurrentMap;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.loadbalance.MessageRequestModeManager;
@@ -35,6 +32,9 @@ import org.apache.rocketmq.remoting.protocol.body.TopicConfigAndMappingSerialize
 import org.apache.rocketmq.store.config.StorePathConfigHelper;
 import org.apache.rocketmq.store.timer.TimerCheckpoint;
 import org.apache.rocketmq.store.timer.TimerMetrics;
+
+import java.io.IOException;
+import java.util.concurrent.ConcurrentMap;
 
 public class SlaveSynchronize {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);

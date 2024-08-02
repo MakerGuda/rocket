@@ -33,10 +33,10 @@ import org.apache.rocketmq.remoting.protocol.RequestCode;
 public class UpdateGroupForbiddenRequestHeader extends TopicRequestHeader {
     @CFNotNull
     @RocketMQResource(ResourceType.GROUP)
-    private String  group;
+    private String group;
     @CFNotNull
     @RocketMQResource(ResourceType.TOPIC)
-    private String  topic;
+    private String topic;
 
     private Boolean readable;
 

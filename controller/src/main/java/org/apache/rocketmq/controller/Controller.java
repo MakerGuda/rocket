@@ -69,7 +69,7 @@ public interface Controller {
      * @return RemotingCommand(AlterSyncStateSetResponseHeader)
      */
     CompletableFuture<RemotingCommand> alterSyncStateSet(
-        final AlterSyncStateSetRequestHeader request, final SyncStateSet syncStateSet);
+            final AlterSyncStateSetRequestHeader request, final SyncStateSet syncStateSet);
 
     /**
      * Elect new master for a broker.
@@ -113,6 +113,7 @@ public interface Controller {
 
     /**
      * Add broker's lifecycle listener
+     *
      * @param listener listener
      */
     void registerBrokerLifecycleListener(final BrokerLifecycleListener listener);
@@ -124,7 +125,6 @@ public interface Controller {
 
     /**
      * Clean controller broker data
-     *
      */
     CompletableFuture<RemotingCommand> cleanBrokerData(final CleanControllerBrokerDataRequestHeader requestHeader);
 }

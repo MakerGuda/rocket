@@ -18,7 +18,6 @@
 package org.apache.rocketmq.proxy.remoting.pipeline;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.util.List;
 import org.apache.rocketmq.acl.AccessResource;
 import org.apache.rocketmq.acl.AccessValidator;
 import org.apache.rocketmq.auth.authentication.AuthenticationEvaluator;
@@ -34,6 +33,8 @@ import org.apache.rocketmq.proxy.config.ConfigurationManager;
 import org.apache.rocketmq.proxy.config.ProxyConfig;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+
+import java.util.List;
 
 public class AuthenticationPipeline implements RequestPipeline {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);

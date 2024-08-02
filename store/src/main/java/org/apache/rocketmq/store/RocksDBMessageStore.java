@@ -16,11 +16,6 @@
  */
 package org.apache.rocketmq.store;
 
-import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import org.apache.rocketmq.common.BrokerConfig;
@@ -37,11 +32,16 @@ import org.apache.rocketmq.store.queue.RocksDBConsumeQueueStore;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
 import org.rocksdb.RocksDBException;
 
+import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
+
 public class RocksDBMessageStore extends DefaultMessageStore {
 
     public RocksDBMessageStore(final MessageStoreConfig messageStoreConfig, final BrokerStatsManager brokerStatsManager,
-        final MessageArrivingListener messageArrivingListener, final BrokerConfig brokerConfig, final ConcurrentMap<String, TopicConfig> topicConfigTable) throws
-        IOException {
+                               final MessageArrivingListener messageArrivingListener, final BrokerConfig brokerConfig, final ConcurrentMap<String, TopicConfig> topicConfigTable) throws
+            IOException {
         super(messageStoreConfig, brokerStatsManager, messageArrivingListener, brokerConfig, topicConfigTable);
         notifyMessageArriveInBatch = true;
     }
@@ -70,6 +70,7 @@ public class RocksDBMessageStore extends DefaultMessageStore {
      * Try to set topicQueueTable = new HashMap<>(), otherwise it will cause bug when broker role changes.
      * And unlike method in DefaultMessageStore, we don't need to really recover topic queue table advance,
      * because we can recover topic queue table from rocksdb when we need to use it.
+     *
      * @see RocksDBConsumeQueue#assignQueueOffset
      */
     @Override
@@ -91,12 +92,25 @@ public class RocksDBMessageStore extends DefaultMessageStore {
         return findConsumeQueue(topic, queueId);
     }
 
+    @Override
+    public long estimateMessageCount(String topic, int queueId, long from, long to, MessageFilter filter) {
+        // todo
+        return 0;
+    }
+
+    @Override
+    public void initMetrics(Meter meter, Supplier<AttributesBuilder> attributesBuilderSupplier) {
+        DefaultStoreMetricsManager.init(meter, attributesBuilderSupplier, this);
+        // Also add some metrics for rocksdb's monitoring.
+        RocksDBStoreMetricsManager.init(meter, attributesBuilderSupplier, this);
+    }
+
     class RocksDBCleanConsumeQueueService extends CleanConsumeQueueService {
         private final double diskSpaceWarningLevelRatio =
-            Double.parseDouble(System.getProperty("rocketmq.broker.diskSpaceWarningLevelRatio", "0.90"));
+                Double.parseDouble(System.getProperty("rocketmq.broker.diskSpaceWarningLevelRatio", "0.90"));
 
         private final double diskSpaceCleanForciblyRatio =
-            Double.parseDouble(System.getProperty("rocketmq.broker.diskSpaceCleanForciblyRatio", "0.85"));
+                Double.parseDouble(System.getProperty("rocketmq.broker.diskSpaceCleanForciblyRatio", "0.85"));
 
         @Override
         protected void deleteExpiredFiles() {
@@ -119,7 +133,7 @@ public class RocksDBMessageStore extends DefaultMessageStore {
             double ratio = RocksDBMessageStore.this.getMessageStoreConfig().getDiskMaxUsedSpaceRatio() / 100.0;
 
             String storePathLogics = StorePathConfigHelper
-                .getStorePathConsumeQueue(RocksDBMessageStore.this.getMessageStoreConfig().getStorePathRootDir());
+                    .getStorePathConsumeQueue(RocksDBMessageStore.this.getMessageStoreConfig().getStorePathRootDir());
             double logicsRatio = UtilAll.getDiskPartitionSpaceUsedPercent(storePathLogics);
             if (logicsRatio > diskSpaceWarningLevelRatio) {
                 boolean diskOk = RocksDBMessageStore.this.runningFlags.getAndMakeLogicDiskFull();
@@ -159,23 +173,11 @@ public class RocksDBMessageStore extends DefaultMessageStore {
     class RocksDBCorrectLogicOffsetService extends CorrectLogicOffsetService {
         /**
          * There is no need to correct min offset of consume queue, we already fix this problem.
-         *  @see org.apache.rocketmq.store.queue.RocksDBConsumeQueueOffsetTable#getMinCqOffset
+         *
+         * @see org.apache.rocketmq.store.queue.RocksDBConsumeQueueOffsetTable#getMinCqOffset
          */
         public void run() {
 
         }
-    }
-
-    @Override
-    public long estimateMessageCount(String topic, int queueId, long from, long to, MessageFilter filter) {
-        // todo
-        return 0;
-    }
-
-    @Override
-    public void initMetrics(Meter meter, Supplier<AttributesBuilder> attributesBuilderSupplier) {
-        DefaultStoreMetricsManager.init(meter, attributesBuilderSupplier, this);
-        // Also add some metrics for rocksdb's monitoring.
-        RocksDBStoreMetricsManager.init(meter, attributesBuilderSupplier, this);
     }
 }

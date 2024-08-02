@@ -20,29 +20,22 @@ public class LatencyFaultToleranceImpl implements LatencyFaultTolerance<String> 
      * key: brokerName
      */
     private final ConcurrentHashMap<String, FaultItem> faultItemTable = new ConcurrentHashMap<>(16);
-
-    /**
-     * 默认嗅探超时时间
-     */
-    private int detectTimeout = 200;
-
-    /**
-     * 默认嗅探时间间隔
-     */
-    private int detectInterval = 2000;
-
     private final ThreadLocalIndex whichItemWorst = new ThreadLocalIndex();
-
-    private volatile boolean startDetectorEnable = false;
-
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "LatencyFaultToleranceScheduledThread"));
-
     private final Resolver resolver;
-
     /**
      * 嗅探服务
      */
     private final ServiceDetector serviceDetector;
+    /**
+     * 默认嗅探超时时间
+     */
+    private int detectTimeout = 200;
+    /**
+     * 默认嗅探时间间隔
+     */
+    private int detectInterval = 2000;
+    private volatile boolean startDetectorEnable = false;
 
     public LatencyFaultToleranceImpl(Resolver resolver, ServiceDetector serviceDetector) {
         this.resolver = resolver;

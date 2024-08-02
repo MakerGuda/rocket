@@ -19,14 +19,6 @@ package org.apache.rocketmq.proxy.service.receipt;
 
 import com.google.common.base.Stopwatch;
 import io.netty.channel.Channel;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.broker.client.ClientChannelInfo;
 import org.apache.rocketmq.broker.client.ConsumerGroupEvent;
 import org.apache.rocketmq.broker.client.ConsumerIdsChangeListener;
@@ -38,37 +30,30 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.consumer.ReceiptHandle;
 import org.apache.rocketmq.common.state.StateEventListener;
 import org.apache.rocketmq.common.thread.ThreadPoolMonitor;
-import org.apache.rocketmq.common.utils.AbstractStartAndShutdown;
-import org.apache.rocketmq.common.utils.ConcurrentHashMapUtils;
-import org.apache.rocketmq.common.utils.StartAndShutdown;
-import org.apache.rocketmq.common.utils.ThreadUtils;
+import org.apache.rocketmq.common.utils.*;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
-import org.apache.rocketmq.proxy.common.MessageReceiptHandle;
-import org.apache.rocketmq.proxy.common.ProxyContext;
-import org.apache.rocketmq.proxy.common.ProxyException;
-import org.apache.rocketmq.proxy.common.ProxyExceptionCode;
-import org.apache.rocketmq.proxy.common.ReceiptHandleGroup;
-import org.apache.rocketmq.proxy.common.ReceiptHandleGroupKey;
-import org.apache.rocketmq.proxy.common.RenewEvent;
-import org.apache.rocketmq.proxy.common.RenewStrategyPolicy;
+import org.apache.rocketmq.proxy.common.*;
 import org.apache.rocketmq.proxy.common.channel.ChannelHelper;
-import org.apache.rocketmq.common.utils.ExceptionUtils;
 import org.apache.rocketmq.proxy.config.ConfigurationManager;
 import org.apache.rocketmq.proxy.config.ProxyConfig;
 import org.apache.rocketmq.proxy.service.metadata.MetadataService;
 import org.apache.rocketmq.remoting.protocol.subscription.RetryPolicy;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.*;
+
 public class DefaultReceiptHandleManager extends AbstractStartAndShutdown implements ReceiptHandleManager {
     protected final static Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
+    protected final static RetryPolicy RENEW_POLICY = new RenewStrategyPolicy();
     protected final MetadataService metadataService;
     protected final ConsumerManager consumerManager;
     protected final ConcurrentMap<ReceiptHandleGroupKey, ReceiptHandleGroup> receiptHandleGroupMap;
     protected final StateEventListener<RenewEvent> eventListener;
-    protected final static RetryPolicy RENEW_POLICY = new RenewStrategyPolicy();
     protected final ScheduledExecutorService scheduledExecutorService =
-        ThreadUtils.newSingleThreadScheduledExecutor(new ThreadFactoryImpl("RenewalScheduledThread_"));
+            ThreadUtils.newSingleThreadScheduledExecutor(new ThreadFactoryImpl("RenewalScheduledThread_"));
     protected final ThreadPoolExecutor renewalWorkerService;
 
     public DefaultReceiptHandleManager(MetadataService metadataService, ConsumerManager consumerManager, StateEventListener<RenewEvent> eventListener) {
@@ -77,11 +62,11 @@ public class DefaultReceiptHandleManager extends AbstractStartAndShutdown implem
         this.eventListener = eventListener;
         ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
         this.renewalWorkerService = ThreadPoolMonitor.createAndMonitor(
-            proxyConfig.getRenewThreadPoolNums(),
-            proxyConfig.getRenewMaxThreadPoolNums(),
-            1, TimeUnit.MINUTES,
-            "RenewalWorkerThread",
-            proxyConfig.getRenewThreadPoolQueueCapacity()
+                proxyConfig.getRenewThreadPoolNums(),
+                proxyConfig.getRenewMaxThreadPoolNums(),
+                1, TimeUnit.MINUTES,
+                "RenewalWorkerThread",
+                proxyConfig.getRenewThreadPoolQueueCapacity()
         );
         consumerManager.appendConsumerIdsChangeListener(new ConsumerIdsChangeListener() {
             @Override
@@ -113,7 +98,7 @@ public class DefaultReceiptHandleManager extends AbstractStartAndShutdown implem
             @Override
             public void start() throws Exception {
                 scheduledExecutorService.scheduleWithFixedDelay(() -> scheduleRenewTask(), 0,
-                    ConfigurationManager.getProxyConfig().getRenewSchedulePeriodMillis(), TimeUnit.MILLISECONDS);
+                        ConfigurationManager.getProxyConfig().getRenewSchedulePeriodMillis(), TimeUnit.MILLISECONDS);
             }
 
             @Override
@@ -126,7 +111,7 @@ public class DefaultReceiptHandleManager extends AbstractStartAndShutdown implem
 
     public void addReceiptHandle(ProxyContext context, Channel channel, String group, String msgID, MessageReceiptHandle messageReceiptHandle) {
         ConcurrentHashMapUtils.computeIfAbsent(this.receiptHandleGroupMap, new ReceiptHandleGroupKey(channel, group),
-            k -> new ReceiptHandleGroup()).put(msgID, messageReceiptHandle);
+                k -> new ReceiptHandleGroup()).put(msgID, messageReceiptHandle);
     }
 
     public MessageReceiptHandle removeReceiptHandle(ProxyContext context, Channel channel, String group, String msgID, String receiptHandle) {
@@ -211,7 +196,7 @@ public class DefaultReceiptHandleManager extends AbstractStartAndShutdown implem
             } else {
                 ProxyContext context = createContext("RenewMessage");
                 SubscriptionGroupConfig subscriptionGroupConfig =
-                    metadataService.getSubscriptionGroupConfig(context, messageReceiptHandle.getGroup());
+                        metadataService.getSubscriptionGroupConfig(context, messageReceiptHandle.getGroup());
                 if (subscriptionGroupConfig == null) {
                     log.error("group's subscriptionGroupConfig is null when renew. handle: {}", messageReceiptHandle);
                     return CompletableFuture.completedFuture(null);
@@ -269,7 +254,7 @@ public class DefaultReceiptHandleManager extends AbstractStartAndShutdown implem
         if (t instanceof ProxyException) {
             ProxyException proxyException = (ProxyException) t;
             if (ProxyExceptionCode.INVALID_BROKER_NAME.equals(proxyException.getCode()) ||
-                ProxyExceptionCode.INVALID_RECEIPT_HANDLE.equals(proxyException.getCode())) {
+                    ProxyExceptionCode.INVALID_RECEIPT_HANDLE.equals(proxyException.getCode())) {
                 return false;
             }
         }

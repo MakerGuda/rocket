@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.acl.plain;
 
-import java.util.HashSet;
-import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.apache.rocketmq.acl.common.AclException;
@@ -26,13 +24,14 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class RemoteAddressStrategyFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
-
     public static final NullRemoteAddressStrategy NULL_NET_ADDRESS_STRATEGY = new NullRemoteAddressStrategy();
-
     public static final BlankRemoteAddressStrategy BLANK_NET_ADDRESS_STRATEGY = new BlankRemoteAddressStrategy();
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
 
     public RemoteAddressStrategy getRemoteAddressStrategy(PlainAccessResource plainAccessResource) {
         return getRemoteAddressStrategy(plainAccessResource.getWhiteRemoteAddress());
@@ -127,9 +126,9 @@ public class RemoteAddressStrategyFactory {
             this.netAddress = netAddress;
             InetAddressValidator validator = InetAddressValidator.getInstance();
             if (!(validator.isValidInet4Address(netAddress) || validator.isValidInet6Address(
-                netAddress))) {
+                    netAddress))) {
                 throw new AclException(String.format("NetAddress examine Exception netAddress is %s",
-                    netAddress));
+                        netAddress));
             }
         }
 

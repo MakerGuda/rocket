@@ -70,9 +70,9 @@ public class GetConsumerStatusRequestHeader extends TopicRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("topic", topic)
-            .add("group", group)
-            .add("clientAddr", clientAddr)
-            .toString();
+                .add("topic", topic)
+                .add("group", group)
+                .add("clientAddr", clientAddr)
+                .toString();
     }
 }

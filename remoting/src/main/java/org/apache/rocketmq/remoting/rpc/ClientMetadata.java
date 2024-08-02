@@ -41,14 +41,68 @@ public class ClientMetadata {
      */
     private final ConcurrentMap<String, HashMap<String, Integer>> brokerVersionTable = new ConcurrentHashMap<>();
 
+    public static ConcurrentMap<MessageQueue, String> topicRouteData2EndpointsForStaticTopic(final String topic, final TopicRouteData route) {
+        if (route.getTopicQueueMappingByBroker() == null || route.getTopicQueueMappingByBroker().isEmpty()) {
+            return new ConcurrentHashMap<>();
+        }
+        ConcurrentMap<MessageQueue, String> mqEndPointsOfBroker = new ConcurrentHashMap<>();
+        Map<String, Map<String, TopicQueueMappingInfo>> mappingInfosByScope = new HashMap<>();
+        for (Map.Entry<String, TopicQueueMappingInfo> entry : route.getTopicQueueMappingByBroker().entrySet()) {
+            TopicQueueMappingInfo info = entry.getValue();
+            String scope = info.getScope();
+            if (scope != null) {
+                if (!mappingInfosByScope.containsKey(scope)) {
+                    mappingInfosByScope.put(scope, new HashMap<>());
+                }
+                mappingInfosByScope.get(scope).put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        for (Map.Entry<String, Map<String, TopicQueueMappingInfo>> mapEntry : mappingInfosByScope.entrySet()) {
+            String scope = mapEntry.getKey();
+            Map<String, TopicQueueMappingInfo> topicQueueMappingInfoMap = mapEntry.getValue();
+            ConcurrentMap<MessageQueue, TopicQueueMappingInfo> mqEndPoints = new ConcurrentHashMap<>();
+            List<Map.Entry<String, TopicQueueMappingInfo>> mappingInfos = new ArrayList<>(topicQueueMappingInfoMap.entrySet());
+            mappingInfos.sort((o1, o2) -> (int) (o2.getValue().getEpoch() - o1.getValue().getEpoch()));
+            int maxTotalNums = 0;
+            long maxTotalNumOfEpoch = -1;
+            for (Map.Entry<String, TopicQueueMappingInfo> entry : mappingInfos) {
+                TopicQueueMappingInfo info = entry.getValue();
+                if (info.getEpoch() >= maxTotalNumOfEpoch && info.getTotalQueues() > maxTotalNums) {
+                    maxTotalNums = info.getTotalQueues();
+                }
+                for (Map.Entry<Integer, Integer> idEntry : entry.getValue().getCurrIdMap().entrySet()) {
+                    int globalId = idEntry.getKey();
+                    MessageQueue mq = new MessageQueue(topic, TopicQueueMappingUtils.getMockBrokerName(info.getScope()), globalId);
+                    TopicQueueMappingInfo oldInfo = mqEndPoints.get(mq);
+                    if (oldInfo == null || oldInfo.getEpoch() <= info.getEpoch()) {
+                        mqEndPoints.put(mq, info);
+                    }
+                }
+            }
+
+
+            //accomplish the static logic queues
+            for (int i = 0; i < maxTotalNums; i++) {
+                MessageQueue mq = new MessageQueue(topic, TopicQueueMappingUtils.getMockBrokerName(scope), i);
+                if (!mqEndPoints.containsKey(mq)) {
+                    mqEndPointsOfBroker.put(mq, MixAll.LOGICAL_QUEUE_MOCK_BROKER_NAME_NOT_EXIST);
+                } else {
+                    mqEndPointsOfBroker.put(mq, mqEndPoints.get(mq).getBname());
+                }
+            }
+        }
+        return mqEndPointsOfBroker;
+    }
+
     public void freshTopicRoute(String topic, TopicRouteData topicRouteData) {
         if (topic == null
-            || topicRouteData == null) {
+                || topicRouteData == null) {
             return;
         }
         TopicRouteData old = this.topicRouteTable.get(topic);
         if (!topicRouteData.topicRouteDataChanged(old)) {
-            return ;
+            return;
         }
         {
             for (BrokerData bd : topicRouteData.getBrokerDatas()) {
@@ -87,60 +141,6 @@ public class ClientMetadata {
             return null;
         }
         return brokerAddrTable.get(brokerName).get(MixAll.MASTER_ID);
-    }
-
-    public static ConcurrentMap<MessageQueue, String> topicRouteData2EndpointsForStaticTopic(final String topic, final TopicRouteData route) {
-        if (route.getTopicQueueMappingByBroker() == null || route.getTopicQueueMappingByBroker().isEmpty()) {
-            return new ConcurrentHashMap<>();
-        }
-        ConcurrentMap<MessageQueue, String> mqEndPointsOfBroker = new ConcurrentHashMap<>();
-        Map<String, Map<String, TopicQueueMappingInfo>> mappingInfosByScope = new HashMap<>();
-        for (Map.Entry<String, TopicQueueMappingInfo> entry : route.getTopicQueueMappingByBroker().entrySet()) {
-            TopicQueueMappingInfo info = entry.getValue();
-            String scope = info.getScope();
-            if (scope != null) {
-                if (!mappingInfosByScope.containsKey(scope)) {
-                    mappingInfosByScope.put(scope, new HashMap<>());
-                }
-                mappingInfosByScope.get(scope).put(entry.getKey(), entry.getValue());
-            }
-        }
-
-        for (Map.Entry<String, Map<String, TopicQueueMappingInfo>> mapEntry : mappingInfosByScope.entrySet()) {
-            String scope = mapEntry.getKey();
-            Map<String, TopicQueueMappingInfo> topicQueueMappingInfoMap =  mapEntry.getValue();
-            ConcurrentMap<MessageQueue, TopicQueueMappingInfo> mqEndPoints = new ConcurrentHashMap<>();
-            List<Map.Entry<String, TopicQueueMappingInfo>> mappingInfos = new ArrayList<>(topicQueueMappingInfoMap.entrySet());
-            mappingInfos.sort((o1, o2) -> (int) (o2.getValue().getEpoch() - o1.getValue().getEpoch()));
-            int maxTotalNums = 0;
-            long maxTotalNumOfEpoch = -1;
-            for (Map.Entry<String, TopicQueueMappingInfo> entry : mappingInfos) {
-                TopicQueueMappingInfo info = entry.getValue();
-                if (info.getEpoch() >= maxTotalNumOfEpoch && info.getTotalQueues() > maxTotalNums) {
-                    maxTotalNums = info.getTotalQueues();
-                }
-                for (Map.Entry<Integer, Integer> idEntry : entry.getValue().getCurrIdMap().entrySet()) {
-                    int globalId = idEntry.getKey();
-                    MessageQueue mq = new MessageQueue(topic, TopicQueueMappingUtils.getMockBrokerName(info.getScope()), globalId);
-                    TopicQueueMappingInfo oldInfo = mqEndPoints.get(mq);
-                    if (oldInfo == null ||  oldInfo.getEpoch() <= info.getEpoch()) {
-                        mqEndPoints.put(mq, info);
-                    }
-                }
-            }
-
-
-            //accomplish the static logic queues
-            for (int i = 0; i < maxTotalNums; i++) {
-                MessageQueue mq = new MessageQueue(topic, TopicQueueMappingUtils.getMockBrokerName(scope), i);
-                if (!mqEndPoints.containsKey(mq)) {
-                    mqEndPointsOfBroker.put(mq, MixAll.LOGICAL_QUEUE_MOCK_BROKER_NAME_NOT_EXIST);
-                } else {
-                    mqEndPointsOfBroker.put(mq, mqEndPoints.get(mq).getBname());
-                }
-            }
-        }
-        return mqEndPointsOfBroker;
     }
 
 }

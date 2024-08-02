@@ -12,17 +12,12 @@ import java.util.concurrent.TimeUnit;
 @Setter
 public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemScheduledPrinter {
 
-    private String[] tpsItemNames;
-
     public static final int TPS_INITIAL_DELAY = 0;
-
     public static final int TPS_INTREVAL = 1000;
-
     public static final String SEPARATOR = "|";
-
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItem>> lastItemSnapshots = new ConcurrentHashMap<>();
-
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItemSampleBrief>> sampleBriefs = new ConcurrentHashMap<>();
+    private String[] tpsItemNames;
 
     public StatisticsItemScheduledIncrementPrinter(String name, StatisticsItemPrinter printer, ScheduledExecutorService executor, InitialDelay initialDelay, long interval, String[] tpsItemNames, Valve valve) {
         super(name, printer, executor, initialDelay, interval, valve);
@@ -125,7 +120,7 @@ public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemSched
         }
         if (interceptor instanceof StatisticsBriefInterceptor) {
             StringBuilder sb = new StringBuilder();
-            StatisticsBriefInterceptor briefInterceptor = (StatisticsBriefInterceptor)interceptor;
+            StatisticsBriefInterceptor briefInterceptor = (StatisticsBriefInterceptor) interceptor;
             for (StatisticsBrief brief : briefInterceptor.getStatisticsBriefs()) {
                 long max = brief.getMax();
                 long tp999 = Math.min(brief.tp999(), max);
@@ -140,11 +135,9 @@ public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemSched
 
     public static class StatisticsItemSampleBrief {
 
-        private StatisticsItem lastSnapshot;
-
         public String[] itemNames;
-
         public ItemSampleBrief[] briefs;
+        private StatisticsItem lastSnapshot;
 
         public StatisticsItemSampleBrief(StatisticsItem statItem, String[] itemNames) {
             this.lastSnapshot = statItem.snapshot();
@@ -218,7 +211,7 @@ public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemSched
         }
 
         public double getAvg() {
-            return cnt != 0 ? ((double)total) / cnt : 0;
+            return cnt != 0 ? ((double) total) / cnt : 0;
         }
     }
 

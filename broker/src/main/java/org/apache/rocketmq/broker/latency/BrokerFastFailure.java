@@ -16,12 +16,6 @@
  */
 package org.apache.rocketmq.broker.latency;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.AbstractBrokerRunnable;
 import org.apache.rocketmq.common.Pair;
@@ -35,6 +29,13 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.netty.RequestTask;
 import org.apache.rocketmq.remoting.protocol.RemotingSysResponseCode;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
 /**
  * BrokerFastFailure will cover {@link BrokerController#getSendThreadPoolQueue()} and {@link
  * BrokerController#getPullThreadPoolQueue()}
@@ -43,27 +44,15 @@ public class BrokerFastFailure {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final ScheduledExecutorService scheduledExecutorService;
     private final BrokerController brokerController;
-
-    private volatile long jstackTime = System.currentTimeMillis();
-
     private final List<Pair<BlockingQueue<Runnable>, Supplier<Long>>> cleanExpiredRequestQueueList = new ArrayList<>();
+    private volatile long jstackTime = System.currentTimeMillis();
 
     public BrokerFastFailure(final BrokerController brokerController) {
         this.brokerController = brokerController;
         initCleanExpiredRequestQueueList();
         this.scheduledExecutorService = ThreadUtils.newScheduledThreadPool(1,
-            new ThreadFactoryImpl("BrokerFastFailureScheduledThread", true,
-                brokerController == null ? null : brokerController.getBrokerConfig()));
-    }
-
-    private void initCleanExpiredRequestQueueList() {
-        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getSendThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInSendQueue()));
-        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getPullThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInPullQueue()));
-        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getLitePullThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInLitePullQueue()));
-        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getHeartbeatThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInHeartbeatQueue()));
-        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getEndTransactionThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInTransactionQueue()));
-        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getAckThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInAckQueue()));
-        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getAdminBrokerThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInAdminBrokerQueue()));
+                new ThreadFactoryImpl("BrokerFastFailureScheduledThread", true,
+                        brokerController == null ? null : brokerController.getBrokerConfig()));
     }
 
     public static RequestTask castRunnable(final Runnable runnable) {
@@ -77,6 +66,16 @@ public class BrokerFastFailure {
         }
 
         return null;
+    }
+
+    private void initCleanExpiredRequestQueueList() {
+        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getSendThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInSendQueue()));
+        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getPullThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInPullQueue()));
+        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getLitePullThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInLitePullQueue()));
+        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getHeartbeatThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInHeartbeatQueue()));
+        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getEndTransactionThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInTransactionQueue()));
+        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getAckThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInAckQueue()));
+        cleanExpiredRequestQueueList.add(new Pair<>(this.brokerController.getAdminBrokerThreadPoolQueue(), () -> this.brokerController.getBrokerConfig().getWaitTimeMillsInAdminBrokerQueue()));
     }
 
     public void start() {
@@ -103,10 +102,10 @@ public class BrokerFastFailure {
                     final RequestTask rt = castRunnable(runnable);
                     if (rt != null) {
                         rt.returnResponse(RemotingSysResponseCode.SYSTEM_BUSY, String.format(
-                            "[PCBUSY_CLEAN_QUEUE]broker busy, start flow control for a while, period in queue: %sms, "
-                                + "size of queue: %d",
-                            System.currentTimeMillis() - rt.getCreateTimestamp(),
-                            this.brokerController.getSendThreadPoolQueue().size()));
+                                "[PCBUSY_CLEAN_QUEUE]broker busy, start flow control for a while, period in queue: %sms, "
+                                        + "size of queue: %d",
+                                System.currentTimeMillis() - rt.getCreateTimestamp(),
+                                this.brokerController.getSendThreadPoolQueue().size()));
                     }
                 } else {
                     break;
@@ -155,7 +154,7 @@ public class BrokerFastFailure {
     }
 
     public synchronized void addCleanExpiredRequestQueue(BlockingQueue<Runnable> cleanExpiredRequestQueue,
-        Supplier<Long> maxWaitTimeMillsInQueueSupplier) {
+                                                         Supplier<Long> maxWaitTimeMillsInQueueSupplier) {
         cleanExpiredRequestQueueList.add(new Pair<>(cleanExpiredRequestQueue, maxWaitTimeMillsInQueueSupplier));
     }
 

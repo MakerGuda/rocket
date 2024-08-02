@@ -17,6 +17,7 @@
 package org.apache.rocketmq.remoting.protocol.body;
 
 import java.util.List;
+
 import org.apache.rocketmq.remoting.protocol.EpochEntry;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
@@ -78,11 +79,11 @@ public class EpochEntryCache extends RemotingSerializable {
     @Override
     public String toString() {
         return "EpochEntryCache{" +
-            "clusterName='" + clusterName + '\'' +
-            ", brokerName='" + brokerName + '\'' +
-            ", brokerId=" + brokerId +
-            ", epochList=" + epochList +
-            ", maxOffset=" + maxOffset +
-            '}';
+                "clusterName='" + clusterName + '\'' +
+                ", brokerName='" + brokerName + '\'' +
+                ", brokerId=" + brokerId +
+                ", epochList=" + epochList +
+                ", maxOffset=" + maxOffset +
+                '}';
     }
 }

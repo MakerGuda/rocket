@@ -32,7 +32,7 @@ public abstract class AbstractMessingActivity {
     protected final GrpcChannelManager grpcChannelManager;
 
     public AbstractMessingActivity(MessagingProcessor messagingProcessor,
-        GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
+                                   GrpcClientSettingsManager grpcClientSettingsManager, GrpcChannelManager grpcChannelManager) {
         this.messagingProcessor = messagingProcessor;
         this.grpcClientSettingsManager = grpcClientSettingsManager;
         this.grpcChannelManager = grpcChannelManager;

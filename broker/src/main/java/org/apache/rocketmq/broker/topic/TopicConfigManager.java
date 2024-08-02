@@ -56,8 +56,8 @@ public class TopicConfigManager extends ConfigManager {
 
     private transient final Lock topicConfigTableLock = new ReentrantLock();
     protected ConcurrentMap<String, TopicConfig> topicConfigTable = new ConcurrentHashMap<>(1024);
-    private DataVersion dataVersion = new DataVersion();
     protected transient BrokerController brokerController;
+    private DataVersion dataVersion = new DataVersion();
 
     public TopicConfigManager() {
 
@@ -89,9 +89,9 @@ public class TopicConfigManager extends ConfigManager {
                 TopicConfig topicConfig = new TopicConfig(topic);
                 TopicValidator.addSystemTopic(topic);
                 topicConfig.setReadQueueNums(this.brokerController.getBrokerConfig()
-                    .getDefaultTopicQueueNums());
+                        .getDefaultTopicQueueNums());
                 topicConfig.setWriteQueueNums(this.brokerController.getBrokerConfig()
-                    .getDefaultTopicQueueNums());
+                        .getDefaultTopicQueueNums());
                 int perm = PermName.PERM_INHERIT | PermName.PERM_READ | PermName.PERM_WRITE;
                 topicConfig.setPerm(perm);
                 putTopicConfig(topicConfig);
@@ -221,7 +221,7 @@ public class TopicConfigManager extends ConfigManager {
     }
 
     public TopicConfig createTopicInSendMessageMethod(final String topic, final String defaultTopic,
-        final String remoteAddress, final int clientDefaultTopicQueueNums, final int topicSysFlag) {
+                                                      final String remoteAddress, final int clientDefaultTopicQueueNums, final int topicSysFlag) {
         TopicConfig topicConfig = null;
         boolean createNew = false;
 
@@ -259,16 +259,16 @@ public class TopicConfigManager extends ConfigManager {
                             topicConfig.setTopicFilterType(defaultTopicConfig.getTopicFilterType());
                         } else {
                             log.warn("Create new topic failed, because the default topic[{}] has no perm [{}] producer:[{}]",
-                                defaultTopic, defaultTopicConfig.getPerm(), remoteAddress);
+                                    defaultTopic, defaultTopicConfig.getPerm(), remoteAddress);
                         }
                     } else {
                         log.warn("Create new topic failed, because the default topic[{}] not exist. producer:[{}]",
-                            defaultTopic, remoteAddress);
+                                defaultTopic, remoteAddress);
                     }
 
                     if (topicConfig != null) {
                         log.info("Create new topic by default topic:[{}] config:[{}] producer:[{}]",
-                            defaultTopic, topicConfig, remoteAddress);
+                                defaultTopic, topicConfig, remoteAddress);
 
                         putTopicConfig(topicConfig);
 
@@ -334,19 +334,19 @@ public class TopicConfigManager extends ConfigManager {
     }
 
     public TopicConfig createTopicInSendMessageBackMethod(
-        final String topic,
-        final int clientDefaultTopicQueueNums,
-        final int perm,
-        final int topicSysFlag) {
+            final String topic,
+            final int clientDefaultTopicQueueNums,
+            final int perm,
+            final int topicSysFlag) {
         return createTopicInSendMessageBackMethod(topic, clientDefaultTopicQueueNums, perm, false, topicSysFlag);
     }
 
     public TopicConfig createTopicInSendMessageBackMethod(
-        final String topic,
-        final int clientDefaultTopicQueueNums,
-        final int perm,
-        final boolean isOrder,
-        final int topicSysFlag) {
+            final String topic,
+            final int clientDefaultTopicQueueNums,
+            final int perm,
+            final boolean isOrder,
+            final int topicSysFlag) {
         TopicConfig topicConfig = getTopicConfig(topic);
         if (topicConfig != null) {
             if (isOrder != topicConfig.isOrder()) {
@@ -447,7 +447,7 @@ public class TopicConfigManager extends ConfigManager {
             }
 
             log.info("update topic sys flag. oldTopicSysFlag={}, newTopicSysFlag={}", oldTopicSysFlag,
-                topicConfig.getTopicSysFlag());
+                    topicConfig.getTopicSysFlag());
 
             putTopicConfig(topicConfig);
 
@@ -470,7 +470,7 @@ public class TopicConfigManager extends ConfigManager {
             }
 
             log.info("update topic sys flag. oldTopicSysFlag={}, newTopicSysFlag={}", oldTopicSysFlag,
-                topicConfig.getTopicSysFlag());
+                    topicConfig.getTopicSysFlag());
 
             putTopicConfig(topicConfig);
 
@@ -490,10 +490,10 @@ public class TopicConfigManager extends ConfigManager {
 
 
         Map<String, String> finalAttributes = AttributeUtil.alterCurrentAttributes(
-            this.topicConfigTable.get(topicConfig.getTopicName()) == null,
-            TopicAttributes.ALL,
-            ImmutableMap.copyOf(currentAttributes),
-            ImmutableMap.copyOf(newAttributes));
+                this.topicConfigTable.get(topicConfig.getTopicName()) == null,
+                TopicAttributes.ALL,
+                ImmutableMap.copyOf(currentAttributes),
+                ImmutableMap.copyOf(newAttributes));
 
         topicConfig.setAttributes(finalAttributes);
         updateTieredStoreTopicMetadata(topicConfig, newAttributes);
@@ -624,8 +624,8 @@ public class TopicConfigManager extends ConfigManager {
     }
 
     public TopicConfigAndMappingSerializeWrapper buildSerializeWrapper(
-        final ConcurrentMap<String, TopicConfig> topicConfigTable,
-        final Map<String, TopicQueueMappingInfo> topicQueueMappingInfoMap
+            final ConcurrentMap<String, TopicConfig> topicConfigTable,
+            final Map<String, TopicQueueMappingInfo> topicQueueMappingInfoMap
     ) {
         TopicConfigAndMappingSerializeWrapper topicConfigWrapper = new TopicConfigAndMappingSerializeWrapper();
         topicConfigWrapper.setTopicConfigTable(topicConfigTable);
@@ -651,7 +651,7 @@ public class TopicConfigManager extends ConfigManager {
     public void decode(String jsonString) {
         if (jsonString != null) {
             TopicConfigSerializeWrapper topicConfigSerializeWrapper =
-                TopicConfigSerializeWrapper.fromJson(jsonString, TopicConfigSerializeWrapper.class);
+                    TopicConfigSerializeWrapper.fromJson(jsonString, TopicConfigSerializeWrapper.class);
             if (topicConfigSerializeWrapper != null) {
                 this.topicConfigTable.putAll(topicConfigSerializeWrapper.getTopicConfigTable());
                 this.dataVersion.assignNewOne(topicConfigSerializeWrapper.getDataVersion());
@@ -679,13 +679,13 @@ public class TopicConfigManager extends ConfigManager {
         return dataVersion;
     }
 
-    public void setTopicConfigTable(
-        ConcurrentMap<String, TopicConfig> topicConfigTable) {
-        this.topicConfigTable = topicConfigTable;
-    }
-
     public ConcurrentMap<String, TopicConfig> getTopicConfigTable() {
         return topicConfigTable;
+    }
+
+    public void setTopicConfigTable(
+            ConcurrentMap<String, TopicConfig> topicConfigTable) {
+        this.topicConfigTable = topicConfigTable;
     }
 
     private Map<String, String> request(TopicConfig topicConfig) {

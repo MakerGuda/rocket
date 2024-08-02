@@ -22,20 +22,16 @@ public class TopicConfig {
      * 分隔符
      */
     private static final String SEPARATOR = " ";
-
+    private static final TypeReference<Map<String, String>> ATTRIBUTES_TYPE_REFERENCE = new TypeReference<Map<String, String>>() {
+    };
     /**
      * 默认读队列数量
      */
     public static int defaultReadQueueNums = 16;
-
     /**
      * 默认写队列数量
      */
     public static int defaultWriteQueueNums = 16;
-
-    private static final TypeReference<Map<String, String>> ATTRIBUTES_TYPE_REFERENCE = new TypeReference<Map<String, String>>() {
-    };
-
     /**
      * 主题名称
      */
@@ -219,9 +215,9 @@ public class TopicConfig {
     @Override
     public String toString() {
         return "TopicConfig [topicName=" + topicName + ", readQueueNums=" + readQueueNums
-            + ", writeQueueNums=" + writeQueueNums + ", perm=" + PermName.perm2String(perm)
-            + ", topicFilterType=" + topicFilterType + ", topicSysFlag=" + topicSysFlag + ", order=" + order
-            + ", attributes=" + attributes + "]";
+                + ", writeQueueNums=" + writeQueueNums + ", perm=" + PermName.perm2String(perm)
+                + ", topicFilterType=" + topicFilterType + ", topicSysFlag=" + topicSysFlag + ", order=" + order
+                + ", attributes=" + attributes + "]";
     }
 
 }

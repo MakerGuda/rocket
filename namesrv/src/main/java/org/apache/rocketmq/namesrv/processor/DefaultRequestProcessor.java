@@ -265,7 +265,7 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
             final int crc32 = UtilAll.crc32(request.getBody());
             if (crc32 != requestHeader.getBodyCrc32()) {
                 log.warn(String.format("receive registerBroker request,crc32 not match,from %s",
-                    RemotingHelper.parseChannelRemoteAddr(ctx.channel())));
+                        RemotingHelper.parseChannelRemoteAddr(ctx.channel())));
                 return false;
             }
         }

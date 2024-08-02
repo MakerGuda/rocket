@@ -26,15 +26,13 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
 public class BrokerLogbackConfigurator {
-    private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
-
-    private static final Set<String> CONFIGURED_BROKER_LIST = new HashSet<>();
-
     public static final String ROCKETMQ_LOGS = "rocketmqlogs";
     public static final String ROCKETMQ_PREFIX = "Rocketmq";
     public static final String SUFFIX_CONSOLE = "Console";
     public static final String SUFFIX_APPENDER = "Appender";
     public static final String SUFFIX_INNER_APPENDER = "_inner";
+    private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
+    private static final Set<String> CONFIGURED_BROKER_LIST = new HashSet<>();
 
     public static void doConfigure(BrokerIdentity brokerIdentity) {
     }

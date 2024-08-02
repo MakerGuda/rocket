@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 客户端消息id处理类
  */
 public class MessageClientIDSetter {
-    
+
     private static final int LEN;
 
     private static final char[] FIX_STRING;
@@ -106,7 +106,7 @@ public class MessageClientIDSetter {
         if (current >= nextStartTime) {
             setStartTime(current);
         }
-        int diff = (int)(current - startTime);
+        int diff = (int) (current - startTime);
         if (diff < 0 && diff > -1000_000) {
             diff = 0;
         }

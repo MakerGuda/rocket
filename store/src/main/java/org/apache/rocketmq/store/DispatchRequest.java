@@ -14,32 +14,21 @@ public class DispatchRequest {
     private final int queueId;
 
     private final long commitLogOffset;
-
-    private int msgSize;
-
     private final long tagsCode;
-
     private final long storeTimestamp;
-
     private final long consumeQueueOffset;
-
     private final String keys;
-
     private final boolean success;
-
     private final String uniqKey;
-
     private final int sysFlag;
-
     private final long preparedTransactionOffset;
-
     private final Map<String, String> propertiesMap;
-
+    private int msgSize;
     private byte[] bitMap;
 
     private int bufferSize = -1;
 
-    private long  msgBaseOffset = -1;
+    private long msgBaseOffset = -1;
 
     private short batchSize = 1;
 

@@ -19,6 +19,7 @@ package org.apache.rocketmq.remoting.protocol;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.rocketmq.common.action.RocketMQAction;
 import org.apache.rocketmq.remoting.CommandCustomHeader;
 import org.reflections.Reflections;
@@ -38,8 +39,8 @@ public class RequestHeaderRegistry {
 
     public void initialize() {
         Reflections reflections = new Reflections(new ConfigurationBuilder()
-            .setUrls(ClasspathHelper.forPackage(PACKAGE_NAME))
-            .setScanners(new SubTypesScanner(false)));
+                .setUrls(ClasspathHelper.forPackage(PACKAGE_NAME))
+                .setScanners(new SubTypesScanner(false)));
 
         Set<Class<? extends CommandCustomHeader>> classes = reflections.getSubTypesOf(CommandCustomHeader.class);
 

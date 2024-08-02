@@ -17,34 +17,17 @@
 
 package org.apache.rocketmq.store.plugin;
 
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.sdk.metrics.InstrumentSelector;
+import io.opentelemetry.sdk.metrics.ViewBuilder;
 import org.apache.rocketmq.common.Pair;
 import org.apache.rocketmq.common.SystemClock;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageExtBatch;
 import org.apache.rocketmq.common.message.MessageExtBrokerInner;
 import org.apache.rocketmq.remoting.protocol.body.HARuntimeInfo;
-import org.apache.rocketmq.store.AllocateMappedFileService;
-import org.apache.rocketmq.store.AppendMessageResult;
-import org.apache.rocketmq.store.CommitLog;
-import org.apache.rocketmq.store.CommitLogDispatcher;
-import org.apache.rocketmq.store.DispatchRequest;
-import org.apache.rocketmq.store.GetMessageResult;
-import org.apache.rocketmq.store.MessageFilter;
-import org.apache.rocketmq.store.MessageStore;
-import org.apache.rocketmq.store.PutMessageResult;
-import org.apache.rocketmq.store.QueryMessageResult;
-import org.apache.rocketmq.store.RunningFlags;
-import org.apache.rocketmq.store.SelectMappedBufferResult;
-import org.apache.rocketmq.store.StoreCheckpoint;
-import org.apache.rocketmq.store.StoreStatsService;
-import org.apache.rocketmq.store.TransientStorePool;
+import org.apache.rocketmq.store.*;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.apache.rocketmq.store.ha.HAService;
 import org.apache.rocketmq.store.hook.PutMessageHook;
@@ -57,10 +40,13 @@ import org.apache.rocketmq.store.timer.TimerMessageStore;
 import org.apache.rocketmq.store.util.PerfCounter;
 import org.rocksdb.RocksDBException;
 
-import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.sdk.metrics.InstrumentSelector;
-import io.opentelemetry.sdk.metrics.ViewBuilder;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 public abstract class AbstractPluginMessageStore implements MessageStore {
     protected MessageStore next = null;
@@ -128,13 +114,13 @@ public abstract class AbstractPluginMessageStore implements MessageStore {
 
     @Override
     public GetMessageResult getMessage(String group, String topic, int queueId, long offset,
-        int maxMsgNums, final MessageFilter messageFilter) {
+                                       int maxMsgNums, final MessageFilter messageFilter) {
         return next.getMessage(group, topic, queueId, offset, maxMsgNums, messageFilter);
     }
 
     @Override
     public CompletableFuture<GetMessageResult> getMessageAsync(String group, String topic,
-        int queueId, long offset, int maxMsgNums, MessageFilter messageFilter) {
+                                                               int queueId, long offset, int maxMsgNums, MessageFilter messageFilter) {
         return next.getMessageAsync(group, topic, queueId, offset, maxMsgNums, messageFilter);
     }
 
@@ -215,7 +201,7 @@ public abstract class AbstractPluginMessageStore implements MessageStore {
 
     @Override
     public CompletableFuture<Long> getMessageStoreTimeStampAsync(String topic, int queueId,
-        long consumeQueueOffset) {
+                                                                 long consumeQueueOffset) {
         return next.getMessageStoreTimeStampAsync(topic, queueId, consumeQueueOffset);
     }
 
@@ -241,13 +227,13 @@ public abstract class AbstractPluginMessageStore implements MessageStore {
 
     @Override
     public QueryMessageResult queryMessage(String topic, String key, int maxNum, long begin,
-        long end) {
+                                           long end) {
         return next.queryMessage(topic, key, maxNum, begin, end);
     }
 
     @Override
     public CompletableFuture<QueryMessageResult> queryMessageAsync(String topic, String key,
-        int maxNum, long begin, long end) {
+                                                                   int maxNum, long begin, long end) {
         return next.queryMessageAsync(topic, key, maxNum, begin, end);
     }
 
@@ -354,7 +340,7 @@ public abstract class AbstractPluginMessageStore implements MessageStore {
 
     @Override
     public DispatchRequest checkMessageAndReturnSize(final ByteBuffer byteBuffer, final boolean checkCRC,
-        final boolean checkDupInfo, final boolean readBody) {
+                                                     final boolean checkDupInfo, final boolean readBody) {
         return next.checkMessageAndReturnSize(byteBuffer, checkCRC, checkDupInfo, readBody);
     }
 
@@ -414,13 +400,13 @@ public abstract class AbstractPluginMessageStore implements MessageStore {
     }
 
     @Override
-    public void setAliveReplicaNumInGroup(int aliveReplicaNums) {
-        next.setAliveReplicaNumInGroup(aliveReplicaNums);
+    public int getAliveReplicaNumInGroup() {
+        return next.getAliveReplicaNumInGroup();
     }
 
     @Override
-    public int getAliveReplicaNumInGroup() {
-        return next.getAliveReplicaNumInGroup();
+    public void setAliveReplicaNumInGroup(int aliveReplicaNums) {
+        next.setAliveReplicaNumInGroup(aliveReplicaNums);
     }
 
     @Override
@@ -434,13 +420,13 @@ public abstract class AbstractPluginMessageStore implements MessageStore {
     }
 
     @Override
-    public long getBrokerInitMaxOffset() {
-        return next.getBrokerInitMaxOffset();
+    public void setMasterFlushedOffset(long masterFlushedOffset) {
+        next.setMasterFlushedOffset(masterFlushedOffset);
     }
 
     @Override
-    public void setMasterFlushedOffset(long masterFlushedOffset) {
-        next.setMasterFlushedOffset(masterFlushedOffset);
+    public long getBrokerInitMaxOffset() {
+        return next.getBrokerInitMaxOffset();
     }
 
     @Override
@@ -474,25 +460,25 @@ public abstract class AbstractPluginMessageStore implements MessageStore {
     }
 
     @Override
-    public void setSendMessageBackHook(SendMessageBackHook sendMessageBackHook) {
-        next.setSendMessageBackHook(sendMessageBackHook);
-    }
-
-    @Override
     public SendMessageBackHook getSendMessageBackHook() {
         return next.getSendMessageBackHook();
     }
 
     @Override
+    public void setSendMessageBackHook(SendMessageBackHook sendMessageBackHook) {
+        next.setSendMessageBackHook(sendMessageBackHook);
+    }
+
+    @Override
     public GetMessageResult getMessage(String group, String topic, int queueId, long offset,
-        int maxMsgNums, int maxTotalMsgSize, MessageFilter messageFilter) {
+                                       int maxMsgNums, int maxTotalMsgSize, MessageFilter messageFilter) {
         return next.getMessage(group, topic, queueId, offset, maxMsgNums, maxTotalMsgSize, messageFilter);
     }
 
     @Override
     public CompletableFuture<GetMessageResult> getMessageAsync(String group, String topic,
-        int queueId, long offset, int maxMsgNums, int maxTotalMsgSize,
-        MessageFilter messageFilter) {
+                                                               int queueId, long offset, int maxMsgNums, int maxTotalMsgSize,
+                                                               MessageFilter messageFilter) {
         return next.getMessageAsync(group, topic, queueId, offset, maxMsgNums, maxTotalMsgSize, messageFilter);
     }
 
@@ -513,7 +499,7 @@ public abstract class AbstractPluginMessageStore implements MessageStore {
 
     @Override
     public void onCommitLogDispatch(DispatchRequest dispatchRequest, boolean doDispatch, MappedFile commitLogFile,
-        boolean isRecover, boolean isFileEnd) throws RocksDBException {
+                                    boolean isRecover, boolean isFileEnd) throws RocksDBException {
         next.onCommitLogDispatch(dispatchRequest, doDispatch, commitLogFile, isRecover, isFileEnd);
     }
 

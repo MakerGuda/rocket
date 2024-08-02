@@ -195,7 +195,7 @@ public class HookUtils {
     }
 
     public static boolean sendMessageBack(BrokerController brokerController, List<MessageExt> msgList,
-        String brokerName, String brokerAddr) {
+                                          String brokerName, String brokerAddr) {
         try {
             Iterator<MessageExt> it = msgList.iterator();
             while (it.hasNext()) {

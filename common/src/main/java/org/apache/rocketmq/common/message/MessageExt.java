@@ -76,7 +76,7 @@ public class MessageExt extends Message {
     }
 
     public MessageExt(int queueId, long bornTimestamp, SocketAddress bornHost, long storeTimestamp,
-        SocketAddress storeHost, String msgId) {
+                      SocketAddress storeHost, String msgId) {
         this.queueId = queueId;
         this.bornTimestamp = bornTimestamp;
         this.bornHost = bornHost;
@@ -141,9 +141,13 @@ public class MessageExt extends Message {
         return null;
     }
 
-    public void setStoreHostAddressV6Flag() { this.sysFlag = this.sysFlag | MessageSysFlag.STOREHOSTADDRESS_V6_FLAG; }
+    public void setStoreHostAddressV6Flag() {
+        this.sysFlag = this.sysFlag | MessageSysFlag.STOREHOSTADDRESS_V6_FLAG;
+    }
 
-    public void setBornHostV6Flag() { this.sysFlag = this.sysFlag | MessageSysFlag.BORNHOST_V6_FLAG; }
+    public void setBornHostV6Flag() {
+        this.sysFlag = this.sysFlag | MessageSysFlag.BORNHOST_V6_FLAG;
+    }
 
     public Integer getTopicSysFlag() {
         String topicSysFlagString = getProperty(MessageConst.PROPERTY_TRANSIENT_TOPIC_CONFIG);

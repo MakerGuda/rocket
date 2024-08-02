@@ -17,10 +17,9 @@ import java.net.UnknownHostException;
 @Setter
 public class BrokerIdentity {
 
-    private static final String DEFAULT_CLUSTER_NAME = "DefaultCluster";
-
+    public static final BrokerIdentity BROKER_CONTAINER_IDENTITY = new BrokerIdentity(true);
     protected static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
-
+    private static final String DEFAULT_CLUSTER_NAME = "DefaultCluster";
     private static String localHostName;
 
     static {
@@ -30,8 +29,6 @@ public class BrokerIdentity {
             LOGGER.error("Failed to obtain the host name", e);
         }
     }
-
-    public static final BrokerIdentity BROKER_CONTAINER_IDENTITY = new BrokerIdentity(true);
 
     @ImportantField
     private String brokerName = defaultBrokerName();

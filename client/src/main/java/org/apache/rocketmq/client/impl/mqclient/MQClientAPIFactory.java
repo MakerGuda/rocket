@@ -17,10 +17,12 @@
 package org.apache.rocketmq.client.impl.mqclient;
 
 import com.google.common.base.Strings;
+
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.common.NameserverAccessConfig;
@@ -32,17 +34,17 @@ import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 
 public class MQClientAPIFactory implements StartAndShutdown {
 
-    private MQClientAPIExt[] clients;
     private final String namePrefix;
     private final int clientNum;
     private final ClientRemotingProcessor clientRemotingProcessor;
     private final RPCHook rpcHook;
     private final ScheduledExecutorService scheduledExecutorService;
     private final NameserverAccessConfig nameserverAccessConfig;
+    private MQClientAPIExt[] clients;
 
     public MQClientAPIFactory(NameserverAccessConfig nameserverAccessConfig, String namePrefix, int clientNum,
-        ClientRemotingProcessor clientRemotingProcessor,
-        RPCHook rpcHook, ScheduledExecutorService scheduledExecutorService) {
+                              ClientRemotingProcessor clientRemotingProcessor,
+                              RPCHook rpcHook, ScheduledExecutorService scheduledExecutorService) {
         this.nameserverAccessConfig = nameserverAccessConfig;
         this.namePrefix = namePrefix;
         this.clientNum = clientNum;
@@ -100,16 +102,16 @@ public class MQClientAPIFactory implements StartAndShutdown {
         nettyClientConfig.setDisableCallbackExecutor(true);
 
         MQClientAPIExt mqClientAPIExt = new MQClientAPIExt(clientConfig, nettyClientConfig,
-            clientRemotingProcessor,
-            rpcHook);
+                clientRemotingProcessor,
+                rpcHook);
 
         if (!mqClientAPIExt.updateNameServerAddressList()) {
             mqClientAPIExt.fetchNameServerAddr();
             this.scheduledExecutorService.scheduleAtFixedRate(
-                mqClientAPIExt::fetchNameServerAddr,
-                Duration.ofSeconds(10).toMillis(),
-                Duration.ofMinutes(2).toMillis(),
-                TimeUnit.MILLISECONDS
+                    mqClientAPIExt::fetchNameServerAddr,
+                    Duration.ofSeconds(10).toMillis(),
+                    Duration.ofMinutes(2).toMillis(),
+                    TimeUnit.MILLISECONDS
             );
         }
         mqClientAPIExt.start();

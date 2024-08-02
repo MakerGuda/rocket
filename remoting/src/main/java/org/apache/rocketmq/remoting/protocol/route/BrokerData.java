@@ -17,25 +17,20 @@ import java.util.Random;
 @Setter
 public class BrokerData implements Comparable<BrokerData> {
 
+    private final Random random = new Random();
     /**
      * 集群名称
      */
     private String cluster;
-
     /**
      * broker名称
      */
     private String brokerName;
-
     /**
      * broker地址，key: brokerId  value: 单台broker实例的地址
      */
     private HashMap<Long, String> brokerAddrs;
-
     private String zoneName;
-
-    private final Random random = new Random();
-
     private boolean enableActingMaster = false;
 
     public BrokerData() {
@@ -59,7 +54,7 @@ public class BrokerData implements Comparable<BrokerData> {
     }
 
     public BrokerData(String cluster, String brokerName, HashMap<Long, String> brokerAddrs,
-        boolean enableActingMaster) {
+                      boolean enableActingMaster) {
         this.cluster = cluster;
         this.brokerName = brokerName;
         this.brokerAddrs = brokerAddrs;
@@ -67,7 +62,7 @@ public class BrokerData implements Comparable<BrokerData> {
     }
 
     public BrokerData(String cluster, String brokerName, HashMap<Long, String> brokerAddrs, boolean enableActingMaster,
-        String zoneName) {
+                      String zoneName) {
         this.cluster = cluster;
         this.brokerName = brokerName;
         this.brokerAddrs = brokerAddrs;

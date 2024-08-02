@@ -7,10 +7,6 @@ import java.io.IOException;
 
 public interface TraceDispatcher {
 
-    enum Type {
-        PRODUCE, CONSUME
-    }
-
     void start(String nameSrvAddr, AccessChannel accessChannel) throws MQClientException;
 
     boolean append(Object ctx);
@@ -18,5 +14,9 @@ public interface TraceDispatcher {
     void flush() throws IOException;
 
     void shutdown();
+
+    enum Type {
+        PRODUCE, CONSUME
+    }
 
 }

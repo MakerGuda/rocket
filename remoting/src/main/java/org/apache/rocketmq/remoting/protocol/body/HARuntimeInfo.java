@@ -19,6 +19,7 @@ package org.apache.rocketmq.remoting.protocol.body;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
 public class HARuntimeInfo extends RemotingSerializable {

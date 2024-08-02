@@ -37,22 +37,6 @@ public class StatisticsBrief {
         reset();
     }
 
-    public void reset() {
-        for (int i = 0; i < counts.length; i++) {
-            if (counts[i] == null) {
-                counts[i] = new AtomicInteger(0);
-            } else {
-                counts[i].set(0);
-            }
-        }
-        totalCount.set(0);
-        synchronized (this) {
-            max = 0;
-            min = Long.MAX_VALUE;
-            total = 0;
-        }
-    }
-
     private static boolean isLegalMeta(long[][] meta) {
         if (ArrayUtils.isEmpty(meta)) {
             return false;
@@ -71,6 +55,22 @@ public class StatisticsBrief {
             ret += (int) line[META_SLOT_NUM_INDEX];
         }
         return ret;
+    }
+
+    public void reset() {
+        for (int i = 0; i < counts.length; i++) {
+            if (counts[i] == null) {
+                counts[i] = new AtomicInteger(0);
+            } else {
+                counts[i].set(0);
+            }
+        }
+        totalCount.set(0);
+        synchronized (this) {
+            max = 0;
+            min = Long.MAX_VALUE;
+            total = 0;
+        }
     }
 
     public void sample(long value) {
@@ -93,7 +93,7 @@ public class StatisticsBrief {
             ratio = 0.99f;
         }
         long count = totalCount.get();
-        long excludes = (long)(count - count * ratio);
+        long excludes = (long) (count - count * ratio);
         if (excludes == 0) {
             return getMax();
         }
@@ -110,7 +110,7 @@ public class StatisticsBrief {
     private long getSlotTPValue(int index) {
         int slotNumLeft = index;
         for (int i = 0; i < topPercentileMeta.length; i++) {
-            int slotNum = (int)topPercentileMeta[i][META_SLOT_NUM_INDEX];
+            int slotNum = (int) topPercentileMeta[i][META_SLOT_NUM_INDEX];
             if (slotNumLeft < slotNum) {
                 long metaRangeMax = topPercentileMeta[i][META_RANGE_INDEX];
                 long metaRangeMin = 0;
@@ -129,7 +129,7 @@ public class StatisticsBrief {
         int index = 0;
         for (int i = 0; i < topPercentileMeta.length; i++) {
             long rangeMax = topPercentileMeta[i][META_RANGE_INDEX];
-            int slotNum = (int)topPercentileMeta[i][META_SLOT_NUM_INDEX];
+            int slotNum = (int) topPercentileMeta[i][META_SLOT_NUM_INDEX];
             long rangeMin = (i > 0) ? topPercentileMeta[i - 1][META_RANGE_INDEX] : 0;
             if (rangeMin <= num && num < rangeMax) {
                 index += (int) ((num - rangeMin) / ((rangeMax - rangeMin) / slotNum));
@@ -141,7 +141,7 @@ public class StatisticsBrief {
     }
 
     public double getAvg() {
-        return totalCount.get() != 0 ? ((double)total) / totalCount.get() : 0;
+        return totalCount.get() != 0 ? ((double) total) / totalCount.get() : 0;
     }
 
 }

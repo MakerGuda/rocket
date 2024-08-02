@@ -24,9 +24,6 @@ import io.grpc.netty.shaded.io.netty.channel.epoll.EpollEventLoopGroup;
 import io.grpc.netty.shaded.io.netty.channel.epoll.EpollServerSocketChannel;
 import io.grpc.netty.shaded.io.netty.channel.nio.NioEventLoopGroup;
 import io.grpc.netty.shaded.io.netty.channel.socket.nio.NioServerSocketChannel;
-import java.util.List;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.apache.rocketmq.acl.AccessValidator;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
@@ -37,6 +34,10 @@ import org.apache.rocketmq.proxy.grpc.interceptor.ContextInterceptor;
 import org.apache.rocketmq.proxy.grpc.interceptor.GlobalExceptionInterceptor;
 import org.apache.rocketmq.proxy.grpc.interceptor.HeaderInterceptor;
 
+import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 public class GrpcServerBuilder {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
     protected NettyServerBuilder serverBuilder;
@@ -44,10 +45,6 @@ public class GrpcServerBuilder {
     protected long time = 30;
 
     protected TimeUnit unit = TimeUnit.SECONDS;
-
-    public static GrpcServerBuilder newBuilder(ThreadPoolExecutor executor, int port) {
-        return new GrpcServerBuilder(executor, port);
-    }
 
     protected GrpcServerBuilder(ThreadPoolExecutor executor, int port) {
         serverBuilder = NettyServerBuilder.forPort(port);
@@ -62,23 +59,27 @@ public class GrpcServerBuilder {
 
         if (ConfigurationManager.getProxyConfig().isEnableGrpcEpoll()) {
             serverBuilder.bossEventLoopGroup(new EpollEventLoopGroup(bossLoopNum))
-                .workerEventLoopGroup(new EpollEventLoopGroup(workerLoopNum))
-                .channelType(EpollServerSocketChannel.class)
-                .executor(executor);
+                    .workerEventLoopGroup(new EpollEventLoopGroup(workerLoopNum))
+                    .channelType(EpollServerSocketChannel.class)
+                    .executor(executor);
         } else {
             serverBuilder.bossEventLoopGroup(new NioEventLoopGroup(bossLoopNum))
-                .workerEventLoopGroup(new NioEventLoopGroup(workerLoopNum))
-                .channelType(NioServerSocketChannel.class)
-                .executor(executor);
+                    .workerEventLoopGroup(new NioEventLoopGroup(workerLoopNum))
+                    .channelType(NioServerSocketChannel.class)
+                    .executor(executor);
         }
 
         serverBuilder.maxInboundMessageSize(maxInboundMessageSize)
                 .maxConnectionIdle(idleTimeMills, TimeUnit.MILLISECONDS);
 
         log.info(
-            "grpc server has built. port: {}, tlsKeyPath: {}, tlsCertPath: {}, threadPool: {}, queueCapacity: {}, "
-                + "boosLoop: {}, workerLoop: {}, maxInboundMessageSize: {}",
-            port, bossLoopNum, workerLoopNum, maxInboundMessageSize);
+                "grpc server has built. port: {}, tlsKeyPath: {}, tlsCertPath: {}, threadPool: {}, queueCapacity: {}, "
+                        + "boosLoop: {}, workerLoop: {}, maxInboundMessageSize: {}",
+                port, bossLoopNum, workerLoopNum, maxInboundMessageSize);
+    }
+
+    public static GrpcServerBuilder newBuilder(ThreadPoolExecutor executor, int port) {
+        return new GrpcServerBuilder(executor, port);
     }
 
     public GrpcServerBuilder shutdownTime(long time, TimeUnit unit) {
@@ -109,12 +110,12 @@ public class GrpcServerBuilder {
     public GrpcServerBuilder configInterceptor(List<AccessValidator> accessValidators) {
         // grpc interceptors, including acl, logging etc.
         this.serverBuilder
-            .intercept(new AuthenticationInterceptor(accessValidators));
+                .intercept(new AuthenticationInterceptor(accessValidators));
 
         this.serverBuilder
-            .intercept(new GlobalExceptionInterceptor())
-            .intercept(new ContextInterceptor())
-            .intercept(new HeaderInterceptor());
+                .intercept(new GlobalExceptionInterceptor())
+                .intercept(new ContextInterceptor())
+                .intercept(new HeaderInterceptor());
 
         return this;
     }

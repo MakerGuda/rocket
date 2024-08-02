@@ -91,16 +91,14 @@ public class DefaultTopAddressing implements TopAddressing {
             if (null != para && !para.isEmpty()) {
                 if (!UtilAll.isBlank(this.unitName)) {
                     url.append("-").append(this.unitName).append("?nofix=1&");
-                }
-                else {
+                } else {
                     url.append("?");
                 }
                 for (Map.Entry<String, String> entry : this.para.entrySet()) {
                     url.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
                 }
                 url = new StringBuilder(url.substring(0, url.length() - 1));
-            }
-            else {
+            } else {
                 if (!UtilAll.isBlank(this.unitName)) {
                     url.append("-").append(this.unitName).append("?nofix=1");
                 }
@@ -123,7 +121,7 @@ public class DefaultTopAddressing implements TopAddressing {
         }
         if (verbose) {
             String errorMsg =
-                "connect to " + url + " failed, maybe the domain name " + MixAll.getWSAddr() + " not bind in /etc/hosts";
+                    "connect to " + url + " failed, maybe the domain name " + MixAll.getWSAddr() + " not bind in /etc/hosts";
             errorMsg += FAQUrl.suggestTodo(FAQUrl.NAME_SERVER_ADDR_NOT_EXIST_URL);
             LOGGER.warn(errorMsg);
         }

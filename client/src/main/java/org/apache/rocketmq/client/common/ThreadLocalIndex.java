@@ -5,11 +5,9 @@ import java.util.Random;
 
 public class ThreadLocalIndex {
 
-    private final ThreadLocal<Integer> threadLocalIndex = new ThreadLocal<>();
-
-    private final Random random = new Random();
-
     private final static int POSITIVE_MASK = 0x7FFFFFFF;
+    private final ThreadLocal<Integer> threadLocalIndex = new ThreadLocal<>();
+    private final Random random = new Random();
 
     public int incrementAndGet() {
         Integer index = this.threadLocalIndex.get();

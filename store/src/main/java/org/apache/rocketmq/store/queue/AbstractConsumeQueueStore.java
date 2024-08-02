@@ -16,8 +16,6 @@
  */
 package org.apache.rocketmq.store.queue;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.message.MessageExtBrokerInner;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
@@ -26,6 +24,9 @@ import org.apache.rocketmq.store.DefaultMessageStore;
 import org.apache.rocketmq.store.DispatchRequest;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 import org.rocksdb.RocksDBException;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public abstract class AbstractConsumeQueueStore implements ConsumeQueueStoreInterface {
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
@@ -52,14 +53,14 @@ public abstract class AbstractConsumeQueueStore implements ConsumeQueueStoreInte
     }
 
     @Override
-    public void setTopicQueueTable(ConcurrentMap<String, Long> topicQueueTable) {
-        this.queueOffsetOperator.setTopicQueueTable(topicQueueTable);
-        this.queueOffsetOperator.setLmqTopicQueueTable(topicQueueTable);
+    public ConcurrentMap getTopicQueueTable() {
+        return this.queueOffsetOperator.getTopicQueueTable();
     }
 
     @Override
-    public ConcurrentMap getTopicQueueTable() {
-        return this.queueOffsetOperator.getTopicQueueTable();
+    public void setTopicQueueTable(ConcurrentMap<String, Long> topicQueueTable) {
+        this.queueOffsetOperator.setTopicQueueTable(topicQueueTable);
+        this.queueOffsetOperator.setLmqTopicQueueTable(topicQueueTable);
     }
 
     @Override

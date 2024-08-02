@@ -226,8 +226,8 @@ public interface MappedFile {
     /**
      * 初始化mappedFile
      *
-     * @param fileName  文件名称
-     * @param fileSize 文件大小
+     * @param fileName           文件名称
+     * @param fileSize           文件大小
      * @param transientStorePool 堆内存缓冲池
      */
     void init(String fileName, int fileSize, TransientStorePool transientStorePool) throws IOException;

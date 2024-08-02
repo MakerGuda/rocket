@@ -33,8 +33,8 @@ public class AuthenticationHeader {
     private int requestCode;
 
     AuthenticationHeader(final String remoteAddress, final String tenantId, final String namespace,
-        final String authorization, final String datetime, final String sessionToken, final String requestId,
-        final String language, final String clientVersion, final String protocol, final int requestCode) {
+                         final String authorization, final String datetime, final String sessionToken, final String requestId,
+                         final String language, final String clientVersion, final String protocol, final int requestCode) {
         this.remoteAddress = remoteAddress;
         this.tenantId = tenantId;
         this.namespace = namespace;
@@ -46,6 +46,115 @@ public class AuthenticationHeader {
         this.clientVersion = clientVersion;
         this.protocol = protocol;
         this.requestCode = requestCode;
+    }
+
+    public static AuthenticationHeader.MetadataHeaderBuilder builder() {
+        return new AuthenticationHeader.MetadataHeaderBuilder();
+    }
+
+    public String getRemoteAddress() {
+        return this.remoteAddress;
+    }
+
+    public void setRemoteAddress(final String remoteAddress) {
+        this.remoteAddress = remoteAddress;
+    }
+
+    public String getTenantId() {
+        return this.tenantId;
+    }
+
+    public void setTenantId(final String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public String getNamespace() {
+        return this.namespace;
+    }
+
+    public void setNamespace(final String namespace) {
+        this.namespace = namespace;
+    }
+
+    public String getAuthorization() {
+        return this.authorization;
+    }
+
+    public void setAuthorization(final String authorization) {
+        this.authorization = authorization;
+    }
+
+    public String getDatetime() {
+        return this.datetime;
+    }
+
+    public void setDatetime(final String datetime) {
+        this.datetime = datetime;
+    }
+
+    public String getSessionToken() {
+        return this.sessionToken;
+    }
+
+    public void setSessionToken(final String sessionToken) {
+        this.sessionToken = sessionToken;
+    }
+
+    public String getRequestId() {
+        return this.requestId;
+    }
+
+    public void setRequestId(final String requestId) {
+        this.requestId = requestId;
+    }
+
+    public String getLanguage() {
+        return this.language;
+    }
+
+    public void setLanguage(final String language) {
+        this.language = language;
+    }
+
+    public String getClientVersion() {
+        return this.clientVersion;
+    }
+
+    public void setClientVersion(final String clientVersion) {
+        this.clientVersion = clientVersion;
+    }
+
+    public String getProtocol() {
+        return this.protocol;
+    }
+
+    public void setProtocol(final String protocol) {
+        this.protocol = protocol;
+    }
+
+    public int getRequestCode() {
+        return this.requestCode;
+    }
+
+    public void setRequestCode(int requestCode) {
+        this.requestCode = requestCode;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("remoteAddress", remoteAddress)
+                .add("tenantId", tenantId)
+                .add("namespace", namespace)
+                .add("authorization", authorization)
+                .add("datetime", datetime)
+                .add("sessionToken", sessionToken)
+                .add("requestId", requestId)
+                .add("language", language)
+                .add("clientVersion", clientVersion)
+                .add("protocol", protocol)
+                .add("requestCode", requestCode)
+                .toString();
     }
 
     public static class MetadataHeaderBuilder {
@@ -121,117 +230,8 @@ public class AuthenticationHeader {
 
         public AuthenticationHeader build() {
             return new AuthenticationHeader(this.remoteAddress, this.tenantId, this.namespace, this.authorization,
-                this.datetime, this.sessionToken, this.requestId, this.language, this.clientVersion, this.protocol,
-                this.requestCode);
+                    this.datetime, this.sessionToken, this.requestId, this.language, this.clientVersion, this.protocol,
+                    this.requestCode);
         }
-    }
-
-    public static AuthenticationHeader.MetadataHeaderBuilder builder() {
-        return new AuthenticationHeader.MetadataHeaderBuilder();
-    }
-
-    public String getRemoteAddress() {
-        return this.remoteAddress;
-    }
-
-    public String getTenantId() {
-        return this.tenantId;
-    }
-
-    public String getNamespace() {
-        return this.namespace;
-    }
-
-    public String getAuthorization() {
-        return this.authorization;
-    }
-
-    public String getDatetime() {
-        return this.datetime;
-    }
-
-    public String getSessionToken() {
-        return this.sessionToken;
-    }
-
-    public String getRequestId() {
-        return this.requestId;
-    }
-
-    public String getLanguage() {
-        return this.language;
-    }
-
-    public String getClientVersion() {
-        return this.clientVersion;
-    }
-
-    public String getProtocol() {
-        return this.protocol;
-    }
-
-    public int getRequestCode() {
-        return this.requestCode;
-    }
-
-    public void setRemoteAddress(final String remoteAddress) {
-        this.remoteAddress = remoteAddress;
-    }
-
-    public void setTenantId(final String tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    public void setNamespace(final String namespace) {
-        this.namespace = namespace;
-    }
-
-    public void setAuthorization(final String authorization) {
-        this.authorization = authorization;
-    }
-
-    public void setDatetime(final String datetime) {
-        this.datetime = datetime;
-    }
-
-    public void setSessionToken(final String sessionToken) {
-        this.sessionToken = sessionToken;
-    }
-
-    public void setRequestId(final String requestId) {
-        this.requestId = requestId;
-    }
-
-    public void setLanguage(final String language) {
-        this.language = language;
-    }
-
-    public void setClientVersion(final String clientVersion) {
-        this.clientVersion = clientVersion;
-    }
-
-    public void setProtocol(final String protocol) {
-        this.protocol = protocol;
-    }
-
-    public void setRequestCode(int requestCode) {
-        this.requestCode = requestCode;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("remoteAddress", remoteAddress)
-            .add("tenantId", tenantId)
-            .add("namespace", namespace)
-            .add("authorization", authorization)
-            .add("datetime", datetime)
-            .add("sessionToken", sessionToken)
-            .add("requestId", requestId)
-            .add("language", language)
-            .add("clientVersion", clientVersion)
-            .add("protocol", protocol)
-            .add("requestCode", requestCode)
-            .toString();
     }
 }

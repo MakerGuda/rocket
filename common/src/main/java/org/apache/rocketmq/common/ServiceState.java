@@ -7,11 +7,11 @@ public enum ServiceState {
      */
     CREATE_JUST,
     /**
-     *服务运行中
+     * 服务运行中
      */
     RUNNING,
     /**
-     *服务关闭
+     * 服务关闭
      */
     SHUTDOWN_ALREADY,
     /**

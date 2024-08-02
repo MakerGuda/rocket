@@ -90,13 +90,19 @@ public class TimerProducer {
                 threadCount,
                 0L,
                 TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(),
+                new LinkedBlockingQueue<>(),
                 new ThreadFactoryImpl("ProducerSendMessageThread_"));
 
         producer = new DefaultMQProducer("benchmark_producer");
         producer.setInstanceName(Long.toString(System.currentTimeMillis()));
         producer.setNamesrvAddr(namesrvAddr);
         producer.setCompressMsgBodyOverHowMuch(Integer.MAX_VALUE);
+    }
+
+    public static void main(String[] args) throws MQClientException {
+        TimerProducer timerProducer = new TimerProducer(args);
+        timerProducer.startScheduleTask();
+        timerProducer.start();
     }
 
     public void startScheduleTask() {
@@ -262,13 +268,6 @@ public class TimerProducer {
             e.printStackTrace();
         }
     }
-
-    public static void main(String[] args) throws MQClientException {
-        TimerProducer timerProducer = new TimerProducer(args);
-        timerProducer.startScheduleTask();
-        timerProducer.start();
-    }
-
 
     public static class StatsBenchmarkProducer {
         private final AtomicLong sendRequestSuccessCount = new AtomicLong(0L);

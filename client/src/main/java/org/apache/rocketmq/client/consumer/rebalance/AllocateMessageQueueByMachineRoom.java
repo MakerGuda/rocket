@@ -19,6 +19,7 @@ package org.apache.rocketmq.client.consumer.rebalance;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
 import org.apache.rocketmq.common.message.MessageQueue;
 
 /**
@@ -29,7 +30,7 @@ public class AllocateMessageQueueByMachineRoom extends AbstractAllocateMessageQu
 
     @Override
     public List<MessageQueue> allocate(String consumerGroup, String currentCID, List<MessageQueue> mqAll,
-        List<String> cidAll) {
+                                       List<String> cidAll) {
 
         List<MessageQueue> result = new ArrayList<>();
         if (!check(consumerGroup, currentCID, mqAll, cidAll)) {

@@ -19,6 +19,7 @@ package org.apache.rocketmq.remoting.protocol.body;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
 public class SyncStateSet extends RemotingSerializable {
@@ -49,8 +50,8 @@ public class SyncStateSet extends RemotingSerializable {
     @Override
     public String toString() {
         return "SyncStateSet{" +
-            "syncStateSet=" + syncStateSet +
-            ", syncStateSetEpoch=" + syncStateSetEpoch +
-            '}';
+                "syncStateSet=" + syncStateSet +
+                ", syncStateSetEpoch=" + syncStateSetEpoch +
+                '}';
     }
 }

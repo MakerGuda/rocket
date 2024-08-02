@@ -46,6 +46,7 @@ public interface LitePullConsumer {
 
     /**
      * Subscribe some topic with all tags
+     *
      * @throws MQClientException if there is any client error.
      */
     void subscribe(final String topic) throws MQClientException;
@@ -54,13 +55,14 @@ public interface LitePullConsumer {
      * Subscribe some topic with subExpression
      *
      * @param subExpression subscription expression.it only support or operation such as "tag1 || tag2 || tag3" <br> if
-     * null or * expression,meaning subscribe all
+     *                      null or * expression,meaning subscribe all
      * @throws MQClientException if there is any client error.
      */
     void subscribe(final String topic, final String subExpression) throws MQClientException;
 
     /**
      * Subscribe some topic with subExpression and messageQueueListener
+     *
      * @param topic
      * @param subExpression
      * @param messageQueueListener
@@ -85,6 +87,7 @@ public interface LitePullConsumer {
 
     /**
      * subscribe mode, get assigned MessageQueue
+     *
      * @return
      * @throws MQClientException
      */
@@ -103,7 +106,7 @@ public interface LitePullConsumer {
      * assignment and will replace the previous assignment (if there is one).
      *
      * @param subExpression subscription expression.it only support or operation such as "tag1 || tag2 || tag3" <br> if
-     *      * null or * expression,meaning subscribe all
+     *                      * null or * expression,meaning subscribe all
      */
     void setSubExpressionForAssign(final String topic, final String subExpression);
 
@@ -118,7 +121,7 @@ public interface LitePullConsumer {
      * Fetch data for the topics or partitions specified using assign API
      *
      * @param timeout The amount time, in milliseconds, spent waiting in poll if data is not available. Must not be
-     * negative
+     *                negative
      * @return list of message, can be null.
      */
     List<MessageExt> poll(long timeout);
@@ -135,10 +138,10 @@ public interface LitePullConsumer {
 
     /**
      * Suspend pulling from the requested message queues.
-     *
+     * <p>
      * Because of the implementation of pre-pull, fetch data in {@link #poll()} will not stop immediately until the
      * messages of the requested message queues drain.
-     *
+     * <p>
      * Note that this method does not affect message queue subscription. In particular, it does not cause a group
      * rebalance.
      *
@@ -215,7 +218,7 @@ public interface LitePullConsumer {
      * Offset specified by batch commit
      *
      * @param offsetMap Offset specified by batch commit
-     * @param persist Whether to persist to the broker
+     * @param persist   Whether to persist to the broker
      */
     void commit(Map<MessageQueue, Long> offsetMap, boolean persist);
 
@@ -223,7 +226,7 @@ public interface LitePullConsumer {
      * Manually commit consume offset saved by the system.
      *
      * @param messageQueues Message queues that need to submit consumer offset
-     * @param persist hether to persist to the broker
+     * @param persist       hether to persist to the broker
      */
     void commit(final Set<MessageQueue> messageQueues, boolean persist);
 
@@ -239,13 +242,13 @@ public interface LitePullConsumer {
     /**
      * Register a callback for sensing topic metadata changes.
      *
-     * @param topic The topic that need to monitor.
+     * @param topic                           The topic that need to monitor.
      * @param topicMessageQueueChangeListener Callback when topic metadata changes, refer {@link
-     * TopicMessageQueueChangeListener}
+     *                                        TopicMessageQueueChangeListener}
      * @throws MQClientException if there is any client error.
      */
     void registerTopicMessageQueueChangeListener(String topic,
-        TopicMessageQueueChangeListener topicMessageQueueChangeListener) throws MQClientException;
+                                                 TopicMessageQueueChangeListener topicMessageQueueChangeListener) throws MQClientException;
 
     /**
      * Update name server addresses.
@@ -259,7 +262,7 @@ public interface LitePullConsumer {
      *
      * @param messageQueue
      */
-    void seekToBegin(MessageQueue messageQueue)throws MQClientException;
+    void seekToBegin(MessageQueue messageQueue) throws MQClientException;
 
     /**
      * Overrides the fetch offsets with the end offset that the consumer will use on the next poll. If this API is
@@ -268,5 +271,5 @@ public interface LitePullConsumer {
      *
      * @param messageQueue
      */
-    void seekToEnd(MessageQueue messageQueue)throws MQClientException;
+    void seekToEnd(MessageQueue messageQueue) throws MQClientException;
 }

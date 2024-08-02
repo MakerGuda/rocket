@@ -17,16 +17,6 @@
 package org.apache.rocketmq.broker.client;
 
 import io.netty.channel.Channel;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
@@ -38,14 +28,21 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
 
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
+
 public class ConsumerManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
-    private final ConcurrentMap<String, ConsumerGroupInfo> consumerTable =
-        new ConcurrentHashMap<>(1024);
-    private final ConcurrentMap<String, ConsumerGroupInfo> consumerCompensationTable =
-        new ConcurrentHashMap<>(1024);
-    private final List<ConsumerIdsChangeListener> consumerIdsChangeListenerList = new CopyOnWriteArrayList<>();
     protected final BrokerStatsManager brokerStatsManager;
+    private final ConcurrentMap<String, ConsumerGroupInfo> consumerTable =
+            new ConcurrentHashMap<>(1024);
+    private final ConcurrentMap<String, ConsumerGroupInfo> consumerCompensationTable =
+            new ConcurrentHashMap<>(1024);
+    private final List<ConsumerIdsChangeListener> consumerIdsChangeListenerList = new CopyOnWriteArrayList<>();
     private final long channelExpiredTimeout;
     private final long subscriptionExpiredTimeout;
 
@@ -57,7 +54,7 @@ public class ConsumerManager {
     }
 
     public ConsumerManager(final ConsumerIdsChangeListener consumerIdsChangeListener,
-        final BrokerStatsManager brokerStatsManager, BrokerConfig brokerConfig) {
+                           final BrokerStatsManager brokerStatsManager, BrokerConfig brokerConfig) {
         this.consumerIdsChangeListenerList.add(consumerIdsChangeListener);
         this.brokerStatsManager = brokerStatsManager;
         this.channelExpiredTimeout = brokerConfig.getChannelExpiredTimeout();
@@ -85,7 +82,7 @@ public class ConsumerManager {
     }
 
     public SubscriptionData findSubscriptionData(final String group, final String topic,
-        boolean fromCompensationTable) {
+                                                 boolean fromCompensationTable) {
         ConsumerGroupInfo consumerGroupInfo = getConsumerGroupInfo(group, false);
         if (consumerGroupInfo != null) {
             SubscriptionData subscriptionData = consumerGroupInfo.findSubscriptionData(topic);
@@ -141,7 +138,7 @@ public class ConsumerManager {
                     ConsumerGroupInfo remove = this.consumerTable.remove(next.getKey());
                     if (remove != null) {
                         LOGGER.info("unregister consumer ok, no any connection, and remove consumer group, {}",
-                            next.getKey());
+                                next.getKey());
                         callConsumerIdsChangeListener(ConsumerGroupEvent.UNREGISTER, next.getKey());
                     }
                 }
@@ -166,15 +163,15 @@ public class ConsumerManager {
     }
 
     public boolean registerConsumer(final String group, final ClientChannelInfo clientChannelInfo,
-        ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
-        final Set<SubscriptionData> subList, boolean isNotifyConsumerIdsChangedEnable) {
+                                    ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
+                                    final Set<SubscriptionData> subList, boolean isNotifyConsumerIdsChangedEnable) {
         return registerConsumer(group, clientChannelInfo, consumeType, messageModel, consumeFromWhere, subList,
-            isNotifyConsumerIdsChangedEnable, true);
+                isNotifyConsumerIdsChangedEnable, true);
     }
 
     public boolean registerConsumer(final String group, final ClientChannelInfo clientChannelInfo,
-        ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
-        final Set<SubscriptionData> subList, boolean isNotifyConsumerIdsChangedEnable, boolean updateSubscription) {
+                                    ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere,
+                                    final Set<SubscriptionData> subList, boolean isNotifyConsumerIdsChangedEnable, boolean updateSubscription) {
         long start = System.currentTimeMillis();
         ConsumerGroupInfo consumerGroupInfo = this.consumerTable.get(group);
         if (null == consumerGroupInfo) {
@@ -184,11 +181,11 @@ public class ConsumerManager {
         }
 
         boolean r1 =
-            consumerGroupInfo.updateChannel(clientChannelInfo, consumeType, messageModel,
-                consumeFromWhere);
+                consumerGroupInfo.updateChannel(clientChannelInfo, consumeType, messageModel,
+                        consumeFromWhere);
         if (r1) {
             callConsumerIdsChangeListener(ConsumerGroupEvent.CLIENT_REGISTER, group, clientChannelInfo,
-                subList.stream().map(SubscriptionData::getTopic).collect(Collectors.toSet()));
+                    subList.stream().map(SubscriptionData::getTopic).collect(Collectors.toSet()));
         }
         boolean r2 = false;
         if (updateSubscription) {
@@ -210,7 +207,7 @@ public class ConsumerManager {
     }
 
     public boolean registerConsumerWithoutSub(final String group, final ClientChannelInfo clientChannelInfo,
-        ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere, boolean isNotifyConsumerIdsChangedEnable) {
+                                              ConsumeType consumeType, MessageModel messageModel, ConsumeFromWhere consumeFromWhere, boolean isNotifyConsumerIdsChangedEnable) {
         long start = System.currentTimeMillis();
         ConsumerGroupInfo consumerGroupInfo = this.consumerTable.get(group);
         if (null == consumerGroupInfo) {
@@ -229,7 +226,7 @@ public class ConsumerManager {
     }
 
     public void unregisterConsumer(final String group, final ClientChannelInfo clientChannelInfo,
-        boolean isNotifyConsumerIdsChangedEnable) {
+                                   boolean isNotifyConsumerIdsChangedEnable) {
         ConsumerGroupInfo consumerGroupInfo = this.consumerTable.get(group);
         if (null != consumerGroupInfo) {
             boolean removed = consumerGroupInfo.unregisterChannel(clientChannelInfo);
@@ -280,7 +277,7 @@ public class ConsumerManager {
             String group = next.getKey();
             ConsumerGroupInfo consumerGroupInfo = next.getValue();
             ConcurrentMap<Channel, ClientChannelInfo> channelInfoTable =
-                consumerGroupInfo.getChannelInfoTable();
+                    consumerGroupInfo.getChannelInfoTable();
 
             Iterator<Entry<Channel, ClientChannelInfo>> itChannel = channelInfoTable.entrySet().iterator();
             while (itChannel.hasNext()) {
@@ -289,8 +286,8 @@ public class ConsumerManager {
                 long diff = System.currentTimeMillis() - clientChannelInfo.getLastUpdateTimestamp();
                 if (diff > channelExpiredTimeout) {
                     LOGGER.warn(
-                        "SCAN: remove expired channel from ConsumerManager consumerTable. channel={}, consumerGroup={}",
-                        RemotingHelper.parseChannelRemoteAddr(clientChannelInfo.getChannel()), group);
+                            "SCAN: remove expired channel from ConsumerManager consumerTable. channel={}, consumerGroup={}",
+                            RemotingHelper.parseChannelRemoteAddr(clientChannelInfo.getChannel()), group);
                     callConsumerIdsChangeListener(ConsumerGroupEvent.CLIENT_UNREGISTER, group, clientChannelInfo, consumerGroupInfo.getSubscribeTopics());
                     RemotingHelper.closeChannel(clientChannelInfo.getChannel());
                     itChannel.remove();
@@ -299,8 +296,8 @@ public class ConsumerManager {
 
             if (channelInfoTable.isEmpty()) {
                 LOGGER.warn(
-                    "SCAN: remove expired channel from ConsumerManager consumerTable, all clear, consumerGroup={}",
-                    group);
+                        "SCAN: remove expired channel from ConsumerManager consumerTable, all clear, consumerGroup={}",
+                        group);
                 it.remove();
             }
         }
@@ -313,7 +310,7 @@ public class ConsumerManager {
         while (it.hasNext()) {
             Entry<String, ConsumerGroupInfo> entry = it.next();
             ConcurrentMap<String, SubscriptionData> subscriptionTable =
-                entry.getValue().getSubscriptionTable();
+                    entry.getValue().getSubscriptionTable();
             if (subscriptionTable.containsKey(topic)) {
                 groups.add(entry.getKey());
             }

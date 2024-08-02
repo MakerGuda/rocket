@@ -16,10 +16,10 @@
  */
 package org.apache.rocketmq.broker.mqtrace;
 
-import java.util.Map;
-
 import org.apache.rocketmq.common.TopicConfig;
 import org.apache.rocketmq.store.stats.BrokerStatsManager;
+
+import java.util.Map;
 
 public class ConsumeMessageContext {
     private String consumerGroup;
@@ -48,6 +48,7 @@ public class ConsumeMessageContext {
     private int commercialRcvSize;
 
     private String namespace;
+
     public String getConsumerGroup() {
         return consumerGroup;
     }

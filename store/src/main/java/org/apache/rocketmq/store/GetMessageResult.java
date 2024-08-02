@@ -12,33 +12,20 @@ import java.util.List;
 @Setter
 public class GetMessageResult {
 
-    private final List<SelectMappedBufferResult> messageMapedList;
-
-    private final List<ByteBuffer> messageBufferList;
-
-    private final List<Long> messageQueueOffset;
-
-    private GetMessageStatus status;
-
-    private long nextBeginOffset;
-
-    private long minOffset;
-
-    private long maxOffset;
-
-    private int bufferTotalSize = 0;
-
-    private int messageCount = 0;
-
-    private boolean suggestPullingFromSlave = false;
-
-    private int msgCount4Commercial = 0;
-
-    private int commercialSizePerMsg = 4 * 1024;
-
-    private long coldDataSum = 0L;
-
     public static final GetMessageResult NO_MATCH_LOGIC_QUEUE = new GetMessageResult(GetMessageStatus.NO_MATCHED_LOGIC_QUEUE, 0, 0, 0, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+    private final List<SelectMappedBufferResult> messageMapedList;
+    private final List<ByteBuffer> messageBufferList;
+    private final List<Long> messageQueueOffset;
+    private GetMessageStatus status;
+    private long nextBeginOffset;
+    private long minOffset;
+    private long maxOffset;
+    private int bufferTotalSize = 0;
+    private int messageCount = 0;
+    private boolean suggestPullingFromSlave = false;
+    private int msgCount4Commercial = 0;
+    private int commercialSizePerMsg = 4 * 1024;
+    private long coldDataSum = 0L;
 
     public GetMessageResult() {
         messageMapedList = new ArrayList<>(100);

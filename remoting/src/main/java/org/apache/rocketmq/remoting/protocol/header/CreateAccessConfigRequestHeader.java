@@ -121,14 +121,14 @@ public class CreateAccessConfigRequestHeader implements CommandCustomHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("accessKey", accessKey)
-            .add("secretKey", secretKey)
-            .add("whiteRemoteAddress", whiteRemoteAddress)
-            .add("admin", admin)
-            .add("defaultTopicPerm", defaultTopicPerm)
-            .add("defaultGroupPerm", defaultGroupPerm)
-            .add("topicPerms", topicPerms)
-            .add("groupPerms", groupPerms)
-            .toString();
+                .add("accessKey", accessKey)
+                .add("secretKey", secretKey)
+                .add("whiteRemoteAddress", whiteRemoteAddress)
+                .add("admin", admin)
+                .add("defaultTopicPerm", defaultTopicPerm)
+                .add("defaultGroupPerm", defaultGroupPerm)
+                .add("topicPerms", topicPerms)
+                .add("groupPerms", groupPerms)
+                .toString();
     }
 }

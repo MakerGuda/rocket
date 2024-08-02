@@ -17,15 +17,15 @@
 
 package org.apache.rocketmq.store.queue;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.utils.ConcurrentHashMapUtils;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * QueueOffsetOperator is a component for operating offsets for queues.
@@ -91,10 +91,6 @@ public class QueueOffsetOperator {
         log.info("removeQueueFromTopicQueueTable OK Topic: {} QueueId: {}", topic, queueId);
     }
 
-    public void setTopicQueueTable(ConcurrentMap<String, Long> topicQueueTable) {
-        this.topicQueueTable = topicQueueTable;
-    }
-
     public void setLmqTopicQueueTable(ConcurrentMap<String, Long> lmqTopicQueueTable) {
         ConcurrentMap<String, Long> table = new ConcurrentHashMap<String, Long>(1024);
         for (Map.Entry<String, Long> entry : lmqTopicQueueTable.entrySet()) {
@@ -107,6 +103,10 @@ public class QueueOffsetOperator {
 
     public ConcurrentMap<String, Long> getTopicQueueTable() {
         return topicQueueTable;
+    }
+
+    public void setTopicQueueTable(ConcurrentMap<String, Long> topicQueueTable) {
+        this.topicQueueTable = topicQueueTable;
     }
 
     public void setBatchTopicQueueTable(ConcurrentMap<String, Long> batchTopicQueueTable) {

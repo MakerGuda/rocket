@@ -37,15 +37,12 @@ import java.util.concurrent.*;
 
 public class RaftBrokerHeartBeatManager implements BrokerHeartbeatManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CONTROLLER_LOGGER_NAME);
-    private JRaftController controller;
     private final List<BrokerLifecycleListener> brokerLifecycleListeners = new ArrayList<>();
     private final ScheduledExecutorService scheduledService;
     private final ExecutorService executor;
     private final ControllerConfig controllerConfig;
-
     private final Map<Channel, BrokerIdentityInfo> brokerChannelIdentityInfoMap = new HashMap<>();
-
-
+    private JRaftController controller;
     // resolve the scene
     // when controller all down and startup again, we wait for some time to avoid electing a new leader,which is not necessary
     private long firstReceivedHeartbeatTime = -1;
@@ -83,8 +80,8 @@ public class RaftBrokerHeartBeatManager implements BrokerHeartbeatManager {
 
     @Override
     public void onBrokerHeartbeat(String clusterName, String brokerName, String brokerAddr, Long brokerId,
-        Long timeoutMillis, Channel channel, Integer epoch, Long maxOffset, Long confirmOffset,
-        Integer electionPriority) {
+                                  Long timeoutMillis, Channel channel, Integer epoch, Long maxOffset, Long confirmOffset,
+                                  Integer electionPriority) {
 
         if (firstReceivedHeartbeatTime == -1) {
             firstReceivedHeartbeatTime = System.currentTimeMillis();
@@ -98,15 +95,15 @@ public class RaftBrokerHeartBeatManager implements BrokerHeartbeatManager {
         long realTimeoutMillis = Optional.ofNullable(timeoutMillis).orElse(DEFAULT_BROKER_CHANNEL_EXPIRED_TIME);
         int realElectionPriority = Optional.ofNullable(electionPriority).orElse(Integer.MAX_VALUE);
         BrokerLiveInfo liveInfo = new BrokerLiveInfo(brokerName,
-            brokerAddr,
-            realBrokerId,
-            System.currentTimeMillis(),
-            realTimeoutMillis,
-            null,
-            realEpoch,
-            realMaxOffset,
-            realElectionPriority,
-            realConfirmOffset);
+                brokerAddr,
+                realBrokerId,
+                System.currentTimeMillis(),
+                realTimeoutMillis,
+                null,
+                realEpoch,
+                realMaxOffset,
+                realElectionPriority,
+                realConfirmOffset);
         log.info("broker {} heart beat", brokerIdentityInfo);
         RaftBrokerHeartBeatEventRequest requestHeader = new RaftBrokerHeartBeatEventRequest(brokerIdentityInfo, liveInfo);
         CompletableFuture<RemotingCommand> future = controller.onBrokerHeartBeat(requestHeader);
@@ -244,13 +241,13 @@ public class RaftBrokerHeartBeatManager implements BrokerHeartbeatManager {
         Map<String, Map<String, Integer>> map = new HashMap<>();
         Map<BrokerIdentityInfo, BrokerLiveInfo> brokerLiveInfoMap = getBrokerLiveInfo(null);
         brokerLiveInfoMap.keySet().stream()
-            .filter(brokerIdentity -> this.isBrokerActive(brokerIdentity.getClusterName(), brokerIdentity.getBrokerName(), brokerIdentity.getBrokerId()))
-            .forEach(id -> {
-                map.computeIfAbsent(id.getClusterName(), k -> new HashMap<>());
-                map.get(id.getClusterName()).compute(id.getBrokerName(), (broker, num) ->
-                    num == null ? 0 : num + 1
-                );
-            });
+                .filter(brokerIdentity -> this.isBrokerActive(brokerIdentity.getClusterName(), brokerIdentity.getBrokerName(), brokerIdentity.getBrokerId()))
+                .forEach(id -> {
+                    map.computeIfAbsent(id.getClusterName(), k -> new HashMap<>());
+                    map.get(id.getClusterName()).compute(id.getBrokerName(), (broker, num) ->
+                            num == null ? 0 : num + 1
+                    );
+                });
         return map;
     }
 

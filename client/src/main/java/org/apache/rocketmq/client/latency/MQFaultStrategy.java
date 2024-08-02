@@ -23,42 +23,22 @@ public class MQFaultStrategy {
      * 不可用时长
      */
     private long[] notAvailableDuration = {0L, 0L, 2000L, 5000L, 6000L, 10000L, 30000L};
-
-    @Setter
-    public static class BrokerFilter implements QueueFilter {
-
-        /**
-         * 最后一次发送消息的broker名称
-         */
-        private String lastBrokerName;
-
-        /**
-         * 当前发送的queue所在的broker与上次发送的brokerName不相同时返回true，表示换一个broker发送
-         */
-        @Override public boolean filter(MessageQueue mq) {
-            if (lastBrokerName != null) {
-                return !mq.getBrokerName().equals(lastBrokerName);
-            }
-            return true;
-        }
-    }
-
     private ThreadLocal<BrokerFilter> threadBrokerFilter = ThreadLocal.withInitial(BrokerFilter::new);
-
     /**
      * 判断当前mq所在的broker是否可达
      */
     private QueueFilter reachableFilter = new QueueFilter() {
-        @Override public boolean filter(MessageQueue mq) {
+        @Override
+        public boolean filter(MessageQueue mq) {
             return latencyFaultTolerance.isReachable(mq.getBrokerName());
         }
     };
-
     /**
      * 判断当前mq所在的broker是否可用
      */
     private QueueFilter availableFilter = new QueueFilter() {
-        @Override public boolean filter(MessageQueue mq) {
+        @Override
+        public boolean filter(MessageQueue mq) {
             return latencyFaultTolerance.isAvailable(mq.getBrokerName());
         }
     };
@@ -146,6 +126,26 @@ public class MQFaultStrategy {
             }
         }
         return 0;
+    }
+
+    @Setter
+    public static class BrokerFilter implements QueueFilter {
+
+        /**
+         * 最后一次发送消息的broker名称
+         */
+        private String lastBrokerName;
+
+        /**
+         * 当前发送的queue所在的broker与上次发送的brokerName不相同时返回true，表示换一个broker发送
+         */
+        @Override
+        public boolean filter(MessageQueue mq) {
+            if (lastBrokerName != null) {
+                return !mq.getBrokerName().equals(lastBrokerName);
+            }
+            return true;
+        }
     }
 
 }

@@ -54,7 +54,7 @@ public abstract class RemotingSerializable {
         return null;
     }
 
-    public byte[] encode(SerializerFeature...features) {
+    public byte[] encode(SerializerFeature... features) {
         final String json = JSON.toJSONString(this, features);
         return json.getBytes(CHARSET_UTF8);
     }

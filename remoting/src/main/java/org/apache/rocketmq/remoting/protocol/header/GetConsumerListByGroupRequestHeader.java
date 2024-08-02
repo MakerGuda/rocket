@@ -48,7 +48,7 @@ public class GetConsumerListByGroupRequestHeader extends RpcRequestHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("consumerGroup", consumerGroup)
-            .toString();
+                .add("consumerGroup", consumerGroup)
+                .toString();
     }
 }

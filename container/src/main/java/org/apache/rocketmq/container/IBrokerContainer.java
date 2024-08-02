@@ -48,7 +48,7 @@ public interface IBrokerContainer {
      * Add a broker to this container with specific broker config.
      *
      * @param brokerConfig the specified broker config
-     * @param storeConfig the specified store config
+     * @param storeConfig  the specified store config
      * @return the added BrokerController or null if the broker already exists
      * @throws Exception when initialize broker
      */

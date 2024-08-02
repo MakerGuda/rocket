@@ -16,14 +16,15 @@
  */
 package org.apache.rocketmq.broker.schedule;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 public class DelayOffsetSerializeWrapper extends RemotingSerializable {
     private ConcurrentMap<Integer /* level */, Long/* offset */> offsetTable =
-        new ConcurrentHashMap<>(32);
+            new ConcurrentHashMap<>(32);
 
     private DataVersion dataVersion;
 

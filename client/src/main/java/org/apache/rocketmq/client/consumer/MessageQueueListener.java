@@ -17,6 +17,7 @@
 package org.apache.rocketmq.client.consumer;
 
 import java.util.Set;
+
 import org.apache.rocketmq.common.message.MessageQueue;
 
 /**
@@ -24,8 +25,8 @@ import org.apache.rocketmq.common.message.MessageQueue;
  */
 public interface MessageQueueListener {
     /**
-     * @param topic message topic
-     * @param mqAll all queues in this message topic
+     * @param topic      message topic
+     * @param mqAll      all queues in this message topic
      * @param mqAssigned collection of queues, assigned to the current consumer
      */
     void messageQueueChanged(final String topic, final Set<MessageQueue> mqAll, final Set<MessageQueue> mqAssigned);

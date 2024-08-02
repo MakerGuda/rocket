@@ -11,11 +11,11 @@ public abstract class Attribute {
 
     protected boolean changeable;
 
-    public abstract void verify(String value);
-
     public Attribute(String name, boolean changeable) {
         this.name = name;
         this.changeable = changeable;
     }
+
+    public abstract void verify(String value);
 
 }

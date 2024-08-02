@@ -61,7 +61,7 @@ public class AclConverter {
             return null;
         }
         return acls.stream().map(AclConverter::convertAcl)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     public static AclInfo convertAcl(Acl acl) {
@@ -74,8 +74,8 @@ public class AclConverter {
             return aclInfo;
         }
         List<AclInfo.PolicyInfo> policyInfos = acl.getPolicies().stream()
-            .map(AclConverter::convertPolicy)
-            .collect(Collectors.toList());
+                .map(AclConverter::convertPolicy)
+                .collect(Collectors.toList());
         aclInfo.setPolicies(policyInfos);
         return aclInfo;
     }
@@ -89,7 +89,7 @@ public class AclConverter {
             return policyInfo;
         }
         List<AclInfo.PolicyEntryInfo> entryInfos = policy.getEntries().stream()
-            .map(AclConverter::convertPolicyEntry).collect(Collectors.toList());
+                .map(AclConverter::convertPolicyEntry).collect(Collectors.toList());
         policyInfo.setEntries(entryInfos);
         return policyInfo;
     }

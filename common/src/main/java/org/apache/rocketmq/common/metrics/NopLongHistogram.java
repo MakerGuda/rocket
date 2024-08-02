@@ -6,15 +6,18 @@ import io.opentelemetry.context.Context;
 
 public class NopLongHistogram implements LongHistogram {
 
-    @Override public void record(long l) {
+    @Override
+    public void record(long l) {
 
     }
 
-    @Override public void record(long l, Attributes attributes) {
+    @Override
+    public void record(long l, Attributes attributes) {
 
     }
 
-    @Override public void record(long l, Attributes attributes, Context context) {
+    @Override
+    public void record(long l, Attributes attributes, Context context) {
 
     }
 

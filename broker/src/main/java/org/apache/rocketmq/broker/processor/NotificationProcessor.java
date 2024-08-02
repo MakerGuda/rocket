@@ -18,9 +18,6 @@ package org.apache.rocketmq.broker.processor;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.longpolling.PollingHeader;
 import org.apache.rocketmq.broker.longpolling.PollingResult;
@@ -42,12 +39,16 @@ import org.apache.rocketmq.remoting.protocol.header.NotificationRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.NotificationResponseHeader;
 import org.apache.rocketmq.remoting.protocol.subscription.SubscriptionGroupConfig;
 
+import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
+
 public class NotificationProcessor implements NettyRequestProcessor {
     private static final Logger POP_LOGGER = LoggerFactory.getLogger(LoggerName.ROCKETMQ_POP_LOGGER_NAME);
+    private static final String BORN_TIME = "bornTime";
     private final BrokerController brokerController;
     private final Random random = new Random(System.currentTimeMillis());
     private final PopLongPollingService popLongPollingService;
-    private static final String BORN_TIME = "bornTime";
 
     public NotificationProcessor(final BrokerController brokerController) {
         this.brokerController = brokerController;
@@ -62,9 +63,9 @@ public class NotificationProcessor implements NettyRequestProcessor {
     // When a new message is written to CommitLog, this method would be called.
     // Suspended long polling will receive notification and be wakeup.
     public void notifyMessageArriving(final String topic, final int queueId,
-        Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
+                                      Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
         this.popLongPollingService.notifyMessageArrivingWithRetryTopic(
-            topic, queueId, tagsCode, msgStoreTime, filterBitMap, properties);
+                topic, queueId, tagsCode, msgStoreTime, filterBitMap, properties);
     }
 
     public void notifyMessageArriving(final String topic, final int queueId) {
@@ -73,7 +74,7 @@ public class NotificationProcessor implements NettyRequestProcessor {
 
     @Override
     public RemotingCommand processRequest(final ChannelHandlerContext ctx,
-        RemotingCommand request) throws RemotingCommandException {
+                                          RemotingCommand request) throws RemotingCommandException {
         request.addExtFieldIfNotExist(BORN_TIME, String.valueOf(System.currentTimeMillis()));
         if (Objects.equals(request.getExtFields().get(BORN_TIME), "0")) {
             request.addExtField(BORN_TIME, String.valueOf(System.currentTimeMillis()));
@@ -83,7 +84,7 @@ public class NotificationProcessor implements NettyRequestProcessor {
         RemotingCommand response = RemotingCommand.createResponseCommand(NotificationResponseHeader.class);
         final NotificationResponseHeader responseHeader = (NotificationResponseHeader) response.readCustomHeader();
         final NotificationRequestHeader requestHeader =
-            (NotificationRequestHeader) request.decodeCommandCustomHeader(NotificationRequestHeader.class);
+                (NotificationRequestHeader) request.decodeCommandCustomHeader(NotificationRequestHeader.class);
 
         response.setOpaque(request.getOpaque());
 
@@ -109,7 +110,7 @@ public class NotificationProcessor implements NettyRequestProcessor {
 
         if (requestHeader.getQueueId() >= topicConfig.getReadQueueNums()) {
             String errorInfo = String.format("queueId[%d] is illegal, topic:[%s] topicConfig.readQueueNums:[%d] consumer:[%s]",
-                requestHeader.getQueueId(), requestHeader.getTopic(), topicConfig.getReadQueueNums(), channel.remoteAddress());
+                    requestHeader.getQueueId(), requestHeader.getTopic(), topicConfig.getReadQueueNums(), channel.remoteAddress());
             POP_LOGGER.warn(errorInfo);
             response.setCode(ResponseCode.SYSTEM_ERROR);
             response.setRemark(errorInfo);
@@ -206,7 +207,7 @@ public class NotificationProcessor implements NettyRequestProcessor {
             offset = this.brokerController.getMessageStore().getMinOffsetInQueue(topic, queueId);
         }
         long bufferOffset = this.brokerController.getPopMessageProcessor().getPopBufferMergeService()
-            .getLatestOffset(topic, cid, queueId);
+                .getLatestOffset(topic, cid, queueId);
         if (bufferOffset < 0) {
             return offset;
         } else {

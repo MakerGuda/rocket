@@ -19,7 +19,7 @@ public class PutMessageResult {
     }
 
     public PutMessageResult(PutMessageStatus putMessageStatus, AppendMessageResult appendMessageResult,
-        boolean remotePut) {
+                            boolean remotePut) {
         this.putMessageStatus = putMessageStatus;
         this.appendMessageResult = appendMessageResult;
         this.remotePut = remotePut;

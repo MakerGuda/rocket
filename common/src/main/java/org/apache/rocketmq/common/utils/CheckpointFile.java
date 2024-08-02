@@ -53,14 +53,6 @@ public class CheckpointFile<T> {
 
     private final CheckpointSerializer<T> serializer;
 
-    public interface CheckpointSerializer<T> {
-
-        String toLine(final T entry);
-
-        T fromLine(final String line);
-
-    }
-
     public CheckpointFile(final String filePath, final CheckpointSerializer<T> serializer) {
         this.filePath = filePath;
         this.serializer = serializer;
@@ -133,6 +125,14 @@ public class CheckpointFile<T> {
         } catch (IOException e) {
             return this.read(this.getBackFilePath());
         }
+    }
+
+    public interface CheckpointSerializer<T> {
+
+        String toLine(final T entry);
+
+        T fromLine(final String line);
+
     }
 
 }

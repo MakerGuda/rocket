@@ -16,11 +16,6 @@
  */
 package org.apache.rocketmq.tools.command.broker;
 
-import java.io.UnsupportedEncodingException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.cli.CommandLine;
@@ -36,6 +31,12 @@ import org.apache.rocketmq.tools.admin.MQAdminExt;
 import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 public class GetColdDataFlowCtrInfoSubCommand implements SubCommand {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -65,7 +66,7 @@ public class GetColdDataFlowCtrInfoSubCommand implements SubCommand {
 
     @Override
     public void execute(final CommandLine commandLine, final Options options, final RPCHook rpcHook)
-        throws SubCommandException {
+            throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
@@ -93,9 +94,9 @@ public class GetColdDataFlowCtrInfoSubCommand implements SubCommand {
     }
 
     protected void getAndPrint(final MQAdminExt defaultMQAdminExt, final String printPrefix, final String addr)
-        throws InterruptedException, RemotingConnectException,
-        UnsupportedEncodingException, RemotingTimeoutException,
-        MQBrokerException, RemotingSendRequestException {
+            throws InterruptedException, RemotingConnectException,
+            UnsupportedEncodingException, RemotingTimeoutException,
+            MQBrokerException, RemotingSendRequestException {
 
         System.out.print(" " + printPrefix);
         String rstStr = defaultMQAdminExt.getColdDataFlowCtrInfo(addr);
@@ -104,7 +105,7 @@ public class GetColdDataFlowCtrInfoSubCommand implements SubCommand {
             return;
         }
         JSONObject jsonObject = JSON.parseObject(rstStr);
-        Map<String, JSONObject> runtimeTable = (Map<String, JSONObject>)jsonObject.get("runtimeTable");
+        Map<String, JSONObject> runtimeTable = (Map<String, JSONObject>) jsonObject.get("runtimeTable");
         runtimeTable.entrySet().stream().forEach(i -> {
             JSONObject value = i.getValue();
             Date lastColdReadTimeMillsDate = new Date(Long.parseLong(String.valueOf(value.get("lastColdReadTimeMills"))));

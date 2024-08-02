@@ -17,6 +17,7 @@
 package org.apache.rocketmq.client.consumer;
 
 import java.util.Set;
+
 import org.apache.rocketmq.client.MQAdmin;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -34,14 +35,14 @@ public interface MQConsumer extends MQAdmin {
      */
     @Deprecated
     void sendMessageBack(final MessageExt msg, final int delayLevel) throws RemotingException,
-        MQBrokerException, InterruptedException, MQClientException;
+            MQBrokerException, InterruptedException, MQClientException;
 
     /**
      * If consuming of messages failed, they will be sent back to the brokers for another delivery attempt after
      * interval specified in delay level.
      */
     void sendMessageBack(final MessageExt msg, final int delayLevel, final String brokerName)
-        throws RemotingException, MQBrokerException, InterruptedException, MQClientException;
+            throws RemotingException, MQBrokerException, InterruptedException, MQClientException;
 
     /**
      * Fetch message queues from consumer cache pertaining to the given topic.

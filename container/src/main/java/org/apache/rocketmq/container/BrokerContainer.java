@@ -53,10 +53,10 @@ public class BrokerContainer implements IBrokerContainer {
     private static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
 
     private final ScheduledExecutorService scheduledExecutorService = ThreadUtils.newScheduledThreadPool(1,
-        new BasicThreadFactory.Builder()
-            .namingPattern("BrokerContainerScheduledThread")
-            .daemon(true)
-            .build());
+            new BasicThreadFactory.Builder()
+                    .namingPattern("BrokerContainerScheduledThread")
+                    .daemon(true)
+                    .build());
     private final NettyServerConfig nettyServerConfig;
     private final NettyClientConfig nettyClientConfig;
     private final BrokerOuterAPI brokerOuterAPI;
@@ -75,9 +75,9 @@ public class BrokerContainer implements IBrokerContainer {
     private ExecutorService brokerContainerExecutor;
 
     public BrokerContainer(
-        final BrokerContainerConfig brokerContainerConfig,
-        final NettyServerConfig nettyServerConfig,
-        final NettyClientConfig nettyClientConfig
+            final BrokerContainerConfig brokerContainerConfig,
+            final NettyServerConfig nettyServerConfig,
+            final NettyClientConfig nettyClientConfig
     ) {
         this.brokerContainerConfig = brokerContainerConfig;
         this.nettyServerConfig = nettyServerConfig;
@@ -90,9 +90,9 @@ public class BrokerContainer implements IBrokerContainer {
         this.containerClientHouseKeepingService = new ContainerClientHouseKeepingService(this);
 
         this.configuration = new Configuration(
-            LOG,
-            BrokerPathConfigHelper.getBrokerConfigPath(),
-            this.brokerContainerConfig, this.nettyServerConfig, this.nettyClientConfig);
+                LOG,
+                BrokerPathConfigHelper.getBrokerConfigPath(),
+                this.brokerContainerConfig, this.nettyServerConfig, this.nettyClientConfig);
     }
 
     @Override
@@ -142,12 +142,12 @@ public class BrokerContainer implements IBrokerContainer {
         this.fastRemotingServer = this.remotingServer.newRemotingServer(this.nettyServerConfig.getListenPort() - 2);
 
         this.brokerContainerExecutor = ThreadUtils.newThreadPoolExecutor(
-            1,
-            1,
-            1000 * 60,
-            TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(10000),
-            new ThreadFactoryImpl("SharedBrokerThread_"));
+                1,
+                1,
+                1000 * 60,
+                TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(10000),
+                new ThreadFactoryImpl("SharedBrokerThread_"));
 
         this.registerProcessor();
 
@@ -269,7 +269,7 @@ public class BrokerContainer implements IBrokerContainer {
 
     @Override
     public InnerBrokerController addBroker(final BrokerConfig brokerConfig,
-        final MessageStoreConfig storeConfig) throws Exception {
+                                           final MessageStoreConfig storeConfig) throws Exception {
         if (storeConfig.isEnableDLegerCommitLog()) {
             return this.addDLedgerBroker(brokerConfig, storeConfig);
         } else {
@@ -315,7 +315,7 @@ public class BrokerContainer implements IBrokerContainer {
     }
 
     public InnerBrokerController addMasterBroker(final BrokerConfig masterBrokerConfig,
-        final MessageStoreConfig storeConfig) throws Exception {
+                                                 final MessageStoreConfig storeConfig) throws Exception {
 
         masterBrokerConfig.setInBrokerContainer(true);
         if (storeConfig.isDuplicationEnable()) {
@@ -359,7 +359,7 @@ public class BrokerContainer implements IBrokerContainer {
      * @throws Exception is thrown if an error occurs
      */
     public InnerSalveBrokerController addSlaveBroker(final BrokerConfig slaveBrokerConfig,
-        final MessageStoreConfig storeConfig) throws Exception {
+                                                     final MessageStoreConfig storeConfig) throws Exception {
 
         slaveBrokerConfig.setInBrokerContainer(true);
         if (storeConfig.isDuplicationEnable()) {

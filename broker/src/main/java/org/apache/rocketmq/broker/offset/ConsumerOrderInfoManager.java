@@ -19,14 +19,6 @@ package org.apache.rocketmq.broker.offset;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.BrokerPathConfigHelper;
 import org.apache.rocketmq.common.ConfigManager;
@@ -37,6 +29,9 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.header.ExtraInfoUtil;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class ConsumerOrderInfoManager extends ConfigManager {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
@@ -44,7 +39,7 @@ public class ConsumerOrderInfoManager extends ConfigManager {
     private static final long CLEAN_SPAN_FROM_LAST = 24 * 3600 * 1000;
 
     private ConcurrentHashMap<String/* topic@group*/, ConcurrentHashMap<Integer/*queueId*/, OrderInfo>> table =
-        new ConcurrentHashMap<>(128);
+            new ConcurrentHashMap<>(128);
 
     private transient ConsumerOrderInfoLockManager consumerOrderInfoLockManager;
     private transient BrokerController brokerController;
@@ -57,20 +52,20 @@ public class ConsumerOrderInfoManager extends ConfigManager {
         this.consumerOrderInfoLockManager = new ConsumerOrderInfoLockManager(brokerController);
     }
 
-    public ConcurrentHashMap<String, ConcurrentHashMap<Integer, OrderInfo>> getTable() {
-        return table;
-    }
-
-    public void setTable(ConcurrentHashMap<String, ConcurrentHashMap<Integer, OrderInfo>> table) {
-        this.table = table;
-    }
-
     protected static String buildKey(String topic, String group) {
         return topic + TOPIC_GROUP_SEPARATOR + group;
     }
 
     protected static String[] decodeKey(String key) {
         return key.split(TOPIC_GROUP_SEPARATOR);
+    }
+
+    public ConcurrentHashMap<String, ConcurrentHashMap<Integer, OrderInfo>> getTable() {
+        return table;
+    }
+
+    public void setTable(ConcurrentHashMap<String, ConcurrentHashMap<Integer, OrderInfo>> table) {
+        this.table = table;
     }
 
     private void updateLockFreeTimestamp(String topic, String group, int queueId, OrderInfo orderInfo) {
@@ -82,17 +77,17 @@ public class ConsumerOrderInfoManager extends ConfigManager {
     /**
      * update the message list received
      *
-     * @param isRetry is retry topic or not
-     * @param topic topic
-     * @param group group
-     * @param queueId queue id of message
-     * @param popTime the time of pop message
-     * @param invisibleTime invisible time
+     * @param isRetry            is retry topic or not
+     * @param topic              topic
+     * @param group              group
+     * @param queueId            queue id of message
+     * @param popTime            the time of pop message
+     * @param invisibleTime      invisible time
      * @param msgQueueOffsetList the queue offsets of messages
-     * @param orderInfoBuilder will append order info to this builder
+     * @param orderInfoBuilder   will append order info to this builder
      */
     public void update(String attemptId, boolean isRetry, String topic, String group, int queueId, long popTime, long invisibleTime,
-        List<Long> msgQueueOffsetList, StringBuilder orderInfoBuilder) {
+                       List<Long> msgQueueOffsetList, StringBuilder orderInfoBuilder) {
         String key = buildKey(topic, group);
         ConcurrentHashMap<Integer/*queueId*/, OrderInfo> qs = table.get(key);
         if (qs == null) {
@@ -169,9 +164,9 @@ public class ConsumerOrderInfoManager extends ConfigManager {
     /**
      * mark message is consumed finished. return the consumer offset
      *
-     * @param topic topic
-     * @param group group
-     * @param queueId queue id of message
+     * @param topic       topic
+     * @param group       group
+     * @param queueId     queue id of message
      * @param queueOffset queue offset of message
      * @return -1 : illegal, -2 : no need commit, >= 0 : commit
      */
@@ -228,10 +223,10 @@ public class ConsumerOrderInfoManager extends ConfigManager {
     /**
      * update next visible time of this message
      *
-     * @param topic topic
-     * @param group group
-     * @param queueId queue id of message
-     * @param queueOffset queue offset of message
+     * @param topic           topic
+     * @param group           group
+     * @param queueId         queue id of message
+     * @param queueOffset     queue offset of message
      * @param nextVisibleTime nex visible time
      */
     public void updateNextVisibleTime(String topic, String group, int queueId, long queueOffset, long popTime, long nextVisibleTime) {
@@ -261,10 +256,10 @@ public class ConsumerOrderInfoManager extends ConfigManager {
             return;
         }
         Iterator<Map.Entry<String/* topic@group*/, ConcurrentHashMap<Integer/*queueId*/, OrderInfo>>> iterator =
-            this.table.entrySet().iterator();
+                this.table.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String/* topic@group*/, ConcurrentHashMap<Integer/*queueId*/, OrderInfo>> entry =
-                iterator.next();
+                    iterator.next();
             String topicAtGroup = entry.getKey();
             ConcurrentHashMap<Integer/*queueId*/, OrderInfo> qs = entry.getValue();
             String[] arrays = decodeKey(topicAtGroup);
@@ -398,13 +393,34 @@ public class ConsumerOrderInfoManager extends ConfigManager {
         }
 
         public OrderInfo(String attemptId, long popTime, long invisibleTime, List<Long> queueOffsetList, long lastConsumeTimestamp,
-            long commitOffsetBit) {
+                         long commitOffsetBit) {
             this.popTime = popTime;
             this.invisibleTime = invisibleTime;
             this.offsetList = buildOffsetList(queueOffsetList);
             this.lastConsumeTimestamp = lastConsumeTimestamp;
             this.commitOffsetBit = commitOffsetBit;
             this.attemptId = attemptId;
+        }
+
+        public static List<Long> buildOffsetList(List<Long> queueOffsetList) {
+            List<Long> simple = new ArrayList<>();
+            if (queueOffsetList.size() == 1) {
+                simple.addAll(queueOffsetList);
+                return simple;
+            }
+            Long first = queueOffsetList.get(0);
+            simple.add(first);
+            for (int i = 1; i < queueOffsetList.size(); i++) {
+                simple.add(queueOffsetList.get(i) - first);
+            }
+            return simple;
+        }
+
+        protected static long getQueueOffset(List<Long> offsetList, int offsetIndex) {
+            if (offsetIndex == 0) {
+                return offsetList.get(0);
+            }
+            return offsetList.get(0) + offsetList.get(offsetIndex);
         }
 
         public List<Long> getOffsetList() {
@@ -469,20 +485,6 @@ public class ConsumerOrderInfoManager extends ConfigManager {
 
         public void setAttemptId(String attemptId) {
             this.attemptId = attemptId;
-        }
-
-        public static List<Long> buildOffsetList(List<Long> queueOffsetList) {
-            List<Long> simple = new ArrayList<>();
-            if (queueOffsetList.size() == 1) {
-                simple.addAll(queueOffsetList);
-                return simple;
-            }
-            Long first = queueOffsetList.get(0);
-            simple.add(first);
-            for (int i = 1; i < queueOffsetList.size(); i++) {
-                simple.add(queueOffsetList.get(i) - first);
-            }
-            return simple;
         }
 
         @JSONField(serialize = false, deserialize = false)
@@ -582,13 +584,6 @@ public class ConsumerOrderInfoManager extends ConfigManager {
             return getQueueOffset(this.offsetList, offsetIndex);
         }
 
-        protected static long getQueueOffset(List<Long> offsetList, int offsetIndex) {
-            if (offsetIndex == 0) {
-                return offsetList.get(0);
-            }
-            return offsetList.get(0) + offsetList.get(offsetIndex);
-        }
-
         @JSONField(serialize = false, deserialize = false)
         public boolean isNotAck(int offsetIndex) {
             return (commitOffsetBit & (1L << offsetIndex)) == 0;
@@ -630,15 +625,15 @@ public class ConsumerOrderInfoManager extends ConfigManager {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("popTime", popTime)
-                .add("invisibleTime", invisibleTime)
-                .add("offsetList", offsetList)
-                .add("offsetNextVisibleTime", offsetNextVisibleTime)
-                .add("offsetConsumedCount", offsetConsumedCount)
-                .add("lastConsumeTimestamp", lastConsumeTimestamp)
-                .add("commitOffsetBit", commitOffsetBit)
-                .add("attemptId", attemptId)
-                .toString();
+                    .add("popTime", popTime)
+                    .add("invisibleTime", invisibleTime)
+                    .add("offsetList", offsetList)
+                    .add("offsetNextVisibleTime", offsetNextVisibleTime)
+                    .add("offsetConsumedCount", offsetConsumedCount)
+                    .add("lastConsumeTimestamp", lastConsumeTimestamp)
+                    .add("commitOffsetBit", commitOffsetBit)
+                    .add("attemptId", attemptId)
+                    .toString();
         }
     }
 }

@@ -17,6 +17,7 @@
 package org.apache.rocketmq.example.simple;
 
 import java.util.List;
+
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -29,6 +30,7 @@ public class PushConsumer {
     public static final String TOPIC = "TopicTest";
     public static final String CONSUMER_GROUP = "CID_JODIE_1";
     public static final String NAMESRV_ADDR = "127.0.0.1:9876";
+
     public static void main(String[] args) throws InterruptedException, MQClientException {
 
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(CONSUMER_GROUP);

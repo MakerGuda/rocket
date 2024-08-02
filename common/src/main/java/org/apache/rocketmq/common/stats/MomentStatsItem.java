@@ -41,7 +41,7 @@ public class MomentStatsItem {
     private final Logger log;
 
     public MomentStatsItem(String statsName, String statsKey,
-        ScheduledExecutorService scheduledExecutorService, Logger log) {
+                           ScheduledExecutorService scheduledExecutorService, Logger log) {
         this.statsName = statsName;
         this.statsKey = statsKey;
         this.scheduledExecutorService = scheduledExecutorService;
@@ -60,9 +60,9 @@ public class MomentStatsItem {
 
     public void printAtMinutes() {
         log.info("[{}] [{}] Stats Every 5 Minutes, Value: {}",
-            this.statsName,
-            this.statsKey,
-            this.value.get());
+                this.statsName,
+                this.statsKey,
+                this.value.get());
     }
 
 }

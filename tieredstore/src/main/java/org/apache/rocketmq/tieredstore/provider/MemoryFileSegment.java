@@ -18,6 +18,7 @@ package org.apache.rocketmq.tieredstore.provider;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
+
 import org.apache.rocketmq.tieredstore.MessageStoreConfig;
 import org.apache.rocketmq.tieredstore.common.FileSegmentType;
 import org.apache.rocketmq.tieredstore.stream.FileSegmentInputStream;
@@ -35,7 +36,7 @@ public class MemoryFileSegment extends FileSegment {
     protected boolean checkSize = true;
 
     public MemoryFileSegment(MessageStoreConfig storeConfig,
-        FileSegmentType fileType, String filePath, long baseOffset) {
+                             FileSegmentType fileType, String filePath, long baseOffset) {
 
         super(storeConfig, fileType, filePath, baseOffset);
         memStore = ByteBuffer.allocate(10000);
@@ -87,7 +88,7 @@ public class MemoryFileSegment extends FileSegment {
 
     @Override
     public CompletableFuture<Boolean> commit0(
-        FileSegmentInputStream inputStream, long position, int length, boolean append) {
+            FileSegmentInputStream inputStream, long position, int length, boolean append) {
 
         try {
             if (blocker != null && !blocker.get()) {

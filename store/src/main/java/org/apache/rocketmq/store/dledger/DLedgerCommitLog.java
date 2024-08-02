@@ -49,14 +49,10 @@ public class DLedgerCommitLog extends CommitLog {
     private final int id;
 
     private final MessageSerializer messageSerializer;
-
-    private volatile long beginTimeInDledgerLock = 0;
-
-    private long dividedCommitlogOffset = -1;
-
-    private boolean isInrecoveringOldCommitlog = false;
-
     private final StringBuilder msgIdBuilder = new StringBuilder();
+    private volatile long beginTimeInDledgerLock = 0;
+    private long dividedCommitlogOffset = -1;
+    private boolean isInrecoveringOldCommitlog = false;
 
     public DLedgerCommitLog(final DefaultMessageStore defaultMessageStore) {
         super(defaultMessageStore);
@@ -417,15 +413,15 @@ public class DLedgerCommitLog extends CommitLog {
                 && this.defaultMessageStore.getMessageStoreConfig().isMessageIndexSafe()) {
             if (storeTimestamp <= this.defaultMessageStore.getStoreCheckpoint().getMinTimestampIndex()) {
                 log.info("dledger find check timestamp, {} {}",
-                    storeTimestamp,
-                    UtilAll.timeMillisToHumanString(storeTimestamp));
+                        storeTimestamp,
+                        UtilAll.timeMillisToHumanString(storeTimestamp));
                 return true;
             }
         } else {
             if (storeTimestamp <= this.defaultMessageStore.getStoreCheckpoint().getMinTimestamp()) {
                 log.info("dledger find check timestamp, {} {}",
-                    storeTimestamp,
-                    UtilAll.timeMillisToHumanString(storeTimestamp));
+                        storeTimestamp,
+                        UtilAll.timeMillisToHumanString(storeTimestamp));
                 return true;
             }
         }
@@ -446,7 +442,7 @@ public class DLedgerCommitLog extends CommitLog {
 
     @Override
     public DispatchRequest checkMessageAndReturnSize(ByteBuffer byteBuffer, final boolean checkCRC,
-        final boolean checkDupInfo, final boolean readBody) {
+                                                     final boolean checkDupInfo, final boolean readBody) {
         if (isInrecoveringOldCommitlog) {
             return super.checkMessageAndReturnSize(byteBuffer, checkCRC, checkDupInfo, readBody);
         }
@@ -457,8 +453,8 @@ public class DLedgerCommitLog extends CommitLog {
             //In dledger, this field is size, it must be gt 0, so it could prevent collision
             int magicOld = byteBuffer.getInt();
             if (magicOld == CommitLog.BLANK_MAGIC_CODE
-                || magicOld == MessageDecoder.MESSAGE_MAGIC_CODE
-                || magicOld == MessageDecoder.MESSAGE_MAGIC_CODE_V2) {
+                    || magicOld == MessageDecoder.MESSAGE_MAGIC_CODE
+                    || magicOld == MessageDecoder.MESSAGE_MAGIC_CODE_V2) {
                 byteBuffer.position(pos);
                 return super.checkMessageAndReturnSize(byteBuffer, checkCRC, checkDupInfo, readBody);
             }
@@ -521,7 +517,7 @@ public class DLedgerCommitLog extends CommitLog {
 
         msg.setVersion(MessageVersion.MESSAGE_VERSION_V1);
         boolean autoMessageVersionOnTopicLen =
-            this.defaultMessageStore.getMessageStoreConfig().isAutoMessageVersionOnTopicLen();
+                this.defaultMessageStore.getMessageStoreConfig().isAutoMessageVersionOnTopicLen();
         if (autoMessageVersionOnTopicLen && msg.getTopic().length() > Byte.MAX_VALUE) {
             msg.setVersion(MessageVersion.MESSAGE_VERSION_V2);
         }
@@ -638,7 +634,7 @@ public class DLedgerCommitLog extends CommitLog {
 
         messageExtBatch.setVersion(MessageVersion.MESSAGE_VERSION_V1);
         boolean autoMessageVersionOnTopicLen =
-            this.defaultMessageStore.getMessageStoreConfig().isAutoMessageVersionOnTopicLen();
+                this.defaultMessageStore.getMessageStoreConfig().isAutoMessageVersionOnTopicLen();
         if (autoMessageVersionOnTopicLen && messageExtBatch.getTopic().length() > Byte.MAX_VALUE) {
             messageExtBatch.setVersion(MessageVersion.MESSAGE_VERSION_V2);
         }
@@ -651,7 +647,7 @@ public class DLedgerCommitLog extends CommitLog {
         encodeResult = this.messageSerializer.serialize(messageExtBatch);
         if (encodeResult.status != AppendMessageStatus.PUT_OK) {
             return CompletableFuture.completedFuture(new PutMessageResult(PutMessageStatus.MESSAGE_ILLEGAL, new AppendMessageResult(encodeResult
-                .status)));
+                    .status)));
         }
 
         int batchNum = encodeResult.batchData.size();
@@ -703,7 +699,7 @@ public class DLedgerCommitLog extends CommitLog {
 
                 elapsedTimeInLock = this.defaultMessageStore.getSystemClock().now() - beginTimeInDledgerLock;
                 appendResult = new AppendMessageResult(AppendMessageStatus.PUT_OK, firstWroteOffset, encodeResult.totalMsgLen,
-                    msgIdBuilder.toString(), System.currentTimeMillis(), queueOffset, elapsedTimeInLock);
+                        msgIdBuilder.toString(), System.currentTimeMillis(), queueOffset, elapsedTimeInLock);
                 appendResult.setMsgNum(msgNum);
             } finally {
                 beginTimeInDledgerLock = 0;
@@ -712,7 +708,7 @@ public class DLedgerCommitLog extends CommitLog {
 
             if (elapsedTimeInLock > 500) {
                 log.warn("[NOTIFYME]putMessage in lock cost time(ms)={}, bodyLength={} AppendMessageResult={}",
-                    elapsedTimeInLock, messageExtBatch.getBody().length, appendResult);
+                        elapsedTimeInLock, messageExtBatch.getBody().length, appendResult);
             }
 
             defaultMessageStore.increaseOffset(messageExtBatch, (short) batchNum);
@@ -720,7 +716,7 @@ public class DLedgerCommitLog extends CommitLog {
         } catch (Exception e) {
             log.error("Put message error", e);
             return CompletableFuture.completedFuture(new PutMessageResult(PutMessageStatus.UNKNOWN_ERROR, new AppendMessageResult(AppendMessageStatus.UNKNOWN_ERROR)));
-        }  finally {
+        } finally {
             topicQueueLock.unlock(encodeResult.queueOffsetKey);
         }
 
@@ -825,6 +821,37 @@ public class DLedgerCommitLog extends CommitLog {
         return queueOffset;
     }
 
+    public DLedgerServer getdLedgerServer() {
+        return dLedgerServer;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public long getDividedCommitlogOffset() {
+        return dividedCommitlogOffset;
+    }
+
+    public static class DLedgerSelectMappedBufferResult extends SelectMappedBufferResult {
+
+        private SelectMmapBufferResult sbr;
+
+        public DLedgerSelectMappedBufferResult(SelectMmapBufferResult sbr) {
+            super(sbr.getStartOffset(), sbr.getByteBuffer(), sbr.getSize(), null);
+            this.sbr = sbr;
+        }
+
+        @Override
+        public synchronized void release() {
+            super.release();
+            if (sbr != null) {
+                sbr.release();
+            }
+        }
+
+    }
+
     class EncodeResult {
         private String queueOffsetKey;
         private ByteBuffer data;
@@ -836,6 +863,14 @@ public class DLedgerCommitLog extends CommitLog {
             this.data = data;
             this.status = status;
             this.queueOffsetKey = queueOffsetKey;
+        }
+
+        public EncodeResult(AppendMessageStatus status, String queueOffsetKey, List<byte[]> batchData,
+                            int totalMsgLen) {
+            this.batchData = batchData;
+            this.status = status;
+            this.queueOffsetKey = queueOffsetKey;
+            this.totalMsgLen = totalMsgLen;
         }
 
         public void setQueueOffsetKey(long offset, boolean isBatch) {
@@ -851,14 +886,6 @@ public class DLedgerCommitLog extends CommitLog {
 
         public byte[] getData() {
             return data.array();
-        }
-
-        public EncodeResult(AppendMessageStatus status, String queueOffsetKey, List<byte[]> batchData,
-            int totalMsgLen) {
-            this.batchData = batchData;
-            this.status = status;
-            this.queueOffsetKey = queueOffsetKey;
-            this.totalMsgLen = totalMsgLen;
         }
     }
 
@@ -892,7 +919,7 @@ public class DLedgerCommitLog extends CommitLog {
              * Serialize message
              */
             final byte[] propertiesData =
-                msgInner.getPropertiesString() == null ? null : msgInner.getPropertiesString().getBytes(MessageDecoder.CHARSET_UTF8);
+                    msgInner.getPropertiesString() == null ? null : msgInner.getPropertiesString().getBytes(MessageDecoder.CHARSET_UTF8);
 
             final int propertiesLength = propertiesData == null ? 0 : propertiesData.length;
 
@@ -913,7 +940,7 @@ public class DLedgerCommitLog extends CommitLog {
             // Exceeds the maximum message
             if (bodyLength > this.maxMessageBodySize) {
                 DLedgerCommitLog.log.warn("message body size exceeded, msg total size: " + msgLen + ", msg body size: " + bodyLength
-                    + ", maxMessageBodySize: " + this.maxMessageBodySize);
+                        + ", maxMessageBodySize: " + this.maxMessageBodySize);
                 return new EncodeResult(AppendMessageStatus.MESSAGE_SIZE_EXCEEDED, null, key);
             }
             // Initialization of storage space
@@ -974,7 +1001,7 @@ public class DLedgerCommitLog extends CommitLog {
             int totalLength = messagesByteBuff.limit();
             if (totalLength > this.maxMessageBodySize) {
                 CommitLog.log.warn("message body size exceeded, msg body size: " + totalLength
-                    + ", maxMessageBodySize: " + this.maxMessageBodySize);
+                        + ", maxMessageBodySize: " + this.maxMessageBodySize);
                 throw new RuntimeException("message size exceeded");
             }
 
@@ -1072,36 +1099,5 @@ public class DLedgerCommitLog extends CommitLog {
             byteBuffer.flip();
             byteBuffer.limit(limit);
         }
-    }
-
-    public static class DLedgerSelectMappedBufferResult extends SelectMappedBufferResult {
-
-        private SelectMmapBufferResult sbr;
-
-        public DLedgerSelectMappedBufferResult(SelectMmapBufferResult sbr) {
-            super(sbr.getStartOffset(), sbr.getByteBuffer(), sbr.getSize(), null);
-            this.sbr = sbr;
-        }
-
-        @Override
-        public synchronized void release() {
-            super.release();
-            if (sbr != null) {
-                sbr.release();
-            }
-        }
-
-    }
-
-    public DLedgerServer getdLedgerServer() {
-        return dLedgerServer;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public long getDividedCommitlogOffset() {
-        return dividedCommitlogOffset;
     }
 }

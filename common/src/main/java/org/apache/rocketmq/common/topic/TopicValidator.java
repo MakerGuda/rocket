@@ -88,21 +88,6 @@ public class TopicValidator {
         return new ValidateTopicResult(true, "");
     }
 
-    @Getter
-    @Setter
-    public static class ValidateTopicResult {
-
-        private final boolean valid;
-
-        private final String remark;
-
-        public ValidateTopicResult(boolean valid, String remark) {
-            this.valid = valid;
-            this.remark = remark;
-        }
-
-    }
-
     public static boolean isSystemTopic(String topic) {
         return SYSTEM_TOPIC_SET.contains(topic) || topic.startsWith(SYSTEM_TOPIC_PREFIX);
     }
@@ -117,6 +102,21 @@ public class TopicValidator {
 
     public static Set<String> getSystemTopicSet() {
         return SYSTEM_TOPIC_SET;
+    }
+
+    @Getter
+    @Setter
+    public static class ValidateTopicResult {
+
+        private final boolean valid;
+
+        private final String remark;
+
+        public ValidateTopicResult(boolean valid, String remark) {
+            this.valid = valid;
+            this.remark = remark;
+        }
+
     }
 
 }

@@ -16,39 +16,14 @@
  */
 package org.apache.rocketmq.acl.plain;
 
-import apache.rocketmq.v2.AckMessageRequest;
-import apache.rocketmq.v2.ChangeInvisibleDurationRequest;
-import apache.rocketmq.v2.ClientType;
-import apache.rocketmq.v2.EndTransactionRequest;
-import apache.rocketmq.v2.ForwardMessageToDeadLetterQueueRequest;
-import apache.rocketmq.v2.HeartbeatRequest;
-import apache.rocketmq.v2.Message;
-import apache.rocketmq.v2.NotifyClientTerminationRequest;
-import apache.rocketmq.v2.QueryAssignmentRequest;
-import apache.rocketmq.v2.QueryRouteRequest;
-import apache.rocketmq.v2.ReceiveMessageRequest;
-import apache.rocketmq.v2.Resource;
-import apache.rocketmq.v2.SendMessageRequest;
-import apache.rocketmq.v2.Subscription;
-import apache.rocketmq.v2.SubscriptionEntry;
-import apache.rocketmq.v2.TelemetryCommand;
+import apache.rocketmq.v2.*;
 import com.google.protobuf.GeneratedMessageV3;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.rocketmq.acl.AccessResource;
-import org.apache.rocketmq.acl.common.AclException;
-import org.apache.rocketmq.acl.common.AclUtils;
-import org.apache.rocketmq.acl.common.AuthenticationHeader;
-import org.apache.rocketmq.acl.common.AuthorizationHeader;
 import org.apache.rocketmq.acl.common.Permission;
-import org.apache.rocketmq.acl.common.SessionCredentials;
+import org.apache.rocketmq.acl.common.*;
 import org.apache.rocketmq.common.KeyBuilder;
 import org.apache.rocketmq.common.MQVersion;
 import org.apache.rocketmq.common.MixAll;
@@ -64,6 +39,9 @@ import org.apache.rocketmq.remoting.protocol.header.UpdateConsumerOffsetRequestH
 import org.apache.rocketmq.remoting.protocol.heartbeat.ConsumerData;
 import org.apache.rocketmq.remoting.protocol.heartbeat.HeartbeatData;
 import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
+
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 public class PlainAccessResource implements AccessResource {
 
@@ -149,20 +127,20 @@ public class PlainAccessResource implements AccessResource {
                     break;
                 case RequestCode.UNREGISTER_CLIENT:
                     final UnregisterClientRequestHeader unregisterClientRequestHeader =
-                        (UnregisterClientRequestHeader) request
-                            .decodeCommandCustomHeader(UnregisterClientRequestHeader.class);
+                            (UnregisterClientRequestHeader) request
+                                    .decodeCommandCustomHeader(UnregisterClientRequestHeader.class);
                     accessResource.addResourceAndPerm(getRetryTopic(unregisterClientRequestHeader.getConsumerGroup()), Permission.SUB);
                     break;
                 case RequestCode.GET_CONSUMER_LIST_BY_GROUP:
                     final GetConsumerListByGroupRequestHeader getConsumerListByGroupRequestHeader =
-                        (GetConsumerListByGroupRequestHeader) request
-                            .decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
+                            (GetConsumerListByGroupRequestHeader) request
+                                    .decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
                     accessResource.addResourceAndPerm(getRetryTopic(getConsumerListByGroupRequestHeader.getConsumerGroup()), Permission.SUB);
                     break;
                 case RequestCode.UPDATE_CONSUMER_OFFSET:
                     final UpdateConsumerOffsetRequestHeader updateConsumerOffsetRequestHeader =
-                        (UpdateConsumerOffsetRequestHeader) request
-                            .decodeCommandCustomHeader(UpdateConsumerOffsetRequestHeader.class);
+                            (UpdateConsumerOffsetRequestHeader) request
+                                    .decodeCommandCustomHeader(UpdateConsumerOffsetRequestHeader.class);
                     accessResource.addResourceAndPerm(getRetryTopic(updateConsumerOffsetRequestHeader.getConsumerGroup()), Permission.SUB);
                     accessResource.addResourceAndPerm(updateConsumerOffsetRequestHeader.getTopic(), Permission.SUB);
                     break;
@@ -213,7 +191,7 @@ public class PlainAccessResource implements AccessResource {
             if (HeartbeatRequest.getDescriptor().getFullName().equals(rpcFullName)) {
                 HeartbeatRequest request = (HeartbeatRequest) messageV3;
                 if (ClientType.PUSH_CONSUMER.equals(request.getClientType())
-                    || ClientType.SIMPLE_CONSUMER.equals(request.getClientType())) {
+                        || ClientType.SIMPLE_CONSUMER.equals(request.getClientType())) {
                     if (!request.hasGroup()) {
                         throw new AclException("Consumer heartbeat doesn't have group");
                     } else {
@@ -290,16 +268,6 @@ public class PlainAccessResource implements AccessResource {
         return accessResource;
     }
 
-    private void addResourceAndPerm(Resource resource, byte permission) {
-        String resourceName = NamespaceUtil.wrapNamespace(resource.getResourceNamespace(), resource.getName());
-        addResourceAndPerm(resourceName, permission);
-    }
-
-    private void addGroupResourceAndPerm(Resource resource, byte permission) {
-        String resourceName = NamespaceUtil.wrapNamespace(resource.getResourceNamespace(), resource.getName());
-        addResourceAndPerm(getRetryTopic(resourceName), permission);
-    }
-
     public static PlainAccessResource build(PlainAccessConfig plainAccessConfig, RemoteAddressStrategy remoteAddressStrategy) {
         PlainAccessResource plainAccessResource = new PlainAccessResource();
         plainAccessResource.setAccessKey(plainAccessConfig.getAccessKey());
@@ -345,6 +313,16 @@ public class PlainAccessResource implements AccessResource {
             return null;
         }
         return MixAll.getRetryTopic(group);
+    }
+
+    private void addResourceAndPerm(Resource resource, byte permission) {
+        String resourceName = NamespaceUtil.wrapNamespace(resource.getResourceNamespace(), resource.getName());
+        addResourceAndPerm(resourceName, permission);
+    }
+
+    private void addGroupResourceAndPerm(Resource resource, byte permission) {
+        String resourceName = NamespaceUtil.wrapNamespace(resource.getResourceNamespace(), resource.getName());
+        addResourceAndPerm(getRetryTopic(resourceName), permission);
     }
 
     public void addResourceAndPerm(String resource, byte perm) {

@@ -17,6 +17,7 @@
 package org.apache.rocketmq.controller.impl.heartbeat;
 
 import java.io.Serializable;
+
 import org.apache.rocketmq.common.UtilAll;
 
 import java.util.Objects;
@@ -76,9 +77,9 @@ public class BrokerIdentityInfo implements Serializable {
     @Override
     public String toString() {
         return "BrokerIdentityInfo{" +
-            "clusterName='" + clusterName + '\'' +
-            ", brokerName='" + brokerName + '\'' +
-            ", brokerId=" + brokerId +
-            '}';
+                "clusterName='" + clusterName + '\'' +
+                ", brokerName='" + brokerName + '\'' +
+                ", brokerId=" + brokerId +
+                '}';
     }
 }

@@ -65,10 +65,12 @@ public interface RemotingClient extends RemotingService {
                 public void operationComplete(ResponseFuture responseFuture) {
 
                 }
+
                 @Override
                 public void operationSucceed(RemotingCommand response) {
                     future.complete(response);
                 }
+
                 @Override
                 public void operationFail(Throwable throwable) {
                     future.completeExceptionally(throwable);

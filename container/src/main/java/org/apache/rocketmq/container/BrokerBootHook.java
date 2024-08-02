@@ -18,6 +18,7 @@
 package org.apache.rocketmq.container;
 
 import java.util.Properties;
+
 import org.apache.rocketmq.broker.BrokerController;
 
 public interface BrokerBootHook {
@@ -32,7 +33,7 @@ public interface BrokerBootHook {
      * Code to execute before broker start.
      *
      * @param brokerController broker to start
-     * @param properties broker properties
+     * @param properties       broker properties
      * @throws Exception when execute hook
      */
     void executeBeforeStart(BrokerController brokerController, Properties properties) throws Exception;
@@ -41,7 +42,7 @@ public interface BrokerBootHook {
      * Code to execute after broker start.
      *
      * @param brokerController broker to start
-     * @param properties broker properties
+     * @param properties       broker properties
      * @throws Exception when execute hook
      */
     void executeAfterStart(BrokerController brokerController, Properties properties) throws Exception;

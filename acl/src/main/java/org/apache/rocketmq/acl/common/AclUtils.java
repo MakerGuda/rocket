@@ -16,13 +16,6 @@
  */
 package org.apache.rocketmq.acl.common;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.util.Map;
-import java.util.SortedMap;
-
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -31,6 +24,13 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.RPCHook;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.util.Map;
+import java.util.SortedMap;
 
 import static org.apache.rocketmq.acl.common.SessionCredentials.CHARSET;
 
@@ -265,7 +265,7 @@ public class AclUtils {
         JSONObject yamlDataObject;
         try {
             yamlDataObject = AclUtils.getYamlDataObject(fileName,
-                JSONObject.class);
+                    JSONObject.class);
         } catch (Exception e) {
             log.error("Convert yaml file to data object error, ", e);
             return null;

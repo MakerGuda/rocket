@@ -54,15 +54,10 @@ public class AsyncTraceDispatcher implements TraceDispatcher {
     private final DefaultMQProducer traceProducer;
 
     private final ThreadPoolExecutor traceExecutor;
-
-    private AtomicLong discardCount;
-
-    private Thread worker;
-
     private final ArrayBlockingQueue<TraceContext> traceContextQueue;
-
     private final HashMap<String, TraceDataSegment> taskQueueByTopic;
-
+    private AtomicLong discardCount;
+    private Thread worker;
     private ArrayBlockingQueue<Runnable> appenderQueue;
 
     private volatile Thread shutDownHook;
@@ -268,17 +263,12 @@ public class AsyncTraceDispatcher implements TraceDispatcher {
     @Setter
     class TraceDataSegment {
 
-        private long firstBeanAddTime;
-
-        private int currentMsgSize;
-
-        private int currentMsgKeySize;
-
         private final String traceTopicName;
-
         private final String regionId;
-
         private final List<TraceTransferBean> traceTransferBeanList = new ArrayList<>();
+        private long firstBeanAddTime;
+        private int currentMsgSize;
+        private int currentMsgKeySize;
 
         TraceDataSegment(String traceTopicName, String regionId) {
             this.traceTopicName = traceTopicName;
@@ -290,7 +280,7 @@ public class AsyncTraceDispatcher implements TraceDispatcher {
             this.traceTransferBeanList.add(traceTransferBean);
             this.currentMsgSize += traceTransferBean.getTransData().length();
             this.currentMsgKeySize = traceTransferBean.getTransKey().stream()
-                .reduce(currentMsgKeySize, (acc, x) -> acc + x.length(), Integer::sum);
+                    .reduce(currentMsgKeySize, (acc, x) -> acc + x.length(), Integer::sum);
             if (currentMsgSize >= traceProducer.getMaxMessageSize() - 10 * 1000 || currentMsgKeySize >= MAX_MSG_KEY_SIZE) {
                 List<TraceTransferBean> dataToSend = new ArrayList<>(traceTransferBeanList);
                 AsyncDataSendTask asyncDataSendTask = new AsyncDataSendTask(traceTopicName, dataToSend);

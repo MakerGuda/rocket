@@ -17,6 +17,7 @@
 package org.apache.rocketmq.remoting.protocol.body;
 
 import java.util.Map;
+
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
@@ -70,7 +71,7 @@ public class ClusterAclVersionInfo extends RemotingSerializable {
     }
 
     public void setAllAclConfigDataVersion(
-        Map<String, DataVersion> allAclConfigDataVersion) {
+            Map<String, DataVersion> allAclConfigDataVersion) {
         this.allAclConfigDataVersion = allAclConfigDataVersion;
     }
 }

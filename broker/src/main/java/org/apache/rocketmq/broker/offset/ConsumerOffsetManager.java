@@ -16,18 +16,7 @@
  */
 package org.apache.rocketmq.broker.offset;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
-
 import com.google.common.base.Strings;
-
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.BrokerPathConfigHelper;
 import org.apache.rocketmq.common.ConfigManager;
@@ -38,24 +27,24 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.DataVersion;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
+
 public class ConsumerOffsetManager extends ConfigManager {
-    protected static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     public static final String TOPIC_GROUP_SEPARATOR = "@";
-
-    private DataVersion dataVersion = new DataVersion();
-
-    protected ConcurrentMap<String/* topic@group */, ConcurrentMap<Integer, Long>> offsetTable =
-        new ConcurrentHashMap<>(512);
-
+    protected static final Logger LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final ConcurrentMap<String, ConcurrentMap<Integer, Long>> resetOffsetTable =
-        new ConcurrentHashMap<>(512);
-
+            new ConcurrentHashMap<>(512);
     private final ConcurrentMap<String/* topic@group */, ConcurrentMap<Integer, Long>> pullOffsetTable =
-        new ConcurrentHashMap<>(512);
-
-    protected transient BrokerController brokerController;
-
+            new ConcurrentHashMap<>(512);
     private final transient AtomicLong versionChangeCounter = new AtomicLong(0);
+    protected ConcurrentMap<String/* topic@group */, ConcurrentMap<Integer, Long>> offsetTable =
+            new ConcurrentHashMap<>(512);
+    protected transient BrokerController brokerController;
+    private DataVersion dataVersion = new DataVersion();
 
     public ConsumerOffsetManager() {
     }
@@ -111,7 +100,7 @@ public class ConsumerOffsetManager extends ConfigManager {
                 String group = arrays[1];
 
                 if (null == brokerController.getConsumerManager().findSubscriptionData(group, topic)
-                    && this.offsetBehindMuchThanData(topic, next.getValue())) {
+                        && this.offsetBehindMuchThanData(topic, next.getValue())) {
                     it.remove();
                     removeConsumerOffset(topicAtGroup);
                     LOG.warn("remove topic offset, {}", topicAtGroup);
@@ -193,7 +182,7 @@ public class ConsumerOffsetManager extends ConfigManager {
     }
 
     public void commitOffset(final String clientHost, final String group, final String topic, final int queueId,
-        final long offset) {
+                             final long offset) {
         // topic@group
         String key = topic + TOPIC_GROUP_SEPARATOR + group;
         this.commitOffset(clientHost, key, queueId, offset);
@@ -218,19 +207,20 @@ public class ConsumerOffsetManager extends ConfigManager {
     }
 
     public void commitPullOffset(final String clientHost, final String group, final String topic, final int queueId,
-        final long offset) {
+                                 final long offset) {
         // topic@group
         String key = topic + TOPIC_GROUP_SEPARATOR + group;
         ConcurrentMap<Integer, Long> map = this.pullOffsetTable.computeIfAbsent(
-            key, k -> new ConcurrentHashMap<>(32));
+                key, k -> new ConcurrentHashMap<>(32));
         map.put(queueId, offset);
     }
 
     /**
      * If the target queue has temporary reset offset, return the reset-offset.
      * Otherwise, return the current consume offset in the offset store.
-     * @param group Consumer group
-     * @param topic Topic
+     *
+     * @param group   Consumer group
+     * @param topic   Topic
      * @param queueId Queue ID
      * @return current consume offset or reset offset if there were one.
      */
@@ -258,8 +248,9 @@ public class ConsumerOffsetManager extends ConfigManager {
 
     /**
      * Query pull offset in pullOffsetTable
-     * @param group Consumer group
-     * @param topic Topic
+     *
+     * @param group   Consumer group
+     * @param topic   Topic
      * @param queueId Queue ID
      * @return latest pull offset of consumer group
      */
@@ -392,7 +383,7 @@ public class ConsumerOffsetManager extends ConfigManager {
     public void assignResetOffset(String topic, String group, int queueId, long offset) {
         if (Strings.isNullOrEmpty(topic) || Strings.isNullOrEmpty(group) || queueId < 0 || offset < 0) {
             LOG.warn("Illegal arguments when assigning reset offset. Topic={}, group={}, queueId={}, offset={}",
-                topic, group, queueId, offset);
+                    topic, group, queueId, offset);
             return;
         }
 
@@ -408,7 +399,7 @@ public class ConsumerOffsetManager extends ConfigManager {
 
         map.put(queueId, offset);
         LOG.debug("Reset offset OK. Topic={}, group={}, queueId={}, resetOffset={}",
-            topic, group, queueId, offset);
+                topic, group, queueId, offset);
 
         // Two things are important here:
         // 1, currentOffsetMap might be null if there is no previous records;

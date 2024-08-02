@@ -92,7 +92,7 @@ public class KVConfigManager {
                 }
             } catch (IOException e) {
                 log.error("persist kvconfig Exception, "
-                    + this.namesrvController.getNamesrvConfig().getKvConfigPath(), e);
+                        + this.namesrvController.getNamesrvConfig().getKvConfigPath(), e);
             } finally {
                 this.lock.readLock().unlock();
             }

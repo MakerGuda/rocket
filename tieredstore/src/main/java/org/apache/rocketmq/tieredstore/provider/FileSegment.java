@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.rocketmq.tieredstore.MessageStoreConfig;
 import org.apache.rocketmq.tieredstore.common.AppendResult;
 import org.apache.rocketmq.tieredstore.common.FileSegmentType;
@@ -35,10 +36,8 @@ import org.slf4j.LoggerFactory;
 
 public abstract class FileSegment implements Comparable<FileSegment>, FileSegmentProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(MessageStoreUtil.TIERED_STORE_LOGGER_NAME);
-
     protected static final Long GET_FILE_SIZE_ERROR = -1L;
-
+    private static final Logger log = LoggerFactory.getLogger(MessageStoreUtil.TIERED_STORE_LOGGER_NAME);
     protected final long baseOffset;
     protected final String filePath;
     protected final FileSegmentType fileType;
@@ -59,7 +58,7 @@ public abstract class FileSegment implements Comparable<FileSegment>, FileSegmen
     protected volatile CompletableFuture<Boolean> flightCommitRequest;
 
     public FileSegment(MessageStoreConfig storeConfig,
-        FileSegmentType fileType, String filePath, long baseOffset) {
+                       FileSegmentType fileType, String filePath, long baseOffset) {
 
         this.storeConfig = storeConfig;
         this.fileType = fileType;
@@ -226,7 +225,7 @@ public abstract class FileSegment implements Comparable<FileSegment>, FileSegmen
             long fileSize = this.getSize();
             if (fileSize == GET_FILE_SIZE_ERROR) {
                 log.error("FileSegment correct position error, fileName={}, commit={}, append={}, buffer={}",
-                    this.getPath(), commitPosition, appendPosition, fileSegmentInputStream.getContentLength());
+                        this.getPath(), commitPosition, appendPosition, fileSegmentInputStream.getContentLength());
                 releaseCommitLock();
                 return CompletableFuture.completedFuture(false);
             }
@@ -247,24 +246,24 @@ public abstract class FileSegment implements Comparable<FileSegment>, FileSegmen
                 return CompletableFuture.completedFuture(true);
             }
             fileSegmentInputStream = FileSegmentInputStreamFactory.build(
-                fileType, this.getCommitOffset(), bufferList, null, bufferSize);
+                    fileType, this.getCommitOffset(), bufferList, null, bufferSize);
         }
 
         boolean append = fileType != FileSegmentType.INDEX;
         return flightCommitRequest =
-            this.commit0(fileSegmentInputStream, commitPosition, bufferSize, append)
-                .thenApply(result -> {
-                    if (result) {
-                        commitPosition += bufferSize;
-                        fileSegmentInputStream = null;
-                        return true;
-                    } else {
-                        fileSegmentInputStream.rewind();
-                        return false;
-                    }
-                })
-                .exceptionally(this::handleCommitException)
-                .whenComplete((result, e) -> releaseCommitLock());
+                this.commit0(fileSegmentInputStream, commitPosition, bufferSize, append)
+                        .thenApply(result -> {
+                            if (result) {
+                                commitPosition += bufferSize;
+                                fileSegmentInputStream = null;
+                                return true;
+                            } else {
+                                fileSegmentInputStream.rewind();
+                                return false;
+                            }
+                        })
+                        .exceptionally(this::handleCommitException)
+                        .whenComplete((result, e) -> releaseCommitLock());
     }
 
     private boolean handleCommitException(Throwable e) {
@@ -275,12 +274,12 @@ public abstract class FileSegment implements Comparable<FileSegment>, FileSegmen
         Throwable rootCause = e.getCause() != null ? e.getCause() : e;
 
         long fileSize = rootCause instanceof TieredStoreException ?
-            ((TieredStoreException) rootCause).getPosition() : this.getSize();
+                ((TieredStoreException) rootCause).getPosition() : this.getSize();
 
         long expectPosition = commitPosition + fileSegmentInputStream.getContentLength();
         if (fileSize == GET_FILE_SIZE_ERROR) {
             log.error("Get file size error after commit, FileName: {}, Commit: {}, Content: {}, Expect: {}, Append: {}",
-                this.getPath(), commitPosition, fileSegmentInputStream.getContentLength(), expectPosition, appendPosition);
+                    this.getPath(), commitPosition, fileSegmentInputStream.getContentLength(), expectPosition, appendPosition);
             return false;
         }
 
@@ -324,13 +323,13 @@ public abstract class FileSegment implements Comparable<FileSegment>, FileSegmen
         CompletableFuture<ByteBuffer> future = new CompletableFuture<>();
         if (position < 0 || position >= commitPosition) {
             future.completeExceptionally(new TieredStoreException(
-                TieredStoreErrorCode.ILLEGAL_PARAM, "FileSegment read position is illegal position"));
+                    TieredStoreErrorCode.ILLEGAL_PARAM, "FileSegment read position is illegal position"));
             return future;
         }
 
         if (length <= 0) {
             future.completeExceptionally(new TieredStoreException(
-                TieredStoreErrorCode.ILLEGAL_PARAM, "FileSegment read length illegal"));
+                    TieredStoreErrorCode.ILLEGAL_PARAM, "FileSegment read length illegal"));
             return future;
         }
 
@@ -338,8 +337,8 @@ public abstract class FileSegment implements Comparable<FileSegment>, FileSegmen
         if (readableBytes < length) {
             length = readableBytes;
             log.debug("FileSegment#readAsync, expect request position is greater than commit position, " +
-                    "file: {}, request position: {}, commit position: {}, change length from {} to {}",
-                getPath(), position, commitPosition, length, readableBytes);
+                            "file: {}, request position: {}, commit position: {}, change length from {} to {}",
+                    getPath(), position, commitPosition, length, readableBytes);
         }
         return this.read0(position, length);
     }

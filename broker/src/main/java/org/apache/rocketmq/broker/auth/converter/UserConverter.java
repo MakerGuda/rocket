@@ -16,18 +16,19 @@
  */
 package org.apache.rocketmq.broker.auth.converter;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.rocketmq.auth.authentication.enums.UserStatus;
 import org.apache.rocketmq.auth.authentication.enums.UserType;
 import org.apache.rocketmq.auth.authentication.model.User;
 import org.apache.rocketmq.remoting.protocol.body.UserInfo;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class UserConverter {
 
     public static List<UserInfo> convertUsers(List<User> users) {
         return users.stream().map(UserConverter::convertUser)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     public static UserInfo convertUser(User user) {

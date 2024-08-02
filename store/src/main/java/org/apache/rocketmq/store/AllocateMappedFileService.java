@@ -36,10 +36,8 @@ public class AllocateMappedFileService extends ServiceThread {
      * 请求队列
      */
     private final PriorityBlockingQueue<AllocateRequest> requestQueue = new PriorityBlockingQueue<>();
-
-    private volatile boolean hasException = false;
-
     private final DefaultMessageStore messageStore;
+    private volatile boolean hasException = false;
 
     public AllocateMappedFileService(DefaultMessageStore messageStore) {
         this.messageStore = messageStore;

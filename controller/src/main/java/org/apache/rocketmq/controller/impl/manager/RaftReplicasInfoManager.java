@@ -78,7 +78,7 @@ public class RaftReplicasInfoManager extends ReplicasInfoManager {
     }
 
     public ControllerResult<RaftBrokerHeartBeatEventResponse> onBrokerHeartBeat(
-        RaftBrokerHeartBeatEventRequest request) {
+            RaftBrokerHeartBeatEventRequest request) {
         BrokerIdentityInfo brokerIdentityInfo = request.getBrokerIdentityInfo();
         BrokerLiveInfo brokerLiveInfo = request.getBrokerLiveInfo();
         ControllerResult<RaftBrokerHeartBeatEventResponse> result = new ControllerResult<>(new RaftBrokerHeartBeatEventResponse());
@@ -130,14 +130,14 @@ public class RaftReplicasInfoManager extends ReplicasInfoManager {
             }
         });
         Set<String> alreadyReportedBrokerName = notActiveBrokerIdentityInfoList.stream()
-            .map(BrokerIdentityInfo::getBrokerName)
-            .collect(Collectors.toSet());
+                .map(BrokerIdentityInfo::getBrokerName)
+                .collect(Collectors.toSet());
         // avoid to duplicate report, filter by name,
         // because BrokerIdentityInfo in needReElectBrokerNames does not have brokerId or clusterName
         notActiveBrokerIdentityInfoList.addAll(needReElectBrokerNames.stream()
-            .filter(brokerName -> !alreadyReportedBrokerName.contains(brokerName))
-            .map(brokerName -> new BrokerIdentityInfo(null, brokerName, null))
-            .collect(Collectors.toList()));
+                .filter(brokerName -> !alreadyReportedBrokerName.contains(brokerName))
+                .map(brokerName -> new BrokerIdentityInfo(null, brokerName, null))
+                .collect(Collectors.toList()));
         ControllerResult<CheckNotActiveBrokerResponse> result = new ControllerResult<>(new CheckNotActiveBrokerResponse());
         try {
             result.setBody(JSON.toJSONBytes(notActiveBrokerIdentityInfoList));

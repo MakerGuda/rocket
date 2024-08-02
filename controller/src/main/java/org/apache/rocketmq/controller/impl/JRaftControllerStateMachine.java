@@ -180,32 +180,32 @@ public class JRaftControllerStateMachine implements StateMachine {
     }
 
     private ControllerResult<AlterSyncStateSetResponseHeader> alterSyncStateSet(
-        AlterSyncStateSetRequestHeader requestHeader, SyncStateSet syncStateSet) {
+            AlterSyncStateSetRequestHeader requestHeader, SyncStateSet syncStateSet) {
         return replicasInfoManager.alterSyncStateSet(requestHeader, syncStateSet, new RaftReplicasInfoManager.BrokerValidPredicateWithInvokeTime(requestHeader.getInvokeTime(), this.replicasInfoManager));
     }
 
     private ControllerResult<ElectMasterResponseHeader> electMaster(ElectMasterRequestHeader request) {
         ControllerResult<ElectMasterResponseHeader> electResult = this.replicasInfoManager.electMaster(request, new DefaultElectPolicy(
-            (clusterName, brokerName, brokerId) -> replicasInfoManager.isBrokerActive(clusterName, brokerName, brokerId, request.getInvokeTime()),
-            replicasInfoManager::getBrokerLiveInfo
+                (clusterName, brokerName, brokerId) -> replicasInfoManager.isBrokerActive(clusterName, brokerName, brokerId, request.getInvokeTime()),
+                replicasInfoManager::getBrokerLiveInfo
         ));
         log.info("elect master, request :{}, result: {}", request.toString(), electResult.toString());
         AttributesBuilder attributesBuilder = ControllerMetricsManager.newAttributesBuilder()
-            .put(LABEL_CLUSTER_NAME, request.getClusterName())
-            .put(LABEL_BROKER_SET, request.getBrokerName());
+                .put(LABEL_CLUSTER_NAME, request.getClusterName())
+                .put(LABEL_BROKER_SET, request.getBrokerName());
         switch (electResult.getResponseCode()) {
             case ResponseCode.SUCCESS:
                 ControllerMetricsManager.electionTotal.add(1,
-                    attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.NEW_MASTER_ELECTED.getLowerCaseName()).build());
+                        attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.NEW_MASTER_ELECTED.getLowerCaseName()).build());
                 break;
             case ResponseCode.CONTROLLER_MASTER_STILL_EXIST:
                 ControllerMetricsManager.electionTotal.add(1,
-                    attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.KEEP_CURRENT_MASTER.getLowerCaseName()).build());
+                        attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.KEEP_CURRENT_MASTER.getLowerCaseName()).build());
                 break;
             case ResponseCode.CONTROLLER_MASTER_NOT_AVAILABLE:
             case ResponseCode.CONTROLLER_ELECT_MASTER_FAILED:
                 ControllerMetricsManager.electionTotal.add(1,
-                    attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.NO_MASTER_ELECTED.getLowerCaseName()).build());
+                        attributesBuilder.put(LABEL_ELECTION_RESULT, ControllerMetricsConstant.ElectionResult.NO_MASTER_ELECTED.getLowerCaseName()).build());
                 break;
             default:
                 break;
@@ -214,7 +214,7 @@ public class JRaftControllerStateMachine implements StateMachine {
     }
 
     private ControllerResult<GetNextBrokerIdResponseHeader> getNextBrokerId(
-        GetNextBrokerIdRequestHeader requestHeader) {
+            GetNextBrokerIdRequestHeader requestHeader) {
         return replicasInfoManager.getNextBrokerId(requestHeader);
     }
 

@@ -10,7 +10,7 @@ import org.apache.rocketmq.remoting.protocol.heartbeat.SubscriptionData;
 import java.util.Set;
 
 /**
- *消费者内部接口
+ * 消费者内部接口
  */
 public interface MQConsumerInner {
 

@@ -15,63 +15,48 @@ import java.util.concurrent.TimeUnit;
 @Setter
 public class BrokerConfig extends BrokerIdentity {
 
+    private static final int PROCESSOR_NUMBER = Runtime.getRuntime().availableProcessors();
     /**
      * broker配置文件路径
      */
     private String brokerConfigPath = null;
-
     /**
      * rocketmq根文件目录
      */
     private String rocketmqHome = System.getProperty(MixAll.ROCKETMQ_HOME_PROPERTY, System.getenv(MixAll.ROCKETMQ_HOME_ENV));
-
     /**
      * namesrv地址
      */
     @ImportantField
     private String namesrvAddr = System.getProperty(MixAll.NAMESRV_ADDR_PROPERTY, System.getenv(MixAll.NAMESRV_ADDR_ENV));
-
     /**
      * 监听端口号
      */
     @ImportantField
     private int listenPort = 6888;
-
     @ImportantField
     private String brokerIP1 = NetworkUtil.getLocalAddress();
-
     private String brokerIP2 = NetworkUtil.getLocalAddress();
-
     @ImportantField
     private boolean recoverConcurrently = false;
-
     /**
      * broker读写权限
      */
     private int brokerPermission = PermName.PERM_READ | PermName.PERM_WRITE;
-
     /**
      * 默认创建主题的队列数
      */
     private int defaultTopicQueueNums = 8;
-
     /**
      * 是否自动创建主题
      */
     @ImportantField
     private boolean autoCreateTopicEnable = true;
-
     private boolean clusterTopicEnable = true;
-
     private boolean brokerTopicEnable = true;
-
     @ImportantField
     private boolean autoCreateSubscriptionGroup = true;
-
     private String messageStorePlugIn = "";
-
-    private static final int PROCESSOR_NUMBER = Runtime.getRuntime().availableProcessors();
-
     @ImportantField
     private String msgTraceTopicName = TopicValidator.RMQ_SYS_TRACE_TOPIC;
 
@@ -387,7 +372,7 @@ public class BrokerConfig extends BrokerIdentity {
     private long cgColdReadThreshold = 3 * 1024 * 1024;
 
     private long globalColdReadThreshold = 100 * 1024 * 1024;
-    
+
     private long fetchNamesrvAddrInterval = 10 * 1000;
 
     private boolean popResponseReturnActualRetryTopic = false;

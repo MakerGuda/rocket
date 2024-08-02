@@ -18,12 +18,14 @@
 package org.apache.rocketmq.container;
 
 import io.netty.channel.ChannelHandlerContext;
+
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
 import java.util.Properties;
+
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.BrokerStartup;
 import org.apache.rocketmq.common.BrokerConfig;
@@ -46,9 +48,8 @@ import org.apache.rocketmq.store.config.MessageStoreConfig;
 public class BrokerContainerProcessor implements NettyRequestProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
     private final BrokerContainer brokerContainer;
-    private List<BrokerBootHook> brokerBootHookList;
-
     private final Set<String> configBlackList = new HashSet<>();
+    private List<BrokerBootHook> brokerBootHookList;
 
     public BrokerContainerProcessor(BrokerContainer brokerContainer) {
         this.brokerContainer = brokerContainer;
@@ -86,7 +87,7 @@ public class BrokerContainerProcessor implements NettyRequestProcessor {
     }
 
     private synchronized RemotingCommand addBroker(ChannelHandlerContext ctx,
-        RemotingCommand request) throws Exception {
+                                                   RemotingCommand request) throws Exception {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         final AddBrokerRequestHeader requestHeader = (AddBrokerRequestHeader) request.decodeCommandCustomHeader(AddBrokerRequestHeader.class);
 
@@ -183,10 +184,10 @@ public class BrokerContainerProcessor implements NettyRequestProcessor {
                 BrokerIdentity brokerIdentity;
                 if (messageStoreConfig.isEnableDLegerCommitLog()) {
                     brokerIdentity = new BrokerIdentity(brokerConfig.getBrokerClusterName(),
-                        brokerConfig.getBrokerName(), Integer.parseInt(messageStoreConfig.getDLegerSelfId().substring(1)));
+                            brokerConfig.getBrokerName(), Integer.parseInt(messageStoreConfig.getDLegerSelfId().substring(1)));
                 } else {
                     brokerIdentity = new BrokerIdentity(brokerConfig.getBrokerClusterName(),
-                        brokerConfig.getBrokerName(), brokerConfig.getBrokerId());
+                            brokerConfig.getBrokerName(), brokerConfig.getBrokerId());
                 }
                 this.brokerContainer.removeBroker(brokerIdentity);
                 brokerController.shutdown();
@@ -205,7 +206,7 @@ public class BrokerContainerProcessor implements NettyRequestProcessor {
     }
 
     private synchronized RemotingCommand removeBroker(ChannelHandlerContext ctx,
-        RemotingCommand request) throws RemotingCommandException {
+                                                      RemotingCommand request) throws RemotingCommandException {
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         final RemoveBrokerRequestHeader requestHeader = (RemoveBrokerRequestHeader) request.decodeCommandCustomHeader(RemoveBrokerRequestHeader.class);
 

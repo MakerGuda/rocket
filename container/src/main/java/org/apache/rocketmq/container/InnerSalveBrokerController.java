@@ -31,8 +31,8 @@ public class InnerSalveBrokerController extends InnerBrokerController {
     private final Lock lock = new ReentrantLock();
 
     public InnerSalveBrokerController(final BrokerContainer brokerContainer,
-        final BrokerConfig brokerConfig,
-        final MessageStoreConfig storeConfig) {
+                                      final BrokerConfig brokerConfig,
+                                      final MessageStoreConfig storeConfig) {
         super(brokerContainer, brokerConfig, storeConfig);
         // Check configs
         checkSlaveBrokerConfig();

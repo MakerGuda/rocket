@@ -142,7 +142,7 @@ public class RouteInfoManager {
         try {
             this.lock.writeLock().lockInterruptibly();
             if (this.topicQueueTable.containsKey(topic)) {
-                Map<String, QueueData> queueDataMap  = this.topicQueueTable.get(topic);
+                Map<String, QueueData> queueDataMap = this.topicQueueTable.get(topic);
                 for (QueueData queueData : queueDatas) {
                     if (!this.brokerAddrTable.containsKey(queueData.getBrokerName())) {
                         log.warn("Register topic contains illegal broker, {}, {}", topic, queueData);
@@ -1105,23 +1105,19 @@ class BrokerAddrInfo {
 class BrokerLiveInfo {
 
     /**
-     * 最后一次更新时间
-     */
-    private long lastUpdateTimestamp;
-
-    /**
      * 心跳检测时间
      */
     private final long heartbeatTimeoutMillis;
-
     /**
      * 数据版本
      */
     private final DataVersion dataVersion;
-
     private final Channel channel;
-
     private final String haServerAddr;
+    /**
+     * 最后一次更新时间
+     */
+    private long lastUpdateTimestamp;
 
     public BrokerLiveInfo(long lastUpdateTimestamp, long heartbeatTimeoutMillis, DataVersion dataVersion, Channel channel, String haServerAddr) {
         this.lastUpdateTimestamp = lastUpdateTimestamp;

@@ -16,15 +16,7 @@
  */
 package org.apache.rocketmq.tools.command.export;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Arrays;
-import java.util.Properties;
-
 import com.alibaba.fastjson.JSON;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -34,6 +26,9 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.CommandUtil;
 import org.apache.rocketmq.tools.command.SubCommand;
 import org.apache.rocketmq.tools.command.SubCommandException;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 public class ExportConfigsCommand implements SubCommand {
     @Override
@@ -53,7 +48,7 @@ public class ExportConfigsCommand implements SubCommand {
         options.addOption(opt);
 
         opt = new Option("f", "filePath", true,
-            "export configs.json path | default /tmp/rocketmq/export");
+                "export configs.json path | default /tmp/rocketmq/export");
         opt.setRequired(false);
         options.addOption(opt);
         return options;
@@ -61,14 +56,14 @@ public class ExportConfigsCommand implements SubCommand {
 
     @Override
     public void execute(CommandLine commandLine, Options options, RPCHook rpcHook)
-        throws SubCommandException {
+            throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
 
         try {
             String clusterName = commandLine.getOptionValue('c').trim();
             String filePath = !commandLine.hasOption('f') ? "/tmp/rocketmq/export" : commandLine.getOptionValue('f')
-                .trim();
+                    .trim();
 
             defaultMQAdminExt.start();
             Map<String, Object> result = new HashMap<>();
@@ -80,7 +75,7 @@ public class ExportConfigsCommand implements SubCommand {
             int slaveBrokerSize = 0;
             Map<String, Properties> brokerConfigs = new HashMap<>();
             Map<String, List<String>> masterAndSlaveMap
-                = CommandUtil.fetchMasterAndSlaveDistinguish(defaultMQAdminExt, clusterName);
+                    = CommandUtil.fetchMasterAndSlaveDistinguish(defaultMQAdminExt, clusterName);
             for (Entry<String, List<String>> masterAndSlaveEntry : masterAndSlaveMap.entrySet()) {
                 Properties masterProperties = defaultMQAdminExt.getBrokerConfig(masterAndSlaveEntry.getKey());
                 masterBrokerSize++;

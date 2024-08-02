@@ -26,10 +26,10 @@ public class TopicConfigAndMappingSerializeWrapper extends TopicConfigSerializeW
     private DataVersion mappingDataVersion = new DataVersion();
 
     public static TopicConfigAndMappingSerializeWrapper from(TopicConfigSerializeWrapper wrapper) {
-        if (wrapper instanceof  TopicConfigAndMappingSerializeWrapper) {
+        if (wrapper instanceof TopicConfigAndMappingSerializeWrapper) {
             return (TopicConfigAndMappingSerializeWrapper) wrapper;
         }
-        TopicConfigAndMappingSerializeWrapper mappingSerializeWrapper =  new TopicConfigAndMappingSerializeWrapper();
+        TopicConfigAndMappingSerializeWrapper mappingSerializeWrapper = new TopicConfigAndMappingSerializeWrapper();
         mappingSerializeWrapper.setDataVersion(wrapper.getDataVersion());
         mappingSerializeWrapper.setTopicConfigTable(wrapper.getTopicConfigTable());
         return mappingSerializeWrapper;

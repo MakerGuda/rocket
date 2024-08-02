@@ -16,16 +16,7 @@
  */
 package org.apache.rocketmq.broker.coldctr;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-
 import com.alibaba.fastjson.JSONObject;
-
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.common.MixAll;
@@ -37,16 +28,24 @@ import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * store the cg cold read ctr table and acc the size of the cold
  * reading msg, timing to clear the table and set acc to zero
  */
 public class ColdDataCgCtrService extends ServiceThread {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_COLDCTR_LOGGER_NAME);
-    private final SystemClock systemClock = new SystemClock();
-    private final long cgColdAccResideTimeoutMills = 60 * 1000;
     private static final AtomicLong GLOBAL_ACC = new AtomicLong(0L);
     private static final String ADAPTIVE = "||adaptive";
+    private final SystemClock systemClock = new SystemClock();
+    private final long cgColdAccResideTimeoutMills = 60 * 1000;
     /**
      * as soon as the consumerGroup read the cold data then it will be put into @code cgColdThresholdMapRuntime,
      * and it also will be removed when does not read cold data in @code cgColdAccResideTimeoutMills later;
@@ -64,7 +63,7 @@ public class ColdDataCgCtrService extends ServiceThread {
     public ColdDataCgCtrService(BrokerController brokerController) {
         this.brokerConfig = brokerController.getBrokerConfig();
         this.messageStoreConfig = brokerController.getMessageStoreConfig();
-        this.coldCtrStrategy = brokerConfig.isUsePIDColdCtrStrategy() ? new PIDAdaptiveColdCtrStrategy(this, (long)(brokerConfig.getGlobalColdReadThreshold() * 0.8)) : new SimpleColdCtrStrategy(this);
+        this.coldCtrStrategy = brokerConfig.isUsePIDColdCtrStrategy() ? new PIDAdaptiveColdCtrStrategy(this, (long) (brokerConfig.getGlobalColdReadThreshold() * 0.8)) : new SimpleColdCtrStrategy(this);
     }
 
     @Override
@@ -146,7 +145,7 @@ public class ColdDataCgCtrService extends ServiceThread {
         configMapList.sort(new Comparator<Entry<String, Long>>() {
             @Override
             public int compare(Entry<String, Long> o1, Entry<String, Long> o2) {
-                return (int)(o2.getValue() - o1.getValue());
+                return (int) (o2.getValue() - o1.getValue());
             }
         });
         Iterator<Entry<String, Long>> iterator = configMapList.iterator();
@@ -155,7 +154,7 @@ public class ColdDataCgCtrService extends ServiceThread {
             Entry<String, Long> next = iterator.next();
             if (!isAdminConfig(next.getKey())) {
                 coldCtrStrategy.decelerate(next.getKey(), getThresholdByConsumerGroup(next.getKey()));
-                maxDecelerate --;
+                maxDecelerate--;
             }
         }
     }

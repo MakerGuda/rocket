@@ -44,10 +44,10 @@ public class PullConsumerImpl implements PullConsumer {
 
     private final DefaultMQPullConsumer rocketmqPullConsumer;
     private final KeyValue properties;
-    private boolean started = false;
     private final MQPullConsumerScheduleService pullConsumerScheduleService;
     private final LocalMessageCache localMessageCache;
     private final ClientConfig clientConfig;
+    private boolean started = false;
 
     public PullConsumerImpl(final KeyValue properties) {
         this.properties = properties;
@@ -150,9 +150,9 @@ public class PullConsumerImpl implements PullConsumer {
                     long offset = localMessageCache.nextPullOffset(mq);
 
                     PullResult pullResult = consumer.pull(mq, "*",
-                        offset, localMessageCache.nextPullBatchNums());
+                            offset, localMessageCache.nextPullBatchNums());
                     ProcessQueue pq = rocketmqPullConsumer.getDefaultMQPullConsumerImpl().getRebalanceImpl()
-                        .getProcessQueueTable().get(mq);
+                            .getProcessQueueTable().get(mq);
                     switch (pullResult.getPullStatus()) {
                         case FOUND:
                             if (pq != null) {

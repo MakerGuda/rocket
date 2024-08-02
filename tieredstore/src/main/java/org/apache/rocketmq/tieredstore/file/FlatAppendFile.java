@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
+
 import org.apache.rocketmq.tieredstore.common.AppendResult;
 import org.apache.rocketmq.tieredstore.common.FileSegmentType;
 import org.apache.rocketmq.tieredstore.metadata.MetadataStore;
@@ -35,9 +36,8 @@ import org.slf4j.LoggerFactory;
 
 public class FlatAppendFile {
 
-    protected static final Logger log = LoggerFactory.getLogger(MessageStoreUtil.TIERED_STORE_LOGGER_NAME);
     public static final long GET_FILE_SIZE_ERROR = -1L;
-
+    protected static final Logger log = LoggerFactory.getLogger(MessageStoreUtil.TIERED_STORE_LOGGER_NAME);
     protected final String filePath;
     protected final FileSegmentType fileType;
     protected final MetadataStore metadataStore;
@@ -61,7 +61,7 @@ public class FlatAppendFile {
         List<FileSegment> fileSegmentList = new ArrayList<>();
         this.metadataStore.iterateFileSegment(this.filePath, this.fileType, metadata -> {
             FileSegment fileSegment = this.fileSegmentFactory.createSegment(
-                this.fileType, metadata.getPath(), metadata.getBaseOffset());
+                    this.fileType, metadata.getPath(), metadata.getBaseOffset());
             fileSegment.initPosition(metadata.getSize());
             fileSegment.setMinTimestamp(metadata.getBeginTimestamp());
             fileSegment.setMaxTimestamp(metadata.getEndTimestamp());
@@ -97,10 +97,10 @@ public class FlatAppendFile {
 
     public void flushFileSegmentMeta(FileSegment fileSegment) {
         FileSegmentMetadata metadata = this.metadataStore.getFileSegment(
-            this.filePath, fileSegment.getFileType(), fileSegment.getBaseOffset());
+                this.filePath, fileSegment.getFileType(), fileSegment.getBaseOffset());
         if (metadata == null) {
             metadata = new FileSegmentMetadata(
-                this.filePath, fileSegment.getBaseOffset(), fileSegment.getFileType().getCode());
+                    this.filePath, fileSegment.getBaseOffset(), fileSegment.getFileType().getCode());
             metadata.setCreateTimestamp(System.currentTimeMillis());
         }
         metadata.setSize(fileSegment.getCommitPosition());
@@ -209,7 +209,7 @@ public class FlatAppendFile {
 
         FileSegment fileSegment1 = fileSegmentList.get(index);
         FileSegment fileSegment2 = offset + length > fileSegment1.getCommitOffset() &&
-            fileSegmentList.size() > index + 1 ? fileSegmentList.get(index + 1) : null;
+                fileSegmentList.size() > index + 1 ? fileSegmentList.get(index + 1) : null;
 
         if (fileSegment2 == null) {
             return fileSegment1.readAsync(offset - fileSegment1.getBaseOffset(), length);
@@ -217,13 +217,13 @@ public class FlatAppendFile {
 
         int segment1Length = (int) (fileSegment1.getCommitOffset() - offset);
         return fileSegment1.readAsync(offset - fileSegment1.getBaseOffset(), segment1Length)
-            .thenCombine(fileSegment2.readAsync(0, length - segment1Length),
-                (buffer1, buffer2) -> {
-                    ByteBuffer buffer = ByteBuffer.allocate(buffer1.remaining() + buffer2.remaining());
-                    buffer.put(buffer1).put(buffer2);
-                    buffer.flip();
-                    return buffer;
-                });
+                .thenCombine(fileSegment2.readAsync(0, length - segment1Length),
+                        (buffer1, buffer2) -> {
+                            ByteBuffer buffer = ByteBuffer.allocate(buffer1.remaining() + buffer2.remaining());
+                            buffer.put(buffer1).put(buffer2);
+                            buffer.flip();
+                            return buffer;
+                        });
     }
 
     public void shutdown() {
@@ -245,10 +245,10 @@ public class FlatAppendFile {
                 FileSegment fileSegment = fileSegmentTable.get(0);
 
                 if (fileSegment.getMaxTimestamp() != Long.MAX_VALUE &&
-                    fileSegment.getMaxTimestamp() > expireTimestamp) {
+                        fileSegment.getMaxTimestamp() > expireTimestamp) {
                     log.debug("FileSegment has not expired, filePath={}, fileType={}, " +
-                            "offset={}, expireTimestamp={}, maxTimestamp={}", filePath, fileType,
-                        fileSegment.getBaseOffset(), expireTimestamp, fileSegment.getMaxTimestamp());
+                                    "offset={}, expireTimestamp={}, maxTimestamp={}", filePath, fileType,
+                            fileSegment.getBaseOffset(), expireTimestamp, fileSegment.getMaxTimestamp());
                     break;
                 }
 

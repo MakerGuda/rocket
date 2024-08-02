@@ -95,15 +95,15 @@ public class QueryMsgByKeySubCommand implements SubCommand {
     }
 
     private void queryByKey(final DefaultMQAdminExt admin, final String topic, final String key, int maxNum, long begin,
-        long end)
-        throws MQClientException, InterruptedException {
+                            long end)
+            throws MQClientException, InterruptedException {
         admin.start();
 
         QueryResult queryResult = admin.queryMessage(topic, key, maxNum, begin, end);
         System.out.printf("%-50s %4s %40s%n",
-            "#Message ID",
-            "#QID",
-            "#Offset");
+                "#Message ID",
+                "#QID",
+                "#Offset");
         for (MessageExt msg : queryResult.getMessageList()) {
             System.out.printf("%-50s %4d %40d%n", msg.getMsgId(), msg.getQueueId(), msg.getQueueOffset());
         }

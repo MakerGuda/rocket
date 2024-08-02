@@ -18,15 +18,7 @@
 package org.apache.rocketmq.proxy.grpc.interceptor;
 
 import com.google.protobuf.GeneratedMessageV3;
-import io.grpc.Context;
-import io.grpc.ForwardingServerCallListener;
-import io.grpc.Metadata;
-import io.grpc.ServerCall;
-import io.grpc.ServerCallHandler;
-import io.grpc.ServerInterceptor;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import java.util.List;
+import io.grpc.*;
 import org.apache.rocketmq.acl.AccessResource;
 import org.apache.rocketmq.acl.AccessValidator;
 import org.apache.rocketmq.acl.common.AclException;
@@ -34,6 +26,8 @@ import org.apache.rocketmq.acl.common.AuthenticationHeader;
 import org.apache.rocketmq.acl.plain.PlainAccessResource;
 import org.apache.rocketmq.common.constant.GrpcConstants;
 import org.apache.rocketmq.proxy.config.ConfigurationManager;
+
+import java.util.List;
 
 public class AuthenticationInterceptor implements ServerInterceptor {
     protected final List<AccessValidator> accessValidatorList;
@@ -44,7 +38,7 @@ public class AuthenticationInterceptor implements ServerInterceptor {
 
     @Override
     public <R, W> ServerCall.Listener<R> interceptCall(ServerCall<R, W> call, Metadata headers,
-        ServerCallHandler<R, W> next) {
+                                                       ServerCallHandler<R, W> next) {
         return new ForwardingServerCallListener.SimpleForwardingServerCallListener<R>(next.startCall(call, headers)) {
             @Override
             public void onMessage(R message) {
@@ -54,17 +48,17 @@ public class AuthenticationInterceptor implements ServerInterceptor {
                 if (ConfigurationManager.getProxyConfig().isEnableACL()) {
                     try {
                         AuthenticationHeader authenticationHeader = AuthenticationHeader.builder()
-                            .remoteAddress(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.REMOTE_ADDRESS))
-                            .namespace(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.NAMESPACE_ID))
-                            .authorization(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.AUTHORIZATION))
-                            .datetime(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.DATE_TIME))
-                            .sessionToken(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.SESSION_TOKEN))
-                            .requestId(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.REQUEST_ID))
-                            .language(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.LANGUAGE))
-                            .clientVersion(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.CLIENT_VERSION))
-                            .protocol(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.PROTOCOL_VERSION))
-                            .requestCode(RequestMapping.map(messageV3.getDescriptorForType().getFullName()))
-                            .build();
+                                .remoteAddress(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.REMOTE_ADDRESS))
+                                .namespace(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.NAMESPACE_ID))
+                                .authorization(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.AUTHORIZATION))
+                                .datetime(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.DATE_TIME))
+                                .sessionToken(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.SESSION_TOKEN))
+                                .requestId(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.REQUEST_ID))
+                                .language(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.LANGUAGE))
+                                .clientVersion(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.CLIENT_VERSION))
+                                .protocol(GrpcConstants.METADATA.get(Context.current()).get(GrpcConstants.PROTOCOL_VERSION))
+                                .requestCode(RequestMapping.map(messageV3.getDescriptorForType().getFullName()))
+                                .build();
 
                         validate(authenticationHeader, headers, messageV3);
                         super.onMessage(message);

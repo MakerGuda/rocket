@@ -30,7 +30,7 @@ public class SimpleColdCtrStrategy implements ColdCtrStrategy {
 
     @Override
     public void promote(String consumerGroup, Long currentThreshold) {
-        coldDataCgCtrService.addOrUpdateGroupConfig(consumerGroup, (long)(currentThreshold * 1.5));
+        coldDataCgCtrService.addOrUpdateGroupConfig(consumerGroup, (long) (currentThreshold * 1.5));
     }
 
     @Override
@@ -38,7 +38,7 @@ public class SimpleColdCtrStrategy implements ColdCtrStrategy {
         if (!coldDataCgCtrService.isGlobalColdCtr()) {
             return;
         }
-        long changedThresholdVal = (long)(currentThreshold * 0.8);
+        long changedThresholdVal = (long) (currentThreshold * 0.8);
         if (changedThresholdVal < coldDataCgCtrService.getBrokerConfig().getCgColdReadThreshold()) {
             changedThresholdVal = coldDataCgCtrService.getBrokerConfig().getCgColdReadThreshold();
         }

@@ -35,13 +35,13 @@ public class TopicQueueMappingDetail extends TopicQueueMappingInfo {
     }
 
     public static ConcurrentMap<Integer, Integer> buildIdMap(TopicQueueMappingDetail mappingDetail, int level) {
-        assert level == LEVEL_0 ;
+        assert level == LEVEL_0;
         if (mappingDetail.hostedQueues.isEmpty()) {
             return new ConcurrentHashMap<>();
         }
         ConcurrentMap<Integer, Integer> tmpIdMap = new ConcurrentHashMap<>();
-        for (Map.Entry<Integer, List<LogicQueueMappingItem>> entry: mappingDetail.hostedQueues.entrySet()) {
-            Integer globalId =  entry.getKey();
+        for (Map.Entry<Integer, List<LogicQueueMappingItem>> entry : mappingDetail.hostedQueues.entrySet()) {
+            Integer globalId = entry.getKey();
             List<LogicQueueMappingItem> items = entry.getValue();
             if (!items.isEmpty()) {
                 LogicQueueMappingItem curr = items.get(items.size() - 1);
@@ -59,7 +59,7 @@ public class TopicQueueMappingDetail extends TopicQueueMappingInfo {
                 || mappingItems.isEmpty()) {
             return -1;
         }
-        LogicQueueMappingItem item =  mappingItems.get(mappingItems.size() - 1);
+        LogicQueueMappingItem item = mappingItems.get(mappingItems.size() - 1);
         return item.computeMaxStaticQueueOffset();
     }
 

@@ -47,13 +47,13 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      * 重试的响应码集合
      */
     private final Set<Integer> retryResponseCodes = new CopyOnWriteArraySet<>(Arrays.asList(
-        ResponseCode.TOPIC_NOT_EXIST,
-        ResponseCode.SERVICE_NOT_AVAILABLE,
-        ResponseCode.SYSTEM_ERROR,
-        ResponseCode.SYSTEM_BUSY,
-        ResponseCode.NO_PERMISSION,
-        ResponseCode.NO_BUYER_ID,
-        ResponseCode.NOT_IN_CURRENT_UNIT
+            ResponseCode.TOPIC_NOT_EXIST,
+            ResponseCode.SERVICE_NOT_AVAILABLE,
+            ResponseCode.SYSTEM_ERROR,
+            ResponseCode.SYSTEM_BUSY,
+            ResponseCode.NO_PERMISSION,
+            ResponseCode.NO_BUYER_ID,
+            ResponseCode.NOT_IN_CURRENT_UNIT
     ));
 
     /**
@@ -175,10 +175,10 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
     /**
      * 构造函数
      *
-     * @param producerGroup  生产者组
-     * @param rpcHook        rpcHook
-     * @param topics        主题列表
-     * @param enableMsgTrace 是否允许消息追踪
+     * @param producerGroup        生产者组
+     * @param rpcHook              rpcHook
+     * @param topics               主题列表
+     * @param enableMsgTrace       是否允许消息追踪
      * @param customizedTraceTopic 自定义追踪主题
      */
     public DefaultMQProducer(final String producerGroup, RPCHook rpcHook, final List<String> topics, boolean enableMsgTrace, final String customizedTraceTopic) {
@@ -285,7 +285,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
     /**
      * 异步消息发送
      *
-     * @param msg 待发送消息
+     * @param msg          待发送消息
      * @param sendCallback 回调函数
      */
     @Override
@@ -307,7 +307,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      *
      * @param msg          待发送消息
      * @param sendCallback 回调函数
-     * @param timeout   超时时间
+     * @param timeout      超时时间
      */
     @Override
     public void send(Message msg, SendCallback sendCallback, long timeout) throws MQClientException, RemotingException, InterruptedException {
@@ -328,7 +328,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      * 同步发送消息，指定发送的mq
      *
      * @param msg 待发送消息
-     * @param mq 目标mq
+     * @param mq  目标mq
      */
     @Override
     public SendResult send(Message msg, MessageQueue mq) throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
@@ -343,8 +343,9 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
 
     /**
      * 异步发送消息，指定mq和超时时间
-     * @param msg 待发送消息
-     * @param mq 目标mq
+     *
+     * @param msg     待发送消息
+     * @param mq      目标mq
      * @param timeout 超时时间
      */
     @Override
@@ -373,10 +374,10 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
     /**
      * 异步发送消息，指定mq，回调函数和超时时间
      *
-     * @param msg         待发送消息
+     * @param msg          待发送消息
      * @param mq           目标mq
      * @param sendCallback 回调函数
-     * @param timeout     超时时间
+     * @param timeout      超时时间
      */
     @Override
     public void send(Message msg, MessageQueue mq, SendCallback sendCallback, long timeout) throws MQClientException, RemotingException, InterruptedException {
@@ -393,11 +394,12 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
         this.defaultMQProducerImpl.sendOneway(msg, queueWithNamespace(mq));
     }
 
-    /**指定mq选择器，同步发送消息
+    /**
+     * 指定mq选择器，同步发送消息
      *
-     * @param msg     待发送消息
+     * @param msg      待发送消息
      * @param selector mq选择器
-     * @param arg     mq选择器相关参数
+     * @param arg      mq选择器相关参数
      */
     @Override
     public SendResult send(Message msg, MessageQueueSelector selector, Object arg) throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
@@ -471,7 +473,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
     }
 
     public SendResult sendByAccumulator(Message msg, MessageQueue mq,
-        SendCallback sendCallback) throws MQClientException, RemotingException, InterruptedException, MQBrokerException {
+                                        SendCallback sendCallback) throws MQClientException, RemotingException, InterruptedException, MQBrokerException {
         if (!canBatch(msg)) {
             return sendDirect(msg, mq, sendCallback);
         } else {
@@ -563,7 +565,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
     @Deprecated
     @Override
     public void createTopic(String key, String newTopic, int queueNum,
-        Map<String, String> attributes) throws MQClientException {
+                            Map<String, String> attributes) throws MQClientException {
         createTopic(key, withNamespace(newTopic), queueNum, 0, null);
     }
 

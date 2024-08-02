@@ -32,7 +32,9 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+
 import javax.net.ssl.SSLException;
+
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.logging.org.slf4j.Logger;
 import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
@@ -64,15 +66,15 @@ public class Http2ProtocolProxyHandler implements ProtocolHandler {
                 sslContext = null;
             } else {
                 sslContext = SslContextBuilder
-                    .forClient()
-                    .sslProvider(SslProvider.OPENSSL)
-                    .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                    .applicationProtocolConfig(new ApplicationProtocolConfig(
-                        ApplicationProtocolConfig.Protocol.ALPN,
-                        ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
-                        ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
-                        ApplicationProtocolNames.HTTP_2))
-                    .build();
+                        .forClient()
+                        .sslProvider(SslProvider.OPENSSL)
+                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                        .applicationProtocolConfig(new ApplicationProtocolConfig(
+                                ApplicationProtocolConfig.Protocol.ALPN,
+                                ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
+                                ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
+                                ApplicationProtocolNames.HTTP_2))
+                        .build();
             }
         } catch (SSLException e) {
             log.error("Failed to create SSLContext for Http2ProtocolProxyHandler", e);
@@ -99,16 +101,16 @@ public class Http2ProtocolProxyHandler implements ProtocolHandler {
         // Start the connection attempt.
         Bootstrap b = new Bootstrap();
         b.group(inboundChannel.eventLoop())
-            .channel(ctx.channel().getClass())
-            .handler(new ChannelInitializer<Channel>() {
-                @Override
-                protected void initChannel(Channel ch) throws Exception {
-                    ch.pipeline().addLast(null, Http2ProxyBackendHandler.HANDLER_NAME,
-                            new Http2ProxyBackendHandler(inboundChannel));
-                }
-            })
-            .option(ChannelOption.AUTO_READ, false)
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getLocalProxyConnectTimeoutMs());
+                .channel(ctx.channel().getClass())
+                .handler(new ChannelInitializer<Channel>() {
+                    @Override
+                    protected void initChannel(Channel ch) throws Exception {
+                        ch.pipeline().addLast(null, Http2ProxyBackendHandler.HANDLER_NAME,
+                                new Http2ProxyBackendHandler(inboundChannel));
+                    }
+                })
+                .option(ChannelOption.AUTO_READ, false)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getLocalProxyConnectTimeoutMs());
         ChannelFuture f;
         try {
             f = b.connect(LOCAL_HOST, config.getGrpcServerPort()).sync();

@@ -46,7 +46,7 @@ public class PullConsumerWithNamespace {
             while (true) {
                 try {
                     PullResult pullResult =
-                        pullConsumer.pullBlockIfNotFound(mq, null, getMessageQueueOffset(mq), 32);
+                            pullConsumer.pullBlockIfNotFound(mq, null, getMessageQueueOffset(mq), 32);
                     System.out.printf("%s%n", pullResult);
 
                     putMessageQueueOffset(mq, pullResult.getNextBeginOffset());
@@ -86,7 +86,7 @@ public class PullConsumerWithNamespace {
             return;
         }
         pullResult.getMsgFoundList().forEach(
-            msg -> System.out.printf("Topic is:%s, msgId is:%s%n", msg.getTopic(), msg.getMsgId()));
+                msg -> System.out.printf("Topic is:%s, msgId is:%s%n", msg.getTopic(), msg.getMsgId()));
     }
 
     private static void putMessageQueueOffset(MessageQueue mq, long offset) {

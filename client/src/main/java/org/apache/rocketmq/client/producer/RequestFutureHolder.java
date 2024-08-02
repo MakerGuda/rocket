@@ -29,6 +29,13 @@ public class RequestFutureHolder {
 
     private ScheduledExecutorService scheduledExecutorService = null;
 
+    private RequestFutureHolder() {
+    }
+
+    public static RequestFutureHolder getInstance() {
+        return INSTANCE;
+    }
+
     private void scanExpiredRequest() {
         final List<RequestResponseFuture> rfList = new LinkedList<>();
         Iterator<Map.Entry<String, RequestResponseFuture>> it = requestFutureTable.entrySet().iterator();
@@ -74,12 +81,6 @@ public class RequestFutureHolder {
             this.scheduledExecutorService = null;
             executorService.shutdown();
         }
-    }
-
-    private RequestFutureHolder() {}
-
-    public static RequestFutureHolder getInstance() {
-        return INSTANCE;
     }
 
 }

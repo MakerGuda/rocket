@@ -19,6 +19,7 @@ package org.apache.rocketmq.example.simple;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -32,6 +33,7 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 public class PopConsumer {
     public static final String TOPIC = "TopicTest";
     public static final String CONSUMER_GROUP = "CID_JODIE_1";
+
     public static void main(String[] args) throws Exception {
         switchPop();
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(CONSUMER_GROUP);
@@ -48,6 +50,7 @@ public class PopConsumer {
         consumer.start();
         System.out.printf("Consumer Started.%n");
     }
+
     private static void switchPop() throws Exception {
         DefaultMQAdminExt mqAdminExt = new DefaultMQAdminExt();
         mqAdminExt.start();

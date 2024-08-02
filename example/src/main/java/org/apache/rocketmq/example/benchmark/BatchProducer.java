@@ -27,6 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
@@ -77,8 +78,8 @@ public class BatchProducer {
         final int reportInterval = commandLine.hasOption("ri") ? Integer.parseInt(commandLine.getOptionValue("ri")) : 10000;
 
         System.out.printf("topic: %s, threadCount: %d, messageSize: %d, batchSize: %d, keyEnable: %s, propertySize: %d, tagCount: %d, traceEnable: %s, " +
-                "aclEnable: %s%n compressEnable: %s, reportInterval: %d%n",
-            topic, threadCount, messageSize, batchSize, keyEnable, propertySize, tagCount, msgTraceEnable, aclEnable, enableCompress, reportInterval);
+                        "aclEnable: %s%n compressEnable: %s, reportInterval: %d%n",
+                topic, threadCount, messageSize, batchSize, keyEnable, propertySize, tagCount, msgTraceEnable, aclEnable, enableCompress, reportInterval);
 
         StringBuilder sb = new StringBuilder(messageSize);
         for (int i = 0; i < messageSize; i++) {
@@ -360,7 +361,7 @@ class StatsBenchmarkBatchProducer {
     private final LongAdder sendMessageFailedCount = new LongAdder();
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl(
-        "BenchmarkTimerThread", Boolean.TRUE));
+            "BenchmarkTimerThread", Boolean.TRUE));
 
     private final LinkedList<Long[]> snapshotList = new LinkedList<>();
 
@@ -371,13 +372,13 @@ class StatsBenchmarkBatchProducer {
     }
 
     public Long[] createSnapshot() {
-        Long[] snap = new Long[] {
-            System.currentTimeMillis(),
-            this.sendRequestSuccessCount.longValue(),
-            this.sendRequestFailedCount.longValue(),
-            this.sendMessageSuccessCount.longValue(),
-            this.sendMessageFailedCount.longValue(),
-            this.sendMessageSuccessTimeTotal.longValue(),
+        Long[] snap = new Long[]{
+                System.currentTimeMillis(),
+                this.sendRequestSuccessCount.longValue(),
+                this.sendRequestFailedCount.longValue(),
+                this.sendMessageSuccessCount.longValue(),
+                this.sendMessageFailedCount.longValue(),
+                this.sendMessageSuccessTimeTotal.longValue(),
         };
 
         return snap;
@@ -431,7 +432,7 @@ class StatsBenchmarkBatchProducer {
                     final double averageMsgRT = (end[5] - begin[5]) / (double) (end[3] - begin[3]);
 
                     System.out.printf("Current Time: %s | Send TPS: %d | Send MPS: %d | Max RT(ms): %d | Average RT(ms): %7.3f | Average Message RT(ms): %7.3f | Send Failed: %d | Send Message Failed: %d%n",
-                        UtilAll.timeMillisToHumanString2(System.currentTimeMillis()), sendTps, sendMps, getSendMessageMaxRT().longValue(), averageRT, averageMsgRT, end[2], end[4]);
+                            UtilAll.timeMillisToHumanString2(System.currentTimeMillis()), sendTps, sendMps, getSendMessageMaxRT().longValue(), averageRT, averageMsgRT, end[2], end[4]);
                 }
             }
 

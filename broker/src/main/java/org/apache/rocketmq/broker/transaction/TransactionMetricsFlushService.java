@@ -26,6 +26,7 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 public class TransactionMetricsFlushService extends ServiceThread {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.TRANSACTION_LOGGER_NAME);
     private BrokerController brokerController;
+
     public TransactionMetricsFlushService(BrokerController brokerController) {
         this.brokerController = brokerController;
     }

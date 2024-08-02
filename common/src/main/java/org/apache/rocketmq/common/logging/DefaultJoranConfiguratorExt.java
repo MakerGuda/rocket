@@ -77,7 +77,7 @@ public class DefaultJoranConfiguratorExt extends DefaultJoranConfigurator {
             configurator.doConfigure0(url);
         } else {
             throw new LogbackException(
-                "Unexpected filename extension of file [" + url + "]. Should be .xml");
+                    "Unexpected filename extension of file [" + url + "]. Should be .xml");
         }
     }
 

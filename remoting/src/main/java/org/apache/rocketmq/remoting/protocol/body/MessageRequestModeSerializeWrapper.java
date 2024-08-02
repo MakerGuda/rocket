@@ -17,6 +17,7 @@
 package org.apache.rocketmq.remoting.protocol.body;
 
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 
 public class MessageRequestModeSerializeWrapper extends RemotingSerializable {

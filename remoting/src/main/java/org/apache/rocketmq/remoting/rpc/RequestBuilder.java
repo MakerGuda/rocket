@@ -18,6 +18,7 @@ package org.apache.rocketmq.remoting.rpc;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.protocol.RequestCode;
 import org.apache.rocketmq.remoting.protocol.header.PullMessageRequestHeader;
@@ -25,6 +26,7 @@ import org.apache.rocketmq.remoting.protocol.header.PullMessageRequestHeader;
 public class RequestBuilder {
 
     private static Map<Integer, Class> requestCodeMap = new HashMap<>();
+
     static {
         requestCodeMap.put(RequestCode.PULL_MESSAGE, PullMessageRequestHeader.class);
     }
@@ -60,7 +62,7 @@ public class RequestBuilder {
         return buildTopicQueueRequestHeader(requestCode, oneway, mq.getBrokerName(), mq.getTopic(), mq.getQueueId(), logic);
     }
 
-    public static TopicQueueRequestHeader buildTopicQueueRequestHeader(int requestCode,  Boolean oneway, String destBrokerName, String topic, int queueId, Boolean logic) {
+    public static TopicQueueRequestHeader buildTopicQueueRequestHeader(int requestCode, Boolean oneway, String destBrokerName, String topic, int queueId, Boolean logic) {
         Class requestHeaderClass = requestCodeMap.get(requestCode);
         if (requestHeaderClass == null) {
             throw new UnsupportedOperationException("unknown " + requestCode);

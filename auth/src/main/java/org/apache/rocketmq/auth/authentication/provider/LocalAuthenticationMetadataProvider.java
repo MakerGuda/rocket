@@ -20,14 +20,6 @@ import com.alibaba.fastjson2.JSON;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.auth.authentication.exception.AuthenticationException;
@@ -36,6 +28,15 @@ import org.apache.rocketmq.auth.config.AuthConfig;
 import org.apache.rocketmq.common.config.ConfigRocksDBStorage;
 import org.apache.rocketmq.common.thread.ThreadPoolMonitor;
 import org.rocksdb.RocksIterator;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public class LocalAuthenticationMetadataProvider implements AuthenticationMetadataProvider {
 
@@ -51,20 +52,20 @@ public class LocalAuthenticationMetadataProvider implements AuthenticationMetada
         }
 
         ThreadPoolExecutor cacheRefreshExecutor = ThreadPoolMonitor.createAndMonitor(
-            1,
-            1,
-            1000 * 60,
-            TimeUnit.MILLISECONDS,
-            "UserCacheRefresh",
-            100000
+                1,
+                1,
+                1000 * 60,
+                TimeUnit.MILLISECONDS,
+                "UserCacheRefresh",
+                100000
         );
 
         this.userCache = Caffeine.newBuilder()
-            .maximumSize(authConfig.getUserCacheMaxNum())
-            .expireAfterAccess(authConfig.getUserCacheExpiredSecond(), TimeUnit.SECONDS)
-            .refreshAfterWrite(authConfig.getUserCacheRefreshSecond(), TimeUnit.SECONDS)
-            .executor(cacheRefreshExecutor)
-            .build(new UserCacheLoader(this.storage));
+                .maximumSize(authConfig.getUserCacheMaxNum())
+                .expireAfterAccess(authConfig.getUserCacheExpiredSecond(), TimeUnit.SECONDS)
+                .refreshAfterWrite(authConfig.getUserCacheRefreshSecond(), TimeUnit.SECONDS)
+                .executor(cacheRefreshExecutor)
+                .build(new UserCacheLoader(this.storage));
     }
 
     @Override
@@ -143,8 +144,8 @@ public class LocalAuthenticationMetadataProvider implements AuthenticationMetada
     }
 
     private static class UserCacheLoader implements CacheLoader<String, User> {
-        private final ConfigRocksDBStorage storage;
         public static final User EMPTY_USER = new User();
+        private final ConfigRocksDBStorage storage;
 
         public UserCacheLoader(ConfigRocksDBStorage storage) {
             this.storage = storage;

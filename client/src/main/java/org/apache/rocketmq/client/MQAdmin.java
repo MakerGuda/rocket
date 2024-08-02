@@ -16,9 +16,9 @@ public interface MQAdmin {
     /**
      * 创建一个主题
      *
-     * @param key accessKey
-     * @param newTopic 主题名称
-     * @param queueNum 主题的队列数量
+     * @param key        accessKey
+     * @param newTopic   主题名称
+     * @param queueNum   主题的队列数量
      * @param attributes 主题属性
      */
     void createTopic(final String key, final String newTopic, final int queueNum, Map<String, String> attributes) throws MQClientException;
@@ -26,18 +26,18 @@ public interface MQAdmin {
     /**
      * 创建主题
      *
-     * @param key accessKey
-     * @param newTopic 主题名称
-     * @param queueNum 主题队列数量
+     * @param key          accessKey
+     * @param newTopic     主题名称
+     * @param queueNum     主题队列数量
      * @param topicSysFlag 主题系统标识
-     * @param attributes 主题属性
+     * @param attributes   主题属性
      */
     void createTopic(String key, String newTopic, int queueNum, int topicSysFlag, Map<String, String> attributes) throws MQClientException;
 
     /**
      * 根据时间戳获取队列偏移量
      *
-     * @param mq 队列
+     * @param mq        队列
      * @param timestamp 时间戳
      * @return 偏移量
      */
@@ -70,11 +70,11 @@ public interface MQAdmin {
     /**
      * 指定主题等信息查询消息
      *
-     * @param topic 主题
-     * @param key 消息索引键
+     * @param topic  主题
+     * @param key    消息索引键
      * @param maxNum 最大消息数
-     * @param begin 起始偏移量
-     * @param end 结束偏移量
+     * @param begin  起始偏移量
+     * @param end    结束偏移量
      * @return 查询结果
      */
     QueryResult queryMessage(final String topic, final String key, final int maxNum, final long begin, final long end) throws MQClientException, InterruptedException;

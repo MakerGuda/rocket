@@ -136,13 +136,11 @@ public class MQClientInstance {
     private final ConsumerStatsManager consumerStatsManager;
 
     private final AtomicLong sendHeartbeatTimesTotal = new AtomicLong(0);
-
+    private final Random random = new Random();
     /**
      * 初始状态
      */
     private ServiceState serviceState = ServiceState.CREATE_JUST;
-
-    private final Random random = new Random();
 
     public MQClientInstance(ClientConfig clientConfig, int instanceIndex, String clientId) {
         this(clientConfig, instanceIndex, clientId, null);
@@ -161,6 +159,7 @@ public class MQClientInstance {
         if (clientConfig.isEnableHeartbeatChannelEventListener()) {
             channelEventListener = new ChannelEventListener() {
                 private final ConcurrentMap<String, HashMap<Long, String>> brokerAddrTable = MQClientInstance.this.brokerAddrTable;
+
                 @Override
                 public void onChannelConnect(String remoteAddr, Channel channel) {
                 }
@@ -267,7 +266,7 @@ public class MQClientInstance {
     public static Set<MessageQueue> topicRouteData2TopicSubscribeInfo(final String topic, final TopicRouteData route) {
         Set<MessageQueue> mqList = new HashSet<>();
         if (route.getTopicQueueMappingByBroker() != null
-            && !route.getTopicQueueMappingByBroker().isEmpty()) {
+                && !route.getTopicQueueMappingByBroker().isEmpty()) {
             ConcurrentMap<MessageQueue, String> mqEndPoints = topicRouteData2EndpointsForStaticTopic(topic, route);
             return mqEndPoints.keySet();
         }
@@ -1277,8 +1276,8 @@ public class MQClientInstance {
     }
 
     public ConsumeMessageDirectlyResult consumeMessageDirectly(final MessageExt msg,
-        final String consumerGroup,
-        final String brokerName) {
+                                                               final String consumerGroup,
+                                                               final String brokerName) {
         MQConsumerInner mqConsumerInner = this.consumerTable.get(consumerGroup);
         if (mqConsumerInner instanceof DefaultMQPushConsumerImpl) {
             DefaultMQPushConsumerImpl consumer = (DefaultMQPushConsumerImpl) mqConsumerInner;

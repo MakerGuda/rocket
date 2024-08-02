@@ -21,7 +21,9 @@
 package org.apache.rocketmq.remoting.protocol.header;
 
 import io.netty.buffer.ByteBuf;
+
 import java.util.HashMap;
+
 import org.apache.rocketmq.remoting.CommandCustomHeader;
 import org.apache.rocketmq.remoting.annotation.CFNotNull;
 import org.apache.rocketmq.remoting.annotation.CFNullable;

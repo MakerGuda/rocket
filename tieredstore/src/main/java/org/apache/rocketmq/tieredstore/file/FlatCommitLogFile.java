@@ -18,6 +18,7 @@ package org.apache.rocketmq.tieredstore.file;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.rocketmq.tieredstore.common.FileSegmentType;
 import org.apache.rocketmq.tieredstore.provider.FileSegmentFactory;
 import org.apache.rocketmq.tieredstore.util.MessageFormatUtil;
@@ -36,7 +37,7 @@ public class FlatCommitLogFile extends FlatAppendFile {
     public boolean tryRollingFile(long interval) {
         long timestamp = this.getFileToWrite().getMinTimestamp();
         if (timestamp != Long.MAX_VALUE &&
-            timestamp + interval < System.currentTimeMillis()) {
+                timestamp + interval < System.currentTimeMillis()) {
             this.rollingNewFile(this.getAppendOffset());
             return true;
         }
@@ -45,20 +46,20 @@ public class FlatCommitLogFile extends FlatAppendFile {
 
     public long getMinOffsetFromFile() {
         return firstOffset.get() == GET_OFFSET_ERROR ?
-            this.getMinOffsetFromFileAsync().join() : firstOffset.get();
+                this.getMinOffsetFromFileAsync().join() : firstOffset.get();
     }
 
     public CompletableFuture<Long> getMinOffsetFromFileAsync() {
         int length = MessageFormatUtil.QUEUE_OFFSET_POSITION + Long.BYTES;
         if (this.fileSegmentTable.isEmpty() ||
-            this.getCommitOffset() - this.getMinOffset() < length) {
+                this.getCommitOffset() - this.getMinOffset() < length) {
             return CompletableFuture.completedFuture(GET_OFFSET_ERROR);
         }
         return this.readAsync(this.getMinOffset(), length)
-            .thenApply(buffer -> {
-                firstOffset.set(MessageFormatUtil.getQueueOffset(buffer));
-                return firstOffset.get();
-            });
+                .thenApply(buffer -> {
+                    firstOffset.set(MessageFormatUtil.getQueueOffset(buffer));
+                    return firstOffset.get();
+                });
     }
 
     @Override
@@ -69,7 +70,7 @@ public class FlatCommitLogFile extends FlatAppendFile {
 
         if (beforeOffset != afterOffset) {
             log.info("CommitLog min cq offset reset, filePath={}, offset={}, expireTimestamp={}, change={}-{}",
-                filePath, firstOffset.get(), expireTimestamp, beforeOffset, afterOffset);
+                    filePath, firstOffset.get(), expireTimestamp, beforeOffset, afterOffset);
             firstOffset.set(GET_OFFSET_ERROR);
         }
     }

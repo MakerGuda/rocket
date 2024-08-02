@@ -16,23 +16,14 @@
  */
 package org.apache.rocketmq.store.rocksdb;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.rocketmq.common.UtilAll;
 import org.apache.rocketmq.common.config.AbstractRocksDBStorage;
 import org.apache.rocketmq.common.utils.DataConverter;
 import org.apache.rocketmq.store.MessageStore;
-import org.rocksdb.ColumnFamilyDescriptor;
-import org.rocksdb.ColumnFamilyHandle;
-import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.CompactRangeOptions;
-import org.rocksdb.ReadOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
+import org.rocksdb.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConsumeQueueRocksDBStorage extends AbstractRocksDBStorage {
     private final MessageStore messageStore;

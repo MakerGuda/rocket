@@ -23,7 +23,7 @@ public class MessageUtils {
                         startIdx = idx1 + name.length();
                         if (idx1 == 0 || propertiesString.charAt(idx1 - 1) == PROPERTY_SEPARATOR) {
                             if (propertiesString.length() > idx1 + name.length()
-                                && propertiesString.charAt(idx1 + name.length()) == NAME_VALUE_SEPARATOR) {
+                                    && propertiesString.charAt(idx1 + name.length()) == NAME_VALUE_SEPARATOR) {
                                 break;
                             }
                         }

@@ -18,6 +18,7 @@
 package org.apache.rocketmq.remoting.protocol.body;
 
 import java.util.List;
+
 import org.apache.rocketmq.common.message.MessageQueueForC;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 

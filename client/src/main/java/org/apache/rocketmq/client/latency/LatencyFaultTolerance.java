@@ -5,10 +5,10 @@ public interface LatencyFaultTolerance<T> {
     /**
      * 更新broker的状态，用来判断他们是否可用
      *
-     * @param name brokerName
-     * @param currentLatency Current message sending process's latency.
-     * @param notAvailableDuration   不可用时间，单位为毫秒，时间范围内broker不可用
-     * @param reachable 判断当前broker是否可达
+     * @param name                 brokerName
+     * @param currentLatency       Current message sending process's latency.
+     * @param notAvailableDuration 不可用时间，单位为毫秒，时间范围内broker不可用
+     * @param reachable            判断当前broker是否可达
      */
     void updateFaultItem(final T name, final long currentLatency, final long notAvailableDuration, final boolean reachable);
 

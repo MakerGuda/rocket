@@ -16,9 +16,6 @@
  */
 package org.apache.rocketmq.proxy.processor;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
@@ -26,12 +23,7 @@ import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.attribute.TopicMessageType;
 import org.apache.rocketmq.common.constant.LoggerName;
 import org.apache.rocketmq.common.consumer.ReceiptHandle;
-import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.common.message.MessageAccessor;
-import org.apache.rocketmq.common.message.MessageClientIDSetter;
-import org.apache.rocketmq.common.message.MessageConst;
-import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.common.message.MessageId;
+import org.apache.rocketmq.common.message.*;
 import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.common.utils.FutureUtils;
@@ -51,20 +43,24 @@ import org.apache.rocketmq.remoting.protocol.ResponseCode;
 import org.apache.rocketmq.remoting.protocol.header.ConsumerSendMsgBackRequestHeader;
 import org.apache.rocketmq.remoting.protocol.header.SendMessageRequestHeader;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+
 public class ProducerProcessor extends AbstractProcessor {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.PROXY_LOGGER_NAME);
     private final ExecutorService executor;
     private final TopicMessageTypeValidator topicMessageTypeValidator;
 
     public ProducerProcessor(MessagingProcessor messagingProcessor,
-        ServiceManager serviceManager, ExecutorService executor) {
+                             ServiceManager serviceManager, ExecutorService executor) {
         super(messagingProcessor, serviceManager);
         this.executor = executor;
         this.topicMessageTypeValidator = new DefaultTopicMessageTypeValidator();
     }
 
     public CompletableFuture<List<SendResult>> sendMessage(ProxyContext ctx, QueueSelector queueSelector,
-        String producerGroup, int sysFlag, List<Message> messageList, long timeoutMillis) {
+                                                           String producerGroup, int sysFlag, List<Message> messageList, long timeoutMillis) {
         CompletableFuture<List<SendResult>> future = new CompletableFuture<>();
         long beginTimestampFirst = System.currentTimeMillis();
         AddressableMessageQueue messageQueue = null;
@@ -82,7 +78,7 @@ public class ProducerProcessor extends AbstractProcessor {
                 }
             }
             messageQueue = queueSelector.select(ctx,
-                this.serviceManager.getTopicRouteService().getCurrentMessageQueueView(ctx, topic));
+                    this.serviceManager.getTopicRouteService().getCurrentMessageQueueView(ctx, topic));
             if (messageQueue == null) {
                 throw new ProxyException(ProxyExceptionCode.FORBIDDEN, "no writable queue");
             }
@@ -94,28 +90,28 @@ public class ProducerProcessor extends AbstractProcessor {
 
             AddressableMessageQueue finalMessageQueue = messageQueue;
             future = this.serviceManager.getMessageService().sendMessage(
-                ctx,
-                messageQueue,
-                messageList,
-                requestHeader,
-                timeoutMillis)
-                .thenApplyAsync(sendResultList -> {
-                    for (SendResult sendResult : sendResultList) {
-                        int tranType = MessageSysFlag.getTransactionValue(requestHeader.getSysFlag());
-                        if (SendStatus.SEND_OK.equals(sendResult.getSendStatus()) &&
-                            tranType == MessageSysFlag.TRANSACTION_PREPARED_TYPE &&
-                            StringUtils.isNotBlank(sendResult.getTransactionId())) {
-                            fillTransactionData(ctx, producerGroup, finalMessageQueue, sendResult, messageList);
+                            ctx,
+                            messageQueue,
+                            messageList,
+                            requestHeader,
+                            timeoutMillis)
+                    .thenApplyAsync(sendResultList -> {
+                        for (SendResult sendResult : sendResultList) {
+                            int tranType = MessageSysFlag.getTransactionValue(requestHeader.getSysFlag());
+                            if (SendStatus.SEND_OK.equals(sendResult.getSendStatus()) &&
+                                    tranType == MessageSysFlag.TRANSACTION_PREPARED_TYPE &&
+                                    StringUtils.isNotBlank(sendResult.getTransactionId())) {
+                                fillTransactionData(ctx, producerGroup, finalMessageQueue, sendResult, messageList);
+                            }
                         }
-                    }
-                    return sendResultList;
-                }, this.executor)
+                        return sendResultList;
+                    }, this.executor)
                     .whenComplete((result, exception) -> {
                         long endTimestamp = System.currentTimeMillis();
                         if (exception != null) {
                             this.serviceManager.getTopicRouteService().updateFaultItem(finalMessageQueue.getBrokerName(), endTimestamp - beginTimestampFirst, true, false);
                         } else {
-                            this.serviceManager.getTopicRouteService().updateFaultItem(finalMessageQueue.getBrokerName(),endTimestamp - beginTimestampFirst, false, true);
+                            this.serviceManager.getTopicRouteService().updateFaultItem(finalMessageQueue.getBrokerName(), endTimestamp - beginTimestampFirst, false, true);
                         }
                     });
         } catch (Throwable t) {
@@ -133,14 +129,14 @@ public class ProducerProcessor extends AbstractProcessor {
                 id = MessageDecoder.decodeMessageId(sendResult.getMsgId());
             }
             this.serviceManager.getTransactionService().addTransactionDataByBrokerName(
-                ctx,
-                messageQueue.getBrokerName(),
-                messageList.get(0).getTopic(),
-                producerGroup,
-                sendResult.getQueueOffset(),
-                id.getOffset(),
-                sendResult.getTransactionId(),
-                messageList.get(0)
+                    ctx,
+                    messageQueue.getBrokerName(),
+                    messageList.get(0).getTopic(),
+                    producerGroup,
+                    sendResult.getQueueOffset(),
+                    id.getOffset(),
+                    sendResult.getTransactionId(),
+                    messageList.get(0)
             );
         } catch (Throwable t) {
             log.warn("fillTransactionData failed. messageQueue: {}, sendResult: {}", messageQueue, sendResult, t);
@@ -148,7 +144,7 @@ public class ProducerProcessor extends AbstractProcessor {
     }
 
     protected SendMessageRequestHeader buildSendMessageRequestHeader(List<Message> messageList,
-        String producerGroup, int sysFlag, int queueId) {
+                                                                     String producerGroup, int sysFlag, int queueId) {
         SendMessageRequestHeader requestHeader = new SendMessageRequestHeader();
 
         Message message = messageList.get(0);
@@ -198,7 +194,7 @@ public class ProducerProcessor extends AbstractProcessor {
     }
 
     public CompletableFuture<RemotingCommand> forwardMessageToDeadLetterQueue(ProxyContext ctx, ReceiptHandle handle,
-        String messageId, String groupName, String topicName, long timeoutMillis) {
+                                                                              String messageId, String groupName, String topicName, long timeoutMillis) {
         CompletableFuture<RemotingCommand> future = new CompletableFuture<>();
         try {
             if (handle.getCommitLogOffset() < 0) {
@@ -214,15 +210,15 @@ public class ProducerProcessor extends AbstractProcessor {
             consumerSendMsgBackRequestHeader.setMaxReconsumeTimes(0);
 
             future = this.serviceManager.getMessageService().sendMessageBack(
-                ctx,
-                handle,
-                messageId,
-                consumerSendMsgBackRequestHeader,
-                timeoutMillis
+                    ctx,
+                    handle,
+                    messageId,
+                    consumerSendMsgBackRequestHeader,
+                    timeoutMillis
             ).whenCompleteAsync((remotingCommand, t) -> {
                 if (t == null && remotingCommand.getCode() == ResponseCode.SUCCESS) {
                     this.messagingProcessor.ackMessage(ctx, handle, messageId,
-                        groupName, topicName, timeoutMillis);
+                            groupName, topicName, timeoutMillis);
                 }
             }, this.executor);
         } catch (Throwable t) {

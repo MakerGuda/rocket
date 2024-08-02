@@ -18,33 +18,34 @@
 package org.apache.rocketmq.proxy.remoting.activity;
 
 import io.netty.channel.ChannelHandlerContext;
-import java.time.Duration;
-import java.util.Map;
 import org.apache.rocketmq.common.attribute.TopicMessageType;
 import org.apache.rocketmq.common.message.MessageDecoder;
-import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
-import org.apache.rocketmq.remoting.protocol.RequestCode;
-import org.apache.rocketmq.remoting.protocol.header.SendMessageRequestHeader;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.config.ConfigurationManager;
 import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 import org.apache.rocketmq.proxy.processor.validator.DefaultTopicMessageTypeValidator;
 import org.apache.rocketmq.proxy.processor.validator.TopicMessageTypeValidator;
 import org.apache.rocketmq.proxy.remoting.pipeline.RequestPipeline;
+import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+import org.apache.rocketmq.remoting.protocol.RequestCode;
+import org.apache.rocketmq.remoting.protocol.header.SendMessageRequestHeader;
+
+import java.time.Duration;
+import java.util.Map;
 
 public class SendMessageActivity extends AbstractRemotingActivity {
     TopicMessageTypeValidator topicMessageTypeValidator;
 
     public SendMessageActivity(RequestPipeline requestPipeline,
-        MessagingProcessor messagingProcessor) {
+                               MessagingProcessor messagingProcessor) {
         super(requestPipeline, messagingProcessor);
         this.topicMessageTypeValidator = new DefaultTopicMessageTypeValidator();
     }
 
     @Override
     protected RemotingCommand processRequest0(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                              ProxyContext context) throws Exception {
         switch (request.getCode()) {
             case RequestCode.SEND_MESSAGE:
             case RequestCode.SEND_MESSAGE_V2:
@@ -61,7 +62,7 @@ public class SendMessageActivity extends AbstractRemotingActivity {
     }
 
     protected RemotingCommand sendMessage(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                          ProxyContext context) throws Exception {
         SendMessageRequestHeader requestHeader = SendMessageRequestHeader.parseRequestHeader(request);
         String topic = requestHeader.getTopic();
         Map<String, String> property = MessageDecoder.string2messageProperties(requestHeader.getProperties());
@@ -84,7 +85,7 @@ public class SendMessageActivity extends AbstractRemotingActivity {
     }
 
     protected RemotingCommand consumerSendMessage(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                                  ProxyContext context) throws Exception {
         return request(ctx, request, context, Duration.ofSeconds(3).toMillis());
     }
 }

@@ -57,7 +57,7 @@ public class MomentStatsItemSet {
         MomentStatsItem statsItem = this.statsItemTable.get(statsKey);
         if (null == statsItem) {
             statsItem =
-                new MomentStatsItem(this.statsName, statsKey, this.scheduledExecutorService, this.log);
+                    new MomentStatsItem(this.statsName, statsKey, this.scheduledExecutorService, this.log);
             MomentStatsItem prev = this.statsItemTable.putIfAbsent(statsKey, statsItem);
             if (null != prev) {
                 statsItem = prev;

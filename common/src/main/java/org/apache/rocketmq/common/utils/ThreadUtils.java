@@ -12,6 +12,9 @@ public final class ThreadUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.TOOLS_LOGGER_NAME);
 
+    private ThreadUtils() {
+    }
+
     public static ExecutorService newSingleThreadExecutor(ThreadFactory threadFactory) {
         return ThreadUtils.newThreadPoolExecutor(1, threadFactory);
     }
@@ -83,9 +86,6 @@ public final class ThreadUtils {
         if (executorService != null) {
             executorService.shutdown();
         }
-    }
-
-    private ThreadUtils() {
     }
 
 }

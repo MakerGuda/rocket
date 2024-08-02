@@ -23,12 +23,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ClientRequestProcessor implements NettyRequestProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
-
-    protected NamesrvController namesrvController;
-
     private final long startupTimeMillis;
-
     private final AtomicBoolean needCheckNamesrvReady = new AtomicBoolean(true);
+    protected NamesrvController namesrvController;
 
     public ClientRequestProcessor(final NamesrvController namesrvController) {
         this.namesrvController = namesrvController;

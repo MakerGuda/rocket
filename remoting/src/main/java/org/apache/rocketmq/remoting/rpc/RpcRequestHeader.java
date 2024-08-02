@@ -89,11 +89,11 @@ public abstract class RpcRequestHeader implements CommandCustomHeader {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("namespace", ns)
-            .add("namespaced", nsd)
-            .add("brokerName", bname)
-            .add("oneway", oway)
-            .toString();
+                .add("namespace", ns)
+                .add("namespaced", nsd)
+                .add("brokerName", bname)
+                .add("oneway", oway)
+                .toString();
     }
 
 }

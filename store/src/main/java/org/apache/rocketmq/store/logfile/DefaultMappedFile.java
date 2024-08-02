@@ -49,114 +49,20 @@ public class DefaultMappedFile extends AbstractMappedFile {
     public static final int OS_PAGE_SIZE = 1024 * 4;
 
     public static final Unsafe UNSAFE = getUnsafe();
-
-    private static final Method IS_LOADED_METHOD;
-
     public static final int UNSAFE_PAGE_SIZE = UNSAFE == null ? OS_PAGE_SIZE : UNSAFE.pageSize();
-
     protected static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
-
     /**
      * 当前jvm中mappedFile虚拟内存
      */
     protected static final AtomicLong TOTAL_MAPPED_VIRTUAL_MEMORY = new AtomicLong(0);
-
     /**
      * 当前jvm中 mappedFile文件个数
      */
     protected static final AtomicInteger TOTAL_MAPPED_FILES = new AtomicInteger(0);
-
     protected static final AtomicIntegerFieldUpdater<DefaultMappedFile> WROTE_POSITION_UPDATER;
-
     protected static final AtomicIntegerFieldUpdater<DefaultMappedFile> COMMITTED_POSITION_UPDATER;
-
     protected static final AtomicIntegerFieldUpdater<DefaultMappedFile> FLUSHED_POSITION_UPDATER;
-
-    /**
-     * 当前文件的写指针，从0开始
-     */
-    protected volatile int wrotePosition;
-
-    /**
-     * 当前文件的提交指针，如果开启transientStorePoolEnable，数据会先存储在transientStorePool中，然后提交到内存映射ByteBuffer中，最后写磁盘
-     */
-    protected volatile int committedPosition;
-
-    /**
-     * 刷盘指针，该指针之前的数据持久到磁盘
-     */
-    protected volatile int flushedPosition;
-
-    /**
-     * 文件大小
-     */
-    protected int fileSize;
-
-    /**
-     * 文件通道
-     */
-    protected FileChannel fileChannel;
-
-    /**
-     * 堆内存ByteBuffer，transientStorePoolEnable为true时不为空
-     */
-    protected ByteBuffer writeBuffer = null;
-
-    /**
-     * 堆内存缓冲池
-     */
-    protected TransientStorePool transientStorePool = null;
-
-    /**
-     * 文件名称
-     */
-    protected String fileName;
-
-    /**
-     * 文件的初始偏移量
-     */
-    protected long fileFromOffset;
-
-    /**
-     * 物理文件
-     */
-    protected File file;
-
-    /**
-     * 物理文件对应的内存映射文件Buffer
-     */
-    protected MappedByteBuffer mappedByteBuffer;
-
-    /**
-     * 文件最后一次写入时间
-     */
-    protected volatile long storeTimestamp = 0;
-
-    /**
-     * 是否为mappedFileQueue中的第一个文件
-     */
-    protected boolean firstCreateInQueue = false;
-
-    /**
-     * 最后一次刷盘时间
-     */
-    private long lastFlushTime = -1L;
-
-    protected MappedByteBuffer mappedByteBufferWaitToClean = null;
-
-    protected long swapMapTime = 0L;
-
-    protected long mappedByteBufferAccessCountSinceLastSwap = 0L;
-
-    /**
-     * 第一条消息的存储时间
-     */
-    private long startTimestamp = -1;
-
-    /**
-     * 最后一条消息的存储时间
-     */
-    private long stopTimestamp = -1;
+    private static final Method IS_LOADED_METHOD;
 
     static {
         WROTE_POSITION_UPDATER = AtomicIntegerFieldUpdater.newUpdater(DefaultMappedFile.class, "wrotePosition");
@@ -174,12 +80,103 @@ public class DefaultMappedFile extends AbstractMappedFile {
         IS_LOADED_METHOD = isLoaded0method;
     }
 
+    /**
+     * 当前文件的写指针，从0开始
+     */
+    protected volatile int wrotePosition;
+    /**
+     * 当前文件的提交指针，如果开启transientStorePoolEnable，数据会先存储在transientStorePool中，然后提交到内存映射ByteBuffer中，最后写磁盘
+     */
+    protected volatile int committedPosition;
+    /**
+     * 刷盘指针，该指针之前的数据持久到磁盘
+     */
+    protected volatile int flushedPosition;
+    /**
+     * 文件大小
+     */
+    protected int fileSize;
+    /**
+     * 文件通道
+     */
+    protected FileChannel fileChannel;
+    /**
+     * 堆内存ByteBuffer，transientStorePoolEnable为true时不为空
+     */
+    protected ByteBuffer writeBuffer = null;
+    /**
+     * 堆内存缓冲池
+     */
+    protected TransientStorePool transientStorePool = null;
+    /**
+     * 文件名称
+     */
+    protected String fileName;
+    /**
+     * 文件的初始偏移量
+     */
+    protected long fileFromOffset;
+    /**
+     * 物理文件
+     */
+    protected File file;
+    /**
+     * 物理文件对应的内存映射文件Buffer
+     */
+    protected MappedByteBuffer mappedByteBuffer;
+    /**
+     * 文件最后一次写入时间
+     */
+    protected volatile long storeTimestamp = 0;
+    /**
+     * 是否为mappedFileQueue中的第一个文件
+     */
+    protected boolean firstCreateInQueue = false;
+    protected MappedByteBuffer mappedByteBufferWaitToClean = null;
+
+    protected long swapMapTime = 0L;
+
+    protected long mappedByteBufferAccessCountSinceLastSwap = 0L;
+    /**
+     * 最后一次刷盘时间
+     */
+    private long lastFlushTime = -1L;
+    /**
+     * 第一条消息的存储时间
+     */
+    private long startTimestamp = -1;
+    /**
+     * 最后一条消息的存储时间
+     */
+    private long stopTimestamp = -1;
+
     public DefaultMappedFile(final String fileName, final int fileSize) throws IOException {
         init(fileName, fileSize);
     }
 
     public DefaultMappedFile(final String fileName, final int fileSize, final TransientStorePool transientStorePool) throws IOException {
         init(fileName, fileSize, transientStorePool);
+    }
+
+    public static Unsafe getUnsafe() {
+        try {
+            Field f = Unsafe.class.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            return (Unsafe) f.get(null);
+        } catch (Exception ignore) {
+
+        }
+        return null;
+    }
+
+    public static long mappingAddr(long addr) {
+        long offset = addr % UNSAFE_PAGE_SIZE;
+        offset = (offset >= 0) ? offset : (UNSAFE_PAGE_SIZE + offset);
+        return addr - offset;
+    }
+
+    public static int pageCount(long size) {
+        return (int) (size + (long) UNSAFE_PAGE_SIZE - 1L) / UNSAFE_PAGE_SIZE;
     }
 
     @Override
@@ -841,27 +838,6 @@ public class DefaultMappedFile extends AbstractMappedFile {
 
     public Iterator<SelectMappedBufferResult> iterator(int startPos) {
         return new Itr(startPos);
-    }
-
-    public static Unsafe getUnsafe() {
-        try {
-            Field f = Unsafe.class.getDeclaredField("theUnsafe");
-            f.setAccessible(true);
-            return (Unsafe) f.get(null);
-        } catch (Exception ignore) {
-
-        }
-        return null;
-    }
-
-    public static long mappingAddr(long addr) {
-        long offset = addr % UNSAFE_PAGE_SIZE;
-        offset = (offset >= 0) ? offset : (UNSAFE_PAGE_SIZE + offset);
-        return addr - offset;
-    }
-
-    public static int pageCount(long size) {
-        return (int) (size + (long) UNSAFE_PAGE_SIZE - 1L) / UNSAFE_PAGE_SIZE;
     }
 
     @Override

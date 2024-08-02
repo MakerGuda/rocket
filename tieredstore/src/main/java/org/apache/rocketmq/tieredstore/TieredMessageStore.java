@@ -23,12 +23,14 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.sdk.metrics.InstrumentSelector;
 import io.opentelemetry.sdk.metrics.ViewBuilder;
+
 import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
 import org.apache.rocketmq.common.BoundaryType;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.Pair;
@@ -90,7 +92,7 @@ public class TieredMessageStore extends AbstractPluginMessageStore {
         this.storeExecutor = new MessageStoreExecutor();
         this.flatFileStore = new FlatFileStore(this.storeConfig, this.metadataStore, this.storeExecutor);
         this.indexService = new IndexStoreService(this.flatFileStore.getFlatFileFactory(),
-            MessageStoreUtil.getIndexFilePath(this.storeConfig.getBrokerName()));
+                MessageStoreUtil.getIndexFilePath(this.storeConfig.getBrokerName()));
         this.fetcher = new MessageStoreFetcherImpl(this);
         this.dispatcher = new MessageStoreDispatcherImpl(this);
         next.addDispatcher(dispatcher);
@@ -123,7 +125,7 @@ public class TieredMessageStore extends AbstractPluginMessageStore {
     private MetadataStore getMetadataStore(MessageStoreConfig storeConfig) {
         try {
             Class<? extends MetadataStore> clazz =
-                Class.forName(storeConfig.getTieredMetadataServiceProvider()).asSubclass(MetadataStore.class);
+                    Class.forName(storeConfig.getTieredMetadataServiceProvider()).asSubclass(MetadataStore.class);
             Constructor<? extends MetadataStore> constructor = clazz.getConstructor(MessageStoreConfig.class);
             return constructor.newInstance(storeConfig);
         } catch (Exception e) {
@@ -178,12 +180,12 @@ public class TieredMessageStore extends AbstractPluginMessageStore {
 
         // determine whether tiered storage path conditions are met
         if (storageLevel.check(MessageStoreConfig.TieredStorageLevel.NOT_IN_DISK)
-            && !next.checkInStoreByConsumeOffset(topic, queueId, offset)) {
+                && !next.checkInStoreByConsumeOffset(topic, queueId, offset)) {
             return true;
         }
 
         if (storageLevel.check(MessageStoreConfig.TieredStorageLevel.NOT_IN_MEM)
-            && !next.checkInMemByConsumeOffset(topic, queueId, offset, batchSize)) {
+                && !next.checkInMemByConsumeOffset(topic, queueId, offset, batchSize)) {
             return true;
         }
         return false;
@@ -191,13 +193,13 @@ public class TieredMessageStore extends AbstractPluginMessageStore {
 
     @Override
     public GetMessageResult getMessage(String group, String topic, int queueId, long offset, int maxMsgNums,
-        MessageFilter messageFilter) {
+                                       MessageFilter messageFilter) {
         return getMessageAsync(group, topic, queueId, offset, maxMsgNums, messageFilter).join();
     }
 
     @Override
     public CompletableFuture<GetMessageResult> getMessageAsync(String group, String topic,
-        int queueId, long offset, int maxMsgNums, MessageFilter messageFilter) {
+                                                               int queueId, long offset, int maxMsgNums, MessageFilter messageFilter) {
 
         // for system topic, force reading from local store
         if (topicFilter.filterTopic(topic)) {
@@ -206,80 +208,80 @@ public class TieredMessageStore extends AbstractPluginMessageStore {
 
         if (fetchFromCurrentStore(topic, queueId, offset, maxMsgNums)) {
             log.trace("GetMessageAsync from current store, " +
-                "topic: {}, queue: {}, offset: {}, maxCount: {}", topic, queueId, offset, maxMsgNums);
+                    "topic: {}, queue: {}, offset: {}, maxCount: {}", topic, queueId, offset, maxMsgNums);
         } else {
             log.trace("GetMessageAsync from remote store, " +
-                "topic: {}, queue: {}, offset: {}, maxCount: {}", topic, queueId, offset, maxMsgNums);
+                    "topic: {}, queue: {}, offset: {}, maxCount: {}", topic, queueId, offset, maxMsgNums);
             return next.getMessageAsync(group, topic, queueId, offset, maxMsgNums, messageFilter);
         }
 
         Stopwatch stopwatch = Stopwatch.createStarted();
         return fetcher
-            .getMessageAsync(group, topic, queueId, offset, maxMsgNums, messageFilter)
-            .thenApply(result -> {
+                .getMessageAsync(group, topic, queueId, offset, maxMsgNums, messageFilter)
+                .thenApply(result -> {
 
-                Attributes latencyAttributes = TieredStoreMetricsManager.newAttributesBuilder()
-                    .put(TieredStoreMetricsConstant.LABEL_OPERATION, TieredStoreMetricsConstant.OPERATION_API_GET_MESSAGE)
-                    .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
-                    .put(TieredStoreMetricsConstant.LABEL_GROUP, group)
-                    .build();
-                TieredStoreMetricsManager.apiLatency.record(stopwatch.elapsed(TimeUnit.MILLISECONDS), latencyAttributes);
+                    Attributes latencyAttributes = TieredStoreMetricsManager.newAttributesBuilder()
+                            .put(TieredStoreMetricsConstant.LABEL_OPERATION, TieredStoreMetricsConstant.OPERATION_API_GET_MESSAGE)
+                            .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
+                            .put(TieredStoreMetricsConstant.LABEL_GROUP, group)
+                            .build();
+                    TieredStoreMetricsManager.apiLatency.record(stopwatch.elapsed(TimeUnit.MILLISECONDS), latencyAttributes);
 
-                if (result.getStatus() == GetMessageStatus.OFFSET_FOUND_NULL ||
-                    result.getStatus() == GetMessageStatus.NO_MATCHED_LOGIC_QUEUE) {
+                    if (result.getStatus() == GetMessageStatus.OFFSET_FOUND_NULL ||
+                            result.getStatus() == GetMessageStatus.NO_MATCHED_LOGIC_QUEUE) {
 
-                    if (next.checkInStoreByConsumeOffset(topic, queueId, offset)) {
-                        TieredStoreMetricsManager.fallbackTotal.add(1, latencyAttributes);
-                        log.debug("GetMessageAsync not found, then back to next store, result: {}, " +
-                                "topic: {}, queue: {}, queue offset: {}, offset range: {}-{}",
-                            result.getStatus(), topic, queueId, offset, result.getMinOffset(), result.getMaxOffset());
-                        return next.getMessage(group, topic, queueId, offset, maxMsgNums, messageFilter);
+                        if (next.checkInStoreByConsumeOffset(topic, queueId, offset)) {
+                            TieredStoreMetricsManager.fallbackTotal.add(1, latencyAttributes);
+                            log.debug("GetMessageAsync not found, then back to next store, result: {}, " +
+                                            "topic: {}, queue: {}, queue offset: {}, offset range: {}-{}",
+                                    result.getStatus(), topic, queueId, offset, result.getMinOffset(), result.getMaxOffset());
+                            return next.getMessage(group, topic, queueId, offset, maxMsgNums, messageFilter);
+                        }
                     }
-                }
 
-                if (result.getStatus() != GetMessageStatus.FOUND &&
-                    result.getStatus() != GetMessageStatus.NO_MESSAGE_IN_QUEUE &&
-                    result.getStatus() != GetMessageStatus.NO_MATCHED_LOGIC_QUEUE &&
-                    result.getStatus() != GetMessageStatus.OFFSET_TOO_SMALL &&
-                    result.getStatus() != GetMessageStatus.OFFSET_OVERFLOW_ONE &&
-                    result.getStatus() != GetMessageStatus.OFFSET_OVERFLOW_BADLY) {
-                    log.warn("GetMessageAsync not found and message is not in next store, result: {}, " +
-                            "topic: {}, queue: {}, queue offset: {}, offset range: {}-{}",
-                        result.getStatus(), topic, queueId, offset, result.getMinOffset(), result.getMaxOffset());
-                }
-
-                if (result.getStatus() == GetMessageStatus.FOUND) {
-                    Attributes messagesOutAttributes = TieredStoreMetricsManager.newAttributesBuilder()
-                        .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
-                        .put(TieredStoreMetricsConstant.LABEL_GROUP, group)
-                        .build();
-                    TieredStoreMetricsManager.messagesOutTotal.add(result.getMessageCount(), messagesOutAttributes);
-
-                    if (next.getStoreStatsService() != null) {
-                        next.getStoreStatsService().getGetMessageTransferredMsgCount().add(result.getMessageCount());
+                    if (result.getStatus() != GetMessageStatus.FOUND &&
+                            result.getStatus() != GetMessageStatus.NO_MESSAGE_IN_QUEUE &&
+                            result.getStatus() != GetMessageStatus.NO_MATCHED_LOGIC_QUEUE &&
+                            result.getStatus() != GetMessageStatus.OFFSET_TOO_SMALL &&
+                            result.getStatus() != GetMessageStatus.OFFSET_OVERFLOW_ONE &&
+                            result.getStatus() != GetMessageStatus.OFFSET_OVERFLOW_BADLY) {
+                        log.warn("GetMessageAsync not found and message is not in next store, result: {}, " +
+                                        "topic: {}, queue: {}, queue offset: {}, offset range: {}-{}",
+                                result.getStatus(), topic, queueId, offset, result.getMinOffset(), result.getMaxOffset());
                     }
-                }
 
-                // Fix min or max offset according next store at last
-                long minOffsetInQueue = next.getMinOffsetInQueue(topic, queueId);
-                if (minOffsetInQueue >= 0 && minOffsetInQueue < result.getMinOffset()) {
-                    result.setMinOffset(minOffsetInQueue);
-                }
+                    if (result.getStatus() == GetMessageStatus.FOUND) {
+                        Attributes messagesOutAttributes = TieredStoreMetricsManager.newAttributesBuilder()
+                                .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
+                                .put(TieredStoreMetricsConstant.LABEL_GROUP, group)
+                                .build();
+                        TieredStoreMetricsManager.messagesOutTotal.add(result.getMessageCount(), messagesOutAttributes);
 
-                // In general, the local cq offset is slightly greater than the commit offset in read message,
-                // so there is no need to update the maximum offset to the local cq offset here,
-                // otherwise it will cause repeated consumption after next start offset over commit offset.
+                        if (next.getStoreStatsService() != null) {
+                            next.getStoreStatsService().getGetMessageTransferredMsgCount().add(result.getMessageCount());
+                        }
+                    }
 
-                if (storeConfig.isRecordGetMessageResult()) {
-                    log.info("GetMessageAsync result, {}, group: {}, topic: {}, queueId: {}, offset: {}, count:{}",
-                        result, group, topic, queueId, offset, maxMsgNums);
-                }
+                    // Fix min or max offset according next store at last
+                    long minOffsetInQueue = next.getMinOffsetInQueue(topic, queueId);
+                    if (minOffsetInQueue >= 0 && minOffsetInQueue < result.getMinOffset()) {
+                        result.setMinOffset(minOffsetInQueue);
+                    }
 
-                return result;
-            }).exceptionally(e -> {
-                log.error("GetMessageAsync from tiered store failed", e);
-                return next.getMessage(group, topic, queueId, offset, maxMsgNums, messageFilter);
-            });
+                    // In general, the local cq offset is slightly greater than the commit offset in read message,
+                    // so there is no need to update the maximum offset to the local cq offset here,
+                    // otherwise it will cause repeated consumption after next start offset over commit offset.
+
+                    if (storeConfig.isRecordGetMessageResult()) {
+                        log.info("GetMessageAsync result, {}, group: {}, topic: {}, queueId: {}, offset: {}, count:{}",
+                                result, group, topic, queueId, offset, maxMsgNums);
+                    }
+
+                    return result;
+                }).exceptionally(e -> {
+                    log.error("GetMessageAsync from tiered store failed", e);
+                    return next.getMessage(group, topic, queueId, offset, maxMsgNums, messageFilter);
+                });
     }
 
     @Override
@@ -307,41 +309,41 @@ public class TieredMessageStore extends AbstractPluginMessageStore {
         long finalNextEarliestMessageTime = nextEarliestMessageTime > 0 ? nextEarliestMessageTime : Long.MAX_VALUE;
         Stopwatch stopwatch = Stopwatch.createStarted();
         return fetcher.getEarliestMessageTimeAsync(topic, queueId)
-            .thenApply(time -> {
-                Attributes latencyAttributes = TieredStoreMetricsManager.newAttributesBuilder()
-                    .put(TieredStoreMetricsConstant.LABEL_OPERATION, TieredStoreMetricsConstant.OPERATION_API_GET_EARLIEST_MESSAGE_TIME)
-                    .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
-                    .build();
-                TieredStoreMetricsManager.apiLatency.record(stopwatch.elapsed(TimeUnit.MILLISECONDS), latencyAttributes);
-                if (time < 0) {
-                    log.debug("GetEarliestMessageTimeAsync failed, try to get earliest message time from next store: topic: {}, queue: {}",
-                        topic, queueId);
-                    return finalNextEarliestMessageTime != Long.MAX_VALUE ? finalNextEarliestMessageTime : -1;
-                }
-                return Math.min(finalNextEarliestMessageTime, time);
-            });
+                .thenApply(time -> {
+                    Attributes latencyAttributes = TieredStoreMetricsManager.newAttributesBuilder()
+                            .put(TieredStoreMetricsConstant.LABEL_OPERATION, TieredStoreMetricsConstant.OPERATION_API_GET_EARLIEST_MESSAGE_TIME)
+                            .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
+                            .build();
+                    TieredStoreMetricsManager.apiLatency.record(stopwatch.elapsed(TimeUnit.MILLISECONDS), latencyAttributes);
+                    if (time < 0) {
+                        log.debug("GetEarliestMessageTimeAsync failed, try to get earliest message time from next store: topic: {}, queue: {}",
+                                topic, queueId);
+                        return finalNextEarliestMessageTime != Long.MAX_VALUE ? finalNextEarliestMessageTime : -1;
+                    }
+                    return Math.min(finalNextEarliestMessageTime, time);
+                });
     }
 
     @Override
     public CompletableFuture<Long> getMessageStoreTimeStampAsync(String topic, int queueId,
-        long consumeQueueOffset) {
+                                                                 long consumeQueueOffset) {
         if (fetchFromCurrentStore(topic, queueId, consumeQueueOffset)) {
             Stopwatch stopwatch = Stopwatch.createStarted();
             return fetcher.getMessageStoreTimeStampAsync(topic, queueId, consumeQueueOffset)
-                .thenApply(time -> {
-                    Attributes latencyAttributes = TieredStoreMetricsManager.newAttributesBuilder()
-                        .put(TieredStoreMetricsConstant.LABEL_OPERATION,
-                                TieredStoreMetricsConstant.OPERATION_API_GET_TIME_BY_OFFSET)
-                        .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
-                        .build();
-                    TieredStoreMetricsManager.apiLatency.record(stopwatch.elapsed(TimeUnit.MILLISECONDS), latencyAttributes);
-                    if (time == -1) {
-                        log.debug("GetEarliestMessageTimeAsync failed, try to get message time from next store, topic: {}, queue: {}, queue offset: {}",
-                            topic, queueId, consumeQueueOffset);
-                        return next.getMessageStoreTimeStamp(topic, queueId, consumeQueueOffset);
-                    }
-                    return time;
-                });
+                    .thenApply(time -> {
+                        Attributes latencyAttributes = TieredStoreMetricsManager.newAttributesBuilder()
+                                .put(TieredStoreMetricsConstant.LABEL_OPERATION,
+                                        TieredStoreMetricsConstant.OPERATION_API_GET_TIME_BY_OFFSET)
+                                .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
+                                .build();
+                        TieredStoreMetricsManager.apiLatency.record(stopwatch.elapsed(TimeUnit.MILLISECONDS), latencyAttributes);
+                        if (time == -1) {
+                            log.debug("GetEarliestMessageTimeAsync failed, try to get message time from next store, topic: {}, queue: {}, queue offset: {}",
+                                    topic, queueId, consumeQueueOffset);
+                            return next.getMessageStoreTimeStamp(topic, queueId, consumeQueueOffset);
+                        }
+                        return time;
+                    });
         }
         return next.getMessageStoreTimeStampAsync(topic, queueId, consumeQueueOffset);
     }
@@ -358,9 +360,9 @@ public class TieredMessageStore extends AbstractPluginMessageStore {
             Stopwatch stopwatch = Stopwatch.createStarted();
             long offsetInTieredStore = fetcher.getOffsetInQueueByTime(topic, queueId, timestamp, boundaryType);
             Attributes latencyAttributes = TieredStoreMetricsManager.newAttributesBuilder()
-                .put(TieredStoreMetricsConstant.LABEL_OPERATION, TieredStoreMetricsConstant.OPERATION_API_GET_OFFSET_BY_TIME)
-                .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
-                .build();
+                    .put(TieredStoreMetricsConstant.LABEL_OPERATION, TieredStoreMetricsConstant.OPERATION_API_GET_OFFSET_BY_TIME)
+                    .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
+                    .build();
             TieredStoreMetricsManager.apiLatency.record(stopwatch.elapsed(TimeUnit.MILLISECONDS), latencyAttributes);
             if (offsetInTieredStore == -1L && !isForce) {
                 return next.getOffsetInQueueByTime(topic, queueId, timestamp);
@@ -377,31 +379,31 @@ public class TieredMessageStore extends AbstractPluginMessageStore {
 
     @Override
     public CompletableFuture<QueryMessageResult> queryMessageAsync(String topic, String key,
-        int maxNum, long begin, long end) {
+                                                                   int maxNum, long begin, long end) {
         long earliestTimeInNextStore = next.getEarliestMessageTime();
         if (earliestTimeInNextStore <= 0) {
             log.warn("TieredMessageStore#queryMessageAsync: get earliest message time in next store failed: {}", earliestTimeInNextStore);
         }
         boolean isForce = storeConfig.getTieredStorageLevel() == MessageStoreConfig.TieredStorageLevel.FORCE;
         QueryMessageResult result = end < earliestTimeInNextStore || isForce ?
-            new QueryMessageResult() :
-            next.queryMessage(topic, key, maxNum, begin, end);
+                new QueryMessageResult() :
+                next.queryMessage(topic, key, maxNum, begin, end);
         int resultSize = result.getMessageBufferList().size();
         if (resultSize < maxNum && begin < earliestTimeInNextStore || isForce) {
             Stopwatch stopwatch = Stopwatch.createStarted();
             try {
                 return fetcher.queryMessageAsync(topic, key, maxNum - resultSize, begin, isForce ? end : earliestTimeInNextStore)
-                    .thenApply(tieredStoreResult -> {
-                        Attributes latencyAttributes = TieredStoreMetricsManager.newAttributesBuilder()
-                            .put(TieredStoreMetricsConstant.LABEL_OPERATION, TieredStoreMetricsConstant.OPERATION_API_QUERY_MESSAGE)
-                            .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
-                            .build();
-                        TieredStoreMetricsManager.apiLatency.record(stopwatch.elapsed(TimeUnit.MILLISECONDS), latencyAttributes);
-                        for (SelectMappedBufferResult msg : tieredStoreResult.getMessageMapedList()) {
-                            result.addMessage(msg);
-                        }
-                        return result;
-                    });
+                        .thenApply(tieredStoreResult -> {
+                            Attributes latencyAttributes = TieredStoreMetricsManager.newAttributesBuilder()
+                                    .put(TieredStoreMetricsConstant.LABEL_OPERATION, TieredStoreMetricsConstant.OPERATION_API_QUERY_MESSAGE)
+                                    .put(TieredStoreMetricsConstant.LABEL_TOPIC, topic)
+                                    .build();
+                            TieredStoreMetricsManager.apiLatency.record(stopwatch.elapsed(TimeUnit.MILLISECONDS), latencyAttributes);
+                            for (SelectMappedBufferResult msg : tieredStoreResult.getMessageMapedList()) {
+                                result.addMessage(msg);
+                            }
+                            return result;
+                        });
             } catch (Exception e) {
                 log.error("TieredMessageStore#queryMessageAsync: query message in tiered store failed", e);
                 return CompletableFuture.completedFuture(result);
@@ -428,8 +430,8 @@ public class TieredMessageStore extends AbstractPluginMessageStore {
         metadataStore.iterateTopic(topicMetadata -> {
             String topic = topicMetadata.getTopic();
             if (retainTopics.contains(topic) ||
-                TopicValidator.isSystemTopic(topic) ||
-                MixAll.isLmq(topic)) {
+                    TopicValidator.isSystemTopic(topic) ||
+                    MixAll.isLmq(topic)) {
                 return;
             }
             this.deleteTopics(Sets.newHashSet(topicMetadata.getTopic()));

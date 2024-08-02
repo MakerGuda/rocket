@@ -17,14 +17,6 @@ public class MessageBatch extends Message implements Iterable<Message> {
         this.messages = messages;
     }
 
-    public byte[] encode() {
-        return MessageDecoder.encodeMessages(messages);
-    }
-
-    public Iterator<Message> iterator() {
-        return messages.iterator();
-    }
-
     /**
      * 指定消息集合，生成批量消息
      */
@@ -61,6 +53,14 @@ public class MessageBatch extends Message implements Iterable<Message> {
         messageBatch.setTopic(first.getTopic());
         messageBatch.setWaitStoreMsgOK(first.isWaitStoreMsgOK());
         return messageBatch;
+    }
+
+    public byte[] encode() {
+        return MessageDecoder.encodeMessages(messages);
+    }
+
+    public Iterator<Message> iterator() {
+        return messages.iterator();
     }
 
 }

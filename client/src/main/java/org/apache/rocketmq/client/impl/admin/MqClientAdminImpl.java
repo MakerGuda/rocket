@@ -42,7 +42,7 @@ public class MqClientAdminImpl implements MqClientAdmin {
             if (response.getCode() == ResponseCode.SUCCESS) {
                 List<MessageExt> wrappers = MessageDecoder.decodesBatch(ByteBuffer.wrap(response.getBody()), true, decompressBody, true);
                 future.complete(filterMessages(wrappers, requestHeader.getTopic(), requestHeader.getKey(), uniqueKeyFlag));
-            } else if (response.getCode() == ResponseCode.QUERY_NOT_FOUND)  {
+            } else if (response.getCode() == ResponseCode.QUERY_NOT_FOUND) {
                 List<MessageExt> wrappers = new ArrayList<>();
                 future.complete(wrappers);
             } else {
@@ -216,26 +216,26 @@ public class MqClientAdminImpl implements MqClientAdmin {
         List<MessageExt> matchedMessages = new ArrayList<>();
         if (uniqueKeyFlag) {
             matchedMessages.addAll(messageFoundList.stream()
-                .filter(msg -> topic.equals(msg.getTopic()))
-                .filter(msg -> key.equals(msg.getMsgId()))
-                .collect(Collectors.toList())
+                    .filter(msg -> topic.equals(msg.getTopic()))
+                    .filter(msg -> key.equals(msg.getMsgId()))
+                    .collect(Collectors.toList())
             );
         } else {
             matchedMessages.addAll(messageFoundList.stream()
-                .filter(msg -> topic.equals(msg.getTopic()))
-                .filter(msg -> {
-                    boolean matched = false;
-                    if (StringUtils.isNotBlank(msg.getKeys())) {
-                        String[] keyArray = msg.getKeys().split(MessageConst.KEY_SEPARATOR);
-                        for (String s : keyArray) {
-                            if (key.equals(s)) {
-                                matched = true;
-                                break;
+                    .filter(msg -> topic.equals(msg.getTopic()))
+                    .filter(msg -> {
+                        boolean matched = false;
+                        if (StringUtils.isNotBlank(msg.getKeys())) {
+                            String[] keyArray = msg.getKeys().split(MessageConst.KEY_SEPARATOR);
+                            for (String s : keyArray) {
+                                if (key.equals(s)) {
+                                    matched = true;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    return matched;
-                }).collect(Collectors.toList()));
+                        return matched;
+                    }).collect(Collectors.toList()));
         }
         return matchedMessages;
     }

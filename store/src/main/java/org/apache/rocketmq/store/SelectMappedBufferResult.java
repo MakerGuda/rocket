@@ -13,11 +13,8 @@ public class SelectMappedBufferResult {
     private final long startOffset;
 
     private final ByteBuffer byteBuffer;
-
-    private int size;
-
     protected MappedFile mappedFile;
-
+    private int size;
     private boolean isInCache = true;
 
     public SelectMappedBufferResult(long startOffset, ByteBuffer byteBuffer, int size, MappedFile mappedFile) {

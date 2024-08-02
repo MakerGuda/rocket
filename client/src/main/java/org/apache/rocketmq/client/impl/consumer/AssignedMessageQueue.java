@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.rocketmq.common.message.MessageQueue;
 
 public class AssignedMessageQueue {

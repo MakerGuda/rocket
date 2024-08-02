@@ -19,12 +19,13 @@ package org.apache.rocketmq.tieredstore.stream;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+
 import org.apache.rocketmq.tieredstore.common.FileSegmentType;
 
 public class FileSegmentInputStreamFactory {
 
     public static FileSegmentInputStream build(
-        FileSegmentType fileType, long offset, List<ByteBuffer> bufferList, ByteBuffer byteBuffer, int length) {
+            FileSegmentType fileType, long offset, List<ByteBuffer> bufferList, ByteBuffer byteBuffer, int length) {
 
         if (bufferList == null) {
             throw new IllegalArgumentException("bufferList is null");

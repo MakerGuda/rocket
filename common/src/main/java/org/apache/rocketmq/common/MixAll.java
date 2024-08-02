@@ -74,15 +74,17 @@ public class MixAll {
     public static final String ZONE_MODE = "__ZONE_MODE";
     public final static String RPC_REQUEST_HEADER_NAMESPACED_FIELD = "nsd";
     public final static String RPC_REQUEST_HEADER_NAMESPACE_FIELD = "ns";
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
     public static final String LOGICAL_QUEUE_MOCK_BROKER_PREFIX = "__syslo__";
     public static final String METADATA_SCOPE_GLOBAL = "__global__";
     public static final String LOGICAL_QUEUE_MOCK_BROKER_NAME_NOT_EXIST = "__syslo__none__";
     public static final String MULTI_PATH_SPLITTER = System.getProperty("rocketmq.broker.multiPathSplitter", ",");
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
     private static final String OS = System.getProperty("os.name").toLowerCase();
+
     public static boolean isWindows() {
         return OS.contains("win");
     }
+
     public static boolean isMac() {
         return OS.contains("mac");
     }

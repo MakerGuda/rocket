@@ -16,12 +16,12 @@
  */
 package org.apache.rocketmq.broker.transaction;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageExtBrokerInner;
 import org.apache.rocketmq.remoting.protocol.header.EndTransactionRequestHeader;
 import org.apache.rocketmq.store.PutMessageResult;
+
+import java.util.concurrent.CompletableFuture;
 
 public interface TransactionalMessageService {
 
@@ -68,12 +68,12 @@ public interface TransactionalMessageService {
      * Traverse uncommitted/unroll back half message and send check back request to producer to obtain transaction
      * status.
      *
-     * @param transactionTimeout The minimum time of the transactional message to be checked firstly, one message only
-     * exceed this time interval that can be checked.
+     * @param transactionTimeout  The minimum time of the transactional message to be checked firstly, one message only
+     *                            exceed this time interval that can be checked.
      * @param transactionCheckMax The maximum number of times the message was checked, if exceed this value, this
-     * message will be discarded.
-     * @param listener When the message is considered to be checked or discarded, the relative method of this class will
-     * be invoked.
+     *                            message will be discarded.
+     * @param listener            When the message is considered to be checked or discarded, the relative method of this class will
+     *                            be invoked.
      */
     void check(long transactionTimeout, int transactionCheckMax, AbstractTransactionalMessageCheckListener listener);
 

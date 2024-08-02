@@ -55,8 +55,8 @@ public class BrokerMemberGroup extends RemotingSerializable {
         }
         BrokerMemberGroup that = (BrokerMemberGroup) o;
         return Objects.equal(cluster, that.cluster) &&
-            Objects.equal(brokerName, that.brokerName) &&
-            Objects.equal(brokerAddrs, that.brokerAddrs);
+                Objects.equal(brokerName, that.brokerName) &&
+                Objects.equal(brokerAddrs, that.brokerAddrs);
     }
 
     @Override
@@ -67,10 +67,10 @@ public class BrokerMemberGroup extends RemotingSerializable {
     @Override
     public String toString() {
         return "BrokerMemberGroup{" +
-            "cluster='" + cluster + '\'' +
-            ", brokerName='" + brokerName + '\'' +
-            ", brokerAddrs=" + brokerAddrs +
-            '}';
+                "cluster='" + cluster + '\'' +
+                ", brokerName='" + brokerName + '\'' +
+                ", brokerAddrs=" + brokerAddrs +
+                '}';
     }
 
 }

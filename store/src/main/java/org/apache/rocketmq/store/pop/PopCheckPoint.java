@@ -17,10 +17,13 @@
 package org.apache.rocketmq.store.pop;
 
 import com.alibaba.fastjson.annotation.JSONField;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class PopCheckPoint implements Comparable<PopCheckPoint> {
+    @JSONField(name = "bn")
+    String brokerName;
     @JSONField(name = "so")
     private long startOffset;
     @JSONField(name = "pt")
@@ -41,8 +44,6 @@ public class PopCheckPoint implements Comparable<PopCheckPoint> {
     private long reviveOffset;
     @JSONField(name = "d")
     private List<Integer> queueOffsetDiff;
-    @JSONField(name = "bn")
-    String brokerName;
 
     public long getReviveOffset() {
         return reviveOffset;
@@ -60,20 +61,20 @@ public class PopCheckPoint implements Comparable<PopCheckPoint> {
         this.startOffset = startOffset;
     }
 
-    public void setPopTime(long popTime) {
-        this.popTime = popTime;
-    }
-
-    public void setInvisibleTime(long invisibleTime) {
-        this.invisibleTime = invisibleTime;
-    }
-
     public long getPopTime() {
         return popTime;
     }
 
+    public void setPopTime(long popTime) {
+        this.popTime = popTime;
+    }
+
     public long getInvisibleTime() {
         return invisibleTime;
+    }
+
+    public void setInvisibleTime(long invisibleTime) {
+        this.invisibleTime = invisibleTime;
     }
 
     public long getReviveTime() {
@@ -174,7 +175,7 @@ public class PopCheckPoint implements Comparable<PopCheckPoint> {
     @Override
     public String toString() {
         return "PopCheckPoint [topic=" + topic + ", cid=" + cid + ", queueId=" + queueId + ", startOffset=" + startOffset + ", bitMap=" + bitMap + ", num=" + num + ", reviveTime=" + getReviveTime()
-            + ", reviveOffset=" + reviveOffset + ", diff=" + queueOffsetDiff + ", brokerName=" + brokerName + "]";
+                + ", reviveOffset=" + reviveOffset + ", diff=" + queueOffsetDiff + ", brokerName=" + brokerName + "]";
     }
 
     @Override

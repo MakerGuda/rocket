@@ -6,13 +6,12 @@ import java.io.File;
 
 public abstract class AbstractBrokerRunnable implements Runnable {
 
+    private static final String MDC_BROKER_CONTAINER_LOG_DIR = "brokerContainerLogDir";
     protected final BrokerIdentity brokerIdentity;
 
     public AbstractBrokerRunnable(BrokerIdentity brokerIdentity) {
         this.brokerIdentity = brokerIdentity;
     }
-
-    private static final String MDC_BROKER_CONTAINER_LOG_DIR = "brokerContainerLogDir";
 
     public abstract void run0();
 

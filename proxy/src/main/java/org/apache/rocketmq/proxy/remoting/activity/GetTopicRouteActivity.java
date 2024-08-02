@@ -20,12 +20,7 @@ package org.apache.rocketmq.proxy.remoting.activity;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.google.common.net.HostAndPort;
 import io.netty.channel.ChannelHandlerContext;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.rocketmq.common.MQVersion;
-import org.apache.rocketmq.remoting.protocol.ResponseCode;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.GetRouteInfoRequestHeader;
-import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
 import org.apache.rocketmq.proxy.common.Address;
 import org.apache.rocketmq.proxy.common.ProxyContext;
 import org.apache.rocketmq.proxy.config.ConfigurationManager;
@@ -34,20 +29,26 @@ import org.apache.rocketmq.proxy.processor.MessagingProcessor;
 import org.apache.rocketmq.proxy.remoting.pipeline.RequestPipeline;
 import org.apache.rocketmq.proxy.service.route.ProxyTopicRouteData;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
+import org.apache.rocketmq.remoting.protocol.ResponseCode;
+import org.apache.rocketmq.remoting.protocol.header.namesrv.GetRouteInfoRequestHeader;
+import org.apache.rocketmq.remoting.protocol.route.TopicRouteData;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GetTopicRouteActivity extends AbstractRemotingActivity {
     public GetTopicRouteActivity(RequestPipeline requestPipeline,
-        MessagingProcessor messagingProcessor) {
+                                 MessagingProcessor messagingProcessor) {
         super(requestPipeline, messagingProcessor);
     }
 
     @Override
     protected RemotingCommand processRequest0(ChannelHandlerContext ctx, RemotingCommand request,
-        ProxyContext context) throws Exception {
+                                              ProxyContext context) throws Exception {
         ProxyConfig proxyConfig = ConfigurationManager.getProxyConfig();
         final RemotingCommand response = RemotingCommand.createResponseCommand(null);
         final GetRouteInfoRequestHeader requestHeader =
-            (GetRouteInfoRequestHeader) request.decodeCommandCustomHeader(GetRouteInfoRequestHeader.class);
+                (GetRouteInfoRequestHeader) request.decodeCommandCustomHeader(GetRouteInfoRequestHeader.class);
         List<Address> addressList = new ArrayList<>();
         // AddressScheme is just a placeholder and will not affect topic route result in this case.
         addressList.add(new Address(Address.AddressScheme.IPv4, HostAndPort.fromParts(proxyConfig.getRemotingAccessAddr(), proxyConfig.getRemotingListenPort())));
@@ -58,8 +59,8 @@ public class GetTopicRouteActivity extends AbstractRemotingActivity {
         Boolean standardJsonOnly = requestHeader.getAcceptStandardJsonOnly();
         if (request.getVersion() >= MQVersion.Version.V4_9_4.ordinal() || null != standardJsonOnly && standardJsonOnly) {
             content = topicRouteData.encode(SerializerFeature.BrowserCompatible,
-                SerializerFeature.QuoteFieldNames, SerializerFeature.SkipTransientField,
-                SerializerFeature.MapSortField);
+                    SerializerFeature.QuoteFieldNames, SerializerFeature.SkipTransientField,
+                    SerializerFeature.MapSortField);
         } else {
             content = topicRouteData.encode();
         }
