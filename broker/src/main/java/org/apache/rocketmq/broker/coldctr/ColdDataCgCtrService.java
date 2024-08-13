@@ -1,22 +1,8 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.broker.coldctr;
 
 import com.alibaba.fastjson.JSONObject;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.BrokerConfig;
 import org.apache.rocketmq.common.MixAll;
@@ -29,35 +15,34 @@ import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * store the cg cold read ctr table and acc the size of the cold
- * reading msg, timing to clear the table and set acc to zero
- */
+@Getter
+@Setter
 public class ColdDataCgCtrService extends ServiceThread {
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_COLDCTR_LOGGER_NAME);
+
     private static final AtomicLong GLOBAL_ACC = new AtomicLong(0L);
-    private static final String ADAPTIVE = "||adaptive";
+
+    private static final String ADAPTIVE = "|adaptive";
+
     private final SystemClock systemClock = new SystemClock();
+
     private final long cgColdAccResideTimeoutMills = 60 * 1000;
-    /**
-     * as soon as the consumerGroup read the cold data then it will be put into @code cgColdThresholdMapRuntime,
-     * and it also will be removed when does not read cold data in @code cgColdAccResideTimeoutMills later;
-     */
+
     private final ConcurrentHashMap<String, AccAndTimeStamp> cgColdThresholdMapRuntime = new ConcurrentHashMap<>();
-    /**
-     * if the system admin wants to set the special cold read threshold for some consumerGroup, the configuration will
-     * be putted into @code cgColdThresholdMapConfig
-     */
+
     private final ConcurrentHashMap<String, Long> cgColdThresholdMapConfig = new ConcurrentHashMap<>();
+
     private final BrokerConfig brokerConfig;
+
     private final MessageStoreConfig messageStoreConfig;
+
     private final ColdCtrStrategy coldCtrStrategy;
 
     public ColdDataCgCtrService(BrokerController brokerController) {
@@ -105,11 +90,6 @@ public class ColdDataCgCtrService extends ServiceThread {
         return result.toJSONString();
     }
 
-    /**
-     * clear the long time no cold read cg in the table;
-     * update the acc to zero for the cg in the table;
-     * use the strategy to promote or decelerate the cg;
-     */
     private void clearDataAcc() {
         log.info("clearDataAcc cgColdThresholdMapRuntime key size: {}", cgColdThresholdMapRuntime.size());
         if (brokerConfig.isColdCtrStrategyEnable()) {
@@ -141,13 +121,8 @@ public class ColdDataCgCtrService extends ServiceThread {
     }
 
     private void sortAndDecelerate() {
-        List<Entry<String, Long>> configMapList = new ArrayList<Entry<String, Long>>(cgColdThresholdMapConfig.entrySet());
-        configMapList.sort(new Comparator<Entry<String, Long>>() {
-            @Override
-            public int compare(Entry<String, Long> o1, Entry<String, Long> o2) {
-                return (int) (o2.getValue() - o1.getValue());
-            }
-        });
+        List<Entry<String, Long>> configMapList = new ArrayList<>(cgColdThresholdMapConfig.entrySet());
+        configMapList.sort((o1, o2) -> (int) (o2.getValue() - o1.getValue()));
         Iterator<Entry<String, Long>> iterator = configMapList.iterator();
         int maxDecelerate = 3;
         while (iterator.hasNext() && maxDecelerate > 0) {
@@ -194,7 +169,6 @@ public class ColdDataCgCtrService extends ServiceThread {
         if (null == accAndTimeStamp) {
             return false;
         }
-
         Long threshold = getThresholdByConsumerGroup(consumerGroup);
         if (accAndTimeStamp.getColdAcc().get() >= threshold) {
             return true;
@@ -204,10 +178,6 @@ public class ColdDataCgCtrService extends ServiceThread {
 
     public boolean isGlobalColdCtr() {
         return GLOBAL_ACC.get() > this.brokerConfig.getGlobalColdReadThreshold();
-    }
-
-    public BrokerConfig getBrokerConfig() {
-        return brokerConfig;
     }
 
     private Long getThresholdByConsumerGroup(String consumerGroup) {

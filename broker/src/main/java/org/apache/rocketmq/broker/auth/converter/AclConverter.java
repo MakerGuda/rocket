@@ -22,7 +22,6 @@ public class AclConverter {
         List<Policy> policies = new ArrayList<>();
         for (AclInfo.PolicyInfo policy : aclInfo.getPolicies()) {
             PolicyType policyType = PolicyType.getByName(policy.getPolicyType());
-
             List<AclInfo.PolicyEntryInfo> entryInfos = policy.getEntries();
             if (CollectionUtils.isEmpty(entryInfos)) {
                 continue;
@@ -30,7 +29,6 @@ public class AclConverter {
             List<PolicyEntry> entries = new ArrayList<>();
             for (AclInfo.PolicyEntryInfo entryInfo : entryInfos) {
                 Resource resource = Resource.of(entryInfo.getResource());
-
                 List<Action> actions = new ArrayList<>();
                 for (String a : entryInfo.getActions()) {
                     Action action = Action.getByName(a);
@@ -39,20 +37,15 @@ public class AclConverter {
                     }
                     actions.add(action);
                 }
-
                 Environment environment = new Environment();
                 if (CollectionUtils.isNotEmpty(entryInfo.getSourceIps())) {
                     environment.setSourceIps(entryInfo.getSourceIps());
                 }
-
                 Decision decision = Decision.getByName(entryInfo.getDecision());
-
                 entries.add(PolicyEntry.of(resource, actions, environment, decision));
             }
-
             policies.add(Policy.of(policyType, entries));
         }
-
         return Acl.of(subject, policies);
     }
 
@@ -60,8 +53,7 @@ public class AclConverter {
         if (CollectionUtils.isEmpty(acls)) {
             return null;
         }
-        return acls.stream().map(AclConverter::convertAcl)
-                .collect(Collectors.toList());
+        return acls.stream().map(AclConverter::convertAcl).collect(Collectors.toList());
     }
 
     public static AclInfo convertAcl(Acl acl) {
@@ -73,9 +65,7 @@ public class AclConverter {
         if (CollectionUtils.isEmpty(acl.getPolicies())) {
             return aclInfo;
         }
-        List<AclInfo.PolicyInfo> policyInfos = acl.getPolicies().stream()
-                .map(AclConverter::convertPolicy)
-                .collect(Collectors.toList());
+        List<AclInfo.PolicyInfo> policyInfos = acl.getPolicies().stream().map(AclConverter::convertPolicy).collect(Collectors.toList());
         aclInfo.setPolicies(policyInfos);
         return aclInfo;
     }
@@ -88,8 +78,7 @@ public class AclConverter {
         if (CollectionUtils.isEmpty(policy.getEntries())) {
             return policyInfo;
         }
-        List<AclInfo.PolicyEntryInfo> entryInfos = policy.getEntries().stream()
-                .map(AclConverter::convertPolicyEntry).collect(Collectors.toList());
+        List<AclInfo.PolicyEntryInfo> entryInfos = policy.getEntries().stream().map(AclConverter::convertPolicyEntry).collect(Collectors.toList());
         policyInfo.setEntries(entryInfos);
         return policyInfo;
     }
@@ -104,4 +93,5 @@ public class AclConverter {
         entryInfo.setDecision(entry.getDecision().getName());
         return entryInfo;
     }
+
 }

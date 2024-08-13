@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.auth.authorization.builder;
 
 import apache.rocketmq.v2.*;
@@ -62,10 +46,15 @@ import java.util.*;
 public class DefaultAuthorizationContextBuilder implements AuthorizationContextBuilder {
 
     private static final String TOPIC = "topic";
+
     private static final String GROUP = "group";
+
     private static final String A = "a";
+
     private static final String B = "b";
+
     private static final String CONSUMER_GROUP = "consumerGroup";
+
     private final AuthConfig authConfig;
 
     private final RequestHeaderRegistry requestHeaderRegistry;
@@ -113,18 +102,15 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
         return Collections.singletonList(context);
     }
 
-    private static List<DefaultAuthorizationContext> newTopicSubContexts(Metadata metadata,
-                                                                         apache.rocketmq.v2.Resource resource) {
+    private static List<DefaultAuthorizationContext> newTopicSubContexts(Metadata metadata, apache.rocketmq.v2.Resource resource) {
         return newSubContexts(metadata, ResourceType.TOPIC, resource);
     }
 
-    private static List<DefaultAuthorizationContext> newGroupSubContexts(Metadata metadata,
-                                                                         apache.rocketmq.v2.Resource resource) {
+    private static List<DefaultAuthorizationContext> newGroupSubContexts(Metadata metadata, apache.rocketmq.v2.Resource resource) {
         return newSubContexts(metadata, ResourceType.GROUP, resource);
     }
 
-    private static List<DefaultAuthorizationContext> newSubContexts(Metadata metadata, ResourceType resourceType,
-                                                                    apache.rocketmq.v2.Resource resource) {
+    private static List<DefaultAuthorizationContext> newSubContexts(Metadata metadata, ResourceType resourceType, apache.rocketmq.v2.Resource resource) {
         if (resourceType == ResourceType.GROUP) {
             if (resource == null || StringUtils.isBlank(resource.getName())) {
                 throw new AuthorizationException("group is null.");
@@ -232,7 +218,6 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
             }
             String remoteAddr = RemotingHelper.parseChannelRemoteAddr(context.channel());
             String sourceIp = StringUtils.substringBefore(remoteAddr, CommonConstants.COLON);
-
             Resource topic;
             Resource group;
             switch (command.getCode()) {
@@ -304,22 +289,19 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
                     }
                     break;
                 case RequestCode.UNREGISTER_CLIENT:
-                    final UnregisterClientRequestHeader unregisterClientRequestHeader =
-                            command.decodeCommandCustomHeader(UnregisterClientRequestHeader.class);
+                    final UnregisterClientRequestHeader unregisterClientRequestHeader = command.decodeCommandCustomHeader(UnregisterClientRequestHeader.class);
                     if (StringUtils.isNotBlank(unregisterClientRequestHeader.getConsumerGroup())) {
                         group = Resource.ofGroup(unregisterClientRequestHeader.getConsumerGroup());
                         result.add(DefaultAuthorizationContext.of(subject, group, Action.SUB, sourceIp));
                     }
                     break;
                 case RequestCode.GET_CONSUMER_LIST_BY_GROUP:
-                    final GetConsumerListByGroupRequestHeader getConsumerListByGroupRequestHeader =
-                            command.decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
+                    final GetConsumerListByGroupRequestHeader getConsumerListByGroupRequestHeader = command.decodeCommandCustomHeader(GetConsumerListByGroupRequestHeader.class);
                     group = Resource.ofGroup(getConsumerListByGroupRequestHeader.getConsumerGroup());
                     result.add(DefaultAuthorizationContext.of(subject, group, Arrays.asList(Action.SUB, Action.GET), sourceIp));
                     break;
                 case RequestCode.QUERY_CONSUMER_OFFSET:
-                    final QueryConsumerOffsetRequestHeader queryConsumerOffsetRequestHeader =
-                            command.decodeCommandCustomHeader(QueryConsumerOffsetRequestHeader.class);
+                    final QueryConsumerOffsetRequestHeader queryConsumerOffsetRequestHeader = command.decodeCommandCustomHeader(QueryConsumerOffsetRequestHeader.class);
                     if (!NamespaceUtil.isRetryTopic(queryConsumerOffsetRequestHeader.getTopic())) {
                         topic = Resource.ofTopic(queryConsumerOffsetRequestHeader.getTopic());
                         result.add(DefaultAuthorizationContext.of(subject, topic, Arrays.asList(Action.SUB, Action.GET), sourceIp));
@@ -328,8 +310,7 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
                     result.add(DefaultAuthorizationContext.of(subject, group, Arrays.asList(Action.SUB, Action.GET), sourceIp));
                     break;
                 case RequestCode.UPDATE_CONSUMER_OFFSET:
-                    final UpdateConsumerOffsetRequestHeader updateConsumerOffsetRequestHeader =
-                            command.decodeCommandCustomHeader(UpdateConsumerOffsetRequestHeader.class);
+                    final UpdateConsumerOffsetRequestHeader updateConsumerOffsetRequestHeader = command.decodeCommandCustomHeader(UpdateConsumerOffsetRequestHeader.class);
                     if (!NamespaceUtil.isRetryTopic(updateConsumerOffsetRequestHeader.getTopic())) {
                         topic = Resource.ofTopic(updateConsumerOffsetRequestHeader.getTopic());
                         result.add(DefaultAuthorizationContext.of(subject, topic, Arrays.asList(Action.SUB, Action.UPDATE), sourceIp));
@@ -383,16 +364,13 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
         return result;
     }
 
-    private List<DefaultAuthorizationContext> buildContextByAnnotation(Subject subject, RemotingCommand request,
-                                                                       String sourceIp) throws Exception {
+    private List<DefaultAuthorizationContext> buildContextByAnnotation(Subject subject, RemotingCommand request, String sourceIp) throws Exception {
         List<DefaultAuthorizationContext> result = new ArrayList<>();
-
         Class<? extends CommandCustomHeader> clazz = this.requestHeaderRegistry.getRequestHeader(request.getCode());
         if (clazz == null) {
             return result;
         }
         CommandCustomHeader header = request.decodeCommandCustomHeader(clazz);
-
         RocketMQAction rocketMQAction = clazz.getAnnotation(RocketMQAction.class);
         ResourceType resourceType = rocketMQAction.resource();
         Action[] actions = rocketMQAction.action();
@@ -400,7 +378,6 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
         if (resourceType == ResourceType.CLUSTER) {
             resource = Resource.ofCluster(authConfig.getClusterName());
         }
-
         Field[] fields = clazz.getDeclaredFields();
         if (ArrayUtils.isNotEmpty(fields)) {
             for (Field field : fields) {
@@ -436,11 +413,9 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
                 }
             }
         }
-
         if (CollectionUtils.isEmpty(result) && resource != null) {
             result.add(DefaultAuthorizationContext.of(subject, resource, Arrays.asList(actions), sourceIp));
         }
-
         return result;
     }
 
@@ -460,15 +435,14 @@ public class DefaultAuthorizationContextBuilder implements AuthorizationContextB
     }
 
     private boolean isConsumerClientType(ClientType clientType) {
-        return Arrays.asList(ClientType.PUSH_CONSUMER, ClientType.SIMPLE_CONSUMER, ClientType.PULL_CONSUMER)
-                .contains(clientType);
+        return Arrays.asList(ClientType.PUSH_CONSUMER, ClientType.SIMPLE_CONSUMER, ClientType.PULL_CONSUMER).contains(clientType);
     }
 
-    private List<DefaultAuthorizationContext> newSubContexts(Metadata metadata, apache.rocketmq.v2.Resource group,
-                                                             apache.rocketmq.v2.Resource topic) {
+    private List<DefaultAuthorizationContext> newSubContexts(Metadata metadata, apache.rocketmq.v2.Resource group, apache.rocketmq.v2.Resource topic) {
         List<DefaultAuthorizationContext> result = new ArrayList<>();
         result.addAll(newGroupSubContexts(metadata, group));
         result.addAll(newTopicSubContexts(metadata, topic));
         return result;
     }
+
 }

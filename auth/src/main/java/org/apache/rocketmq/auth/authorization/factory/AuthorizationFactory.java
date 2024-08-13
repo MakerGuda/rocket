@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.auth.authorization.factory;
 
 import com.google.protobuf.GeneratedMessageV3;
@@ -41,8 +25,11 @@ import java.util.function.Supplier;
 public class AuthorizationFactory {
 
     private static final Map<String, Object> INSTANCE_MAP = new HashMap<>();
+
     private static final String PROVIDER_PREFIX = "PROVIDER_";
+
     private static final String METADATA_PROVIDER_PREFIX = "METADATA_PROVIDER_";
+
     private static final String EVALUATOR_PREFIX = "EVALUATOR_";
 
     @SuppressWarnings("unchecked")
@@ -52,13 +39,11 @@ public class AuthorizationFactory {
         }
         return computeIfAbsent(PROVIDER_PREFIX + config.getConfigName(), key -> {
             try {
-                Class<? extends AuthorizationProvider<? extends AuthorizationContext>> clazz =
-                        DefaultAuthorizationProvider.class;
+                Class<? extends AuthorizationProvider<? extends AuthorizationContext>> clazz = DefaultAuthorizationProvider.class;
                 if (StringUtils.isNotBlank(config.getAuthorizationProvider())) {
                     clazz = (Class<? extends AuthorizationProvider<? extends AuthorizationContext>>) Class.forName(config.getAuthorizationProvider());
                 }
-                return (AuthorizationProvider<AuthorizationContext>) clazz
-                        .getDeclaredConstructor().newInstance();
+                return (AuthorizationProvider<AuthorizationContext>) clazz.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 throw new RuntimeException("Failed to load the authorization provider.", e);
             }
@@ -83,8 +68,7 @@ public class AuthorizationFactory {
                 if (StringUtils.isBlank(config.getAuthorizationMetadataProvider())) {
                     return null;
                 }
-                Class<? extends AuthorizationMetadataProvider> clazz = (Class<? extends AuthorizationMetadataProvider>)
-                        Class.forName(config.getAuthorizationMetadataProvider());
+                Class<? extends AuthorizationMetadataProvider> clazz = (Class<? extends AuthorizationMetadataProvider>) Class.forName(config.getAuthorizationMetadataProvider());
                 AuthorizationMetadataProvider result = clazz.getDeclaredConstructor().newInstance();
                 result.initialize(config, metadataService);
                 return result;
@@ -115,8 +99,7 @@ public class AuthorizationFactory {
         }
     }
 
-    public static List<AuthorizationContext> newContexts(AuthConfig config, Metadata metadata,
-                                                         GeneratedMessageV3 message) {
+    public static List<AuthorizationContext> newContexts(AuthConfig config, Metadata metadata, GeneratedMessageV3 message) {
         AuthorizationProvider<AuthorizationContext> authorizationProvider = getProvider(config);
         if (authorizationProvider == null) {
             return null;
@@ -124,8 +107,7 @@ public class AuthorizationFactory {
         return authorizationProvider.newContexts(metadata, message);
     }
 
-    public static List<AuthorizationContext> newContexts(AuthConfig config, ChannelHandlerContext context,
-                                                         RemotingCommand command) {
+    public static List<AuthorizationContext> newContexts(AuthConfig config, ChannelHandlerContext context, RemotingCommand command) {
         AuthorizationProvider<AuthorizationContext> authorizationProvider = getProvider(config);
         if (authorizationProvider == null) {
             return null;
@@ -154,4 +136,5 @@ public class AuthorizationFactory {
         }
         return result != null ? (V) result : null;
     }
+
 }

@@ -76,7 +76,7 @@ public class ContainerClientHouseKeepingService implements ChannelEventListener 
             return;
         }
         boolean removed = brokerController.getProducerManager().doChannelCloseEvent(remoteAddr, channel);
-        removed &= brokerController.getConsumerManager().doChannelCloseEvent(remoteAddr, channel);
+        removed &= brokerController.getConsumerManager().doChannelCloseEvent(channel);
         if (removed) {
             switch (callbackCode) {
                 case CLOSE:

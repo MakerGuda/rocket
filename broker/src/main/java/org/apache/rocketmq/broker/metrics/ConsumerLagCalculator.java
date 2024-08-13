@@ -1,21 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.broker.metrics;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.broker.client.ConsumerGroupInfo;
 import org.apache.rocketmq.broker.client.ConsumerManager;
@@ -46,16 +32,28 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+@Getter
+@Setter
 public class ConsumerLagCalculator {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
+
     private final BrokerConfig brokerConfig;
+
     private final TopicConfigManager topicConfigManager;
+
     private final ConsumerManager consumerManager;
+
     private final ConsumerOffsetManager offsetManager;
+
     private final ConsumerFilterManager consumerFilterManager;
+
     private final SubscriptionGroupManager subscriptionGroupManager;
+
     private final MessageStore messageStore;
+
     private final PopBufferMergeService popBufferMergeService;
+
     private final PopInflightMessageCounter popInflightMessageCounter;
 
     public ConsumerLagCalculator(BrokerController brokerController) {
@@ -71,9 +69,7 @@ public class ConsumerLagCalculator {
     }
 
     private void processAllGroup(Consumer<ProcessGroupInfo> consumer) {
-        for (Map.Entry<String, SubscriptionGroupConfig> subscriptionEntry :
-                subscriptionGroupManager.getSubscriptionGroupTable().entrySet()) {
-
+        for (Map.Entry<String, SubscriptionGroupConfig> subscriptionEntry : subscriptionGroupManager.getSubscriptionGroupTable().entrySet()) {
             String group = subscriptionEntry.getKey();
             ConsumerGroupInfo consumerGroupInfo = consumerManager.getConsumerGroupInfo(group, true);
             boolean isPop = false;
@@ -83,41 +79,31 @@ public class ConsumerLagCalculator {
             Set<String> topics;
             if (brokerConfig.isUseStaticSubscription()) {
                 SubscriptionGroupConfig subscriptionGroupConfig = subscriptionEntry.getValue();
-                if (subscriptionGroupConfig.getSubscriptionDataSet() == null ||
-                        subscriptionGroupConfig.getSubscriptionDataSet().isEmpty()) {
+                if (subscriptionGroupConfig.getSubscriptionDataSet() == null || subscriptionGroupConfig.getSubscriptionDataSet().isEmpty()) {
                     continue;
                 }
-                topics = subscriptionGroupConfig.getSubscriptionDataSet()
-                        .stream()
-                        .map(SimpleSubscriptionData::getTopic)
-                        .collect(Collectors.toSet());
+                topics = subscriptionGroupConfig.getSubscriptionDataSet().stream().map(SimpleSubscriptionData::getTopic).collect(Collectors.toSet());
             } else {
                 if (consumerGroupInfo == null) {
                     continue;
                 }
                 topics = consumerGroupInfo.getSubscribeTopics();
             }
-
             if (null == topics || topics.isEmpty()) {
                 continue;
             }
             for (String topic : topics) {
-                // skip retry topic
                 if (topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
                     continue;
                 }
-
                 TopicConfig topicConfig = topicConfigManager.selectTopicConfig(topic);
                 if (topicConfig == null) {
                     continue;
                 }
-
-                // skip no perm topic
                 int topicPerm = topicConfig.getPerm() & brokerConfig.getBrokerPermission();
                 if (!PermName.isReadable(topicPerm) && !PermName.isWriteable(topicPerm)) {
                     continue;
                 }
-
                 if (isPop) {
                     String retryTopic = KeyBuilder.buildPopRetryTopic(topic, group, brokerConfig.isEnableRetryTopicV2());
                     TopicConfig retryTopicConfig = topicConfigManager.selectTopicConfig(retryTopic);
@@ -152,19 +138,15 @@ public class ConsumerLagCalculator {
             if (info.group == null || info.topic == null) {
                 return;
             }
-
             CalculateLagResult result = new CalculateLagResult(info.group, info.topic, false);
-
             Pair<Long, Long> lag = getConsumerLagStats(info.group, info.topic, info.isPop);
             if (lag != null) {
                 result.lag = lag.getObject1();
                 result.earliestUnconsumedTimestamp = lag.getObject2();
             }
             lagRecorder.accept(result);
-
             if (info.isPop) {
                 Pair<Long, Long> retryLag = getConsumerLagStats(info.group, info.retryTopic, true);
-
                 result = new CalculateLagResult(info.group, info.topic, true);
                 if (retryLag != null) {
                     result.lag = retryLag.getObject1();
@@ -184,10 +166,8 @@ public class ConsumerLagCalculator {
                 result.earliestUnPulledTimestamp = inFlight.getObject2();
             }
             inflightRecorder.accept(result);
-
             if (info.isPop) {
                 Pair<Long, Long> retryInFlight = getInFlightMsgStats(info.group, info.retryTopic, true);
-
                 result = new CalculateInflightResult(info.group, info.topic, true);
                 if (retryInFlight != null) {
                     result.inFlight = retryInFlight.getObject1();
@@ -201,13 +181,10 @@ public class ConsumerLagCalculator {
     public void calculateAvailable(Consumer<CalculateAvailableResult> availableRecorder) {
         processAllGroup(info -> {
             CalculateAvailableResult result = new CalculateAvailableResult(info.group, info.topic, false);
-
             result.available = getAvailableMsgCount(info.group, info.topic, info.isPop);
             availableRecorder.accept(result);
-
             if (info.isPop) {
                 long retryAvailable = getAvailableMsgCount(info.group, info.retryTopic, true);
-
                 result = new CalculateAvailableResult(info.group, info.topic, true);
                 result.available = retryAvailable;
                 availableRecorder.accept(result);
@@ -218,11 +195,9 @@ public class ConsumerLagCalculator {
     public Pair<Long, Long> getConsumerLagStats(String group, String topic, boolean isPop) {
         long total = 0L;
         long earliestUnconsumedTimestamp = Long.MAX_VALUE;
-
         if (group == null || topic == null) {
             return new Pair<>(total, earliestUnconsumedTimestamp);
         }
-
         TopicConfig topicConfig = topicConfigManager.selectTopicConfig(topic);
         if (topicConfig != null) {
             for (int queueId = 0; queueId < topicConfig.getWriteQueueNums(); queueId++) {
@@ -233,11 +208,9 @@ public class ConsumerLagCalculator {
         } else {
             LOGGER.warn("failed to get config of topic {}", topic);
         }
-
         if (earliestUnconsumedTimestamp < 0 || earliestUnconsumedTimestamp == Long.MAX_VALUE) {
             earliestUnconsumedTimestamp = 0L;
         }
-
         return new Pair<>(total, earliestUnconsumedTimestamp);
     }
 
@@ -246,7 +219,6 @@ public class ConsumerLagCalculator {
         if (brokerOffset < 0) {
             brokerOffset = 0;
         }
-
         if (isPop) {
             long pullOffset = popBufferMergeService.getLatestOffset(topic, group, queueId);
             if (pullOffset < 0) {
@@ -261,12 +233,10 @@ public class ConsumerLagCalculator {
             long consumerStoreTimeStamp = getStoreTimeStamp(topic, queueId, consumerOffset);
             return new Pair<>(lag, consumerStoreTimeStamp);
         }
-
         long consumerOffset = offsetManager.queryOffset(group, topic, queueId);
         if (consumerOffset < 0) {
             consumerOffset = brokerOffset;
         }
-
         long lag = calculateMessageCount(group, topic, queueId, consumerOffset, brokerOffset);
         long consumerStoreTimeStamp = getStoreTimeStamp(topic, queueId, consumerOffset);
         return new Pair<>(lag, consumerStoreTimeStamp);
@@ -275,11 +245,9 @@ public class ConsumerLagCalculator {
     public Pair<Long, Long> getInFlightMsgStats(String group, String topic, boolean isPop) {
         long total = 0L;
         long earliestUnPulledTimestamp = Long.MAX_VALUE;
-
         if (group == null || topic == null) {
             return new Pair<>(total, earliestUnPulledTimestamp);
         }
-
         TopicConfig topicConfig = topicConfigManager.selectTopicConfig(topic);
         if (topicConfig != null) {
             for (int queueId = 0; queueId < topicConfig.getWriteQueueNums(); queueId++) {
@@ -290,11 +258,9 @@ public class ConsumerLagCalculator {
         } else {
             LOGGER.warn("failed to get config of topic {}", topic);
         }
-
         if (earliestUnPulledTimestamp < 0 || earliestUnPulledTimestamp == Long.MAX_VALUE) {
             earliestUnPulledTimestamp = 0L;
         }
-
         return new Pair<>(total, earliestUnPulledTimestamp);
     }
 
@@ -311,17 +277,14 @@ public class ConsumerLagCalculator {
             long pullStoreTimeStamp = getStoreTimeStamp(topic, queueId, pullOffset);
             return new Pair<>(inflight, pullStoreTimeStamp);
         }
-
         long pullOffset = offsetManager.queryPullOffset(group, topic, queueId);
         if (pullOffset < 0) {
             pullOffset = 0;
         }
-
         long commitOffset = offsetManager.queryOffset(group, topic, queueId);
         if (commitOffset < 0) {
             commitOffset = pullOffset;
         }
-
         long inflight = calculateMessageCount(group, topic, queueId, commitOffset, pullOffset);
         long pullStoreTimeStamp = getStoreTimeStamp(topic, queueId, pullOffset);
         return new Pair<>(inflight, pullStoreTimeStamp);
@@ -329,11 +292,9 @@ public class ConsumerLagCalculator {
 
     public long getAvailableMsgCount(String group, String topic, boolean isPop) {
         long total = 0L;
-
         if (group == null || topic == null) {
             return total;
         }
-
         TopicConfig topicConfig = topicConfigManager.selectTopicConfig(topic);
         if (topicConfig != null) {
             for (int queueId = 0; queueId < topicConfig.getWriteQueueNums(); queueId++) {
@@ -342,7 +303,6 @@ public class ConsumerLagCalculator {
         } else {
             LOGGER.warn("failed to get config of topic {}", topic);
         }
-
         return total;
     }
 
@@ -351,7 +311,6 @@ public class ConsumerLagCalculator {
         if (brokerOffset < 0) {
             brokerOffset = 0;
         }
-
         long pullOffset;
         if (isPop) {
             pullOffset = popBufferMergeService.getLatestOffset(topic, group, queueId);
@@ -367,7 +326,6 @@ public class ConsumerLagCalculator {
         if (pullOffset < 0) {
             pullOffset = brokerOffset;
         }
-
         return calculateMessageCount(group, topic, queueId, pullOffset, brokerOffset);
     }
 
@@ -382,7 +340,6 @@ public class ConsumerLagCalculator {
 
     public long calculateMessageCount(String group, String topic, int queueId, long from, long to) {
         long count = to - from;
-
         if (brokerConfig.isEstimateAccumulation() && to > from) {
             SubscriptionData subscriptionData = null;
             if (brokerConfig.isUseStaticSubscription()) {
@@ -391,8 +348,7 @@ public class ConsumerLagCalculator {
                     for (SimpleSubscriptionData simpleSubscriptionData : subscriptionGroupConfig.getSubscriptionDataSet()) {
                         if (topic.equals(simpleSubscriptionData.getTopic())) {
                             try {
-                                subscriptionData = FilterAPI.buildSubscriptionData(simpleSubscriptionData.getTopic(),
-                                        simpleSubscriptionData.getExpression(), simpleSubscriptionData.getExpressionType());
+                                subscriptionData = FilterAPI.buildSubscriptionData(simpleSubscriptionData.getTopic(), simpleSubscriptionData.getExpression(), simpleSubscriptionData.getExpressionType());
                             } catch (Exception e) {
                                 LOGGER.error("Try to build subscription for group:{}, topic:{} exception.", group, topic, e);
                             }
@@ -406,33 +362,29 @@ public class ConsumerLagCalculator {
                     subscriptionData = consumerGroupInfo.findSubscriptionData(topic);
                 }
             }
-
             if (null != subscriptionData) {
-                if (ExpressionType.TAG.equalsIgnoreCase(subscriptionData.getExpressionType())
-                        && !SubscriptionData.SUB_ALL.equals(subscriptionData.getSubString())) {
-                    count = messageStore.estimateMessageCount(topic, queueId, from, to,
-                            new DefaultMessageFilter(subscriptionData));
+                if (ExpressionType.TAG.equalsIgnoreCase(subscriptionData.getExpressionType()) && !SubscriptionData.SUB_ALL.equals(subscriptionData.getSubString())) {
+                    count = messageStore.estimateMessageCount(topic, queueId, from, to, new DefaultMessageFilter(subscriptionData));
                 } else if (ExpressionType.SQL92.equalsIgnoreCase(subscriptionData.getExpressionType())) {
                     ConsumerFilterData consumerFilterData = consumerFilterManager.get(topic, group);
-                    count = messageStore.estimateMessageCount(topic, queueId, from, to,
-                            new ExpressionMessageFilter(subscriptionData,
-                                    consumerFilterData,
-                                    consumerFilterManager));
+                    count = messageStore.estimateMessageCount(topic, queueId, from, to, new ExpressionMessageFilter(subscriptionData, consumerFilterData, consumerFilterManager));
                 }
             }
-
         }
         return count < 0 ? 0 : count;
     }
 
     private static class ProcessGroupInfo {
+
         public String group;
+
         public String topic;
+
         public boolean isPop;
+
         public String retryTopic;
 
-        public ProcessGroupInfo(String group, String topic, boolean isPop,
-                                String retryTopic) {
+        public ProcessGroupInfo(String group, String topic, boolean isPop, String retryTopic) {
             this.group = group;
             this.topic = topic;
             this.isPop = isPop;
@@ -441,8 +393,11 @@ public class ConsumerLagCalculator {
     }
 
     public static class BaseCalculateResult {
+
         public String group;
+
         public String topic;
+
         public boolean isRetry;
 
         public BaseCalculateResult(String group, String topic, boolean isRetry) {
@@ -453,7 +408,9 @@ public class ConsumerLagCalculator {
     }
 
     public static class CalculateLagResult extends BaseCalculateResult {
+
         public long lag;
+
         public long earliestUnconsumedTimestamp;
 
         public CalculateLagResult(String group, String topic, boolean isRetry) {
@@ -462,7 +419,9 @@ public class ConsumerLagCalculator {
     }
 
     public static class CalculateInflightResult extends BaseCalculateResult {
+
         public long inFlight;
+
         public long earliestUnPulledTimestamp;
 
         public CalculateInflightResult(String group, String topic, boolean isRetry) {
@@ -471,10 +430,12 @@ public class ConsumerLagCalculator {
     }
 
     public static class CalculateAvailableResult extends BaseCalculateResult {
+
         public long available;
 
         public CalculateAvailableResult(String group, String topic, boolean isRetry) {
             super(group, topic, isRetry);
         }
     }
+
 }

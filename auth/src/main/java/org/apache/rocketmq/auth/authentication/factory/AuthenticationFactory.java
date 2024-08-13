@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.auth.authentication.factory;
 
 import com.google.protobuf.GeneratedMessageV3;
@@ -40,8 +24,11 @@ import java.util.function.Supplier;
 public class AuthenticationFactory {
 
     private static final Map<String, Object> INSTANCE_MAP = new HashMap<>();
+
     private static final String PROVIDER_PREFIX = "PROVIDER_";
+
     private static final String METADATA_PROVIDER_PREFIX = "METADATA_PROVIDER_";
+
     private static final String EVALUATOR_PREFIX = "EVALUATOR_";
 
     @SuppressWarnings("unchecked")
@@ -51,8 +38,7 @@ public class AuthenticationFactory {
         }
         return computeIfAbsent(PROVIDER_PREFIX + config.getConfigName(), key -> {
             try {
-                Class<? extends AuthenticationProvider<? extends AuthenticationContext>> clazz =
-                        DefaultAuthenticationProvider.class;
+                Class<? extends AuthenticationProvider<? extends AuthenticationContext>> clazz = DefaultAuthenticationProvider.class;
                 if (StringUtils.isNotBlank(config.getAuthenticationProvider())) {
                     clazz = (Class<? extends AuthenticationProvider<? extends AuthenticationContext>>) Class.forName(config.getAuthenticationProvider());
                 }
@@ -81,8 +67,7 @@ public class AuthenticationFactory {
                 if (StringUtils.isBlank(config.getAuthenticationMetadataProvider())) {
                     return null;
                 }
-                Class<? extends AuthenticationMetadataProvider> clazz = (Class<? extends AuthenticationMetadataProvider>)
-                        Class.forName(config.getAuthenticationMetadataProvider());
+                Class<? extends AuthenticationMetadataProvider> clazz = (Class<? extends AuthenticationMetadataProvider>) Class.forName(config.getAuthenticationMetadataProvider());
                 AuthenticationMetadataProvider result = clazz.getDeclaredConstructor().newInstance();
                 result.initialize(config, metadataService);
                 return result;
@@ -121,8 +106,7 @@ public class AuthenticationFactory {
         return authenticationProvider.newContext(metadata, request);
     }
 
-    public static AuthenticationContext newContext(AuthConfig config, ChannelHandlerContext context,
-                                                   RemotingCommand command) {
+    public static AuthenticationContext newContext(AuthConfig config, ChannelHandlerContext context, RemotingCommand command) {
         AuthenticationProvider<AuthenticationContext> authenticationProvider = getProvider(config);
         if (authenticationProvider == null) {
             return null;
@@ -151,4 +135,5 @@ public class AuthenticationFactory {
         }
         return result != null ? (V) result : null;
     }
+
 }

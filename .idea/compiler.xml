@@ -9,7 +9,6 @@
         <outputRelativeToContentRoot value="true" />
         <module name="container" />
         <module name="controller" />
-        <module name="test" />
         <module name="auth" />
         <module name="openmessaging" />
         <module name="acl" />
@@ -27,5 +26,8 @@
         <module name="client" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="test" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

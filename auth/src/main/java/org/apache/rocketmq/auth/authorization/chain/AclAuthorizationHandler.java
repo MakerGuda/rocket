@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.auth.authorization.chain;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -40,22 +24,16 @@ public class AclAuthorizationHandler implements Handler<DefaultAuthorizationCont
 
     private final AuthorizationMetadataProvider authorizationMetadataProvider;
 
-    public AclAuthorizationHandler(AuthConfig config) {
-        this.authorizationMetadataProvider = AuthorizationFactory.getMetadataProvider(config);
-    }
-
     public AclAuthorizationHandler(AuthConfig config, Supplier<?> metadataService) {
         this.authorizationMetadataProvider = AuthorizationFactory.getMetadataProvider(config, metadataService);
     }
 
     private static void throwException(DefaultAuthorizationContext context, String detail) {
-        throw new AuthorizationException("{} has no permission to access {} from {}, " + detail,
-                context.getSubject().getSubjectKey(), context.getResource().getResourceKey(), context.getSourceIp());
+        throw new AuthorizationException("{} has no permission to access {} from {}, " + detail, context.getSubject().getSubjectKey(), context.getResource().getResourceKey(), context.getSourceIp());
     }
 
     @Override
-    public CompletableFuture<Void> handle(DefaultAuthorizationContext context,
-                                          HandlerChain<DefaultAuthorizationContext, CompletableFuture<Void>> chain) {
+    public CompletableFuture<Void> handle(DefaultAuthorizationContext context, HandlerChain<DefaultAuthorizationContext, CompletableFuture<Void>> chain) {
         if (this.authorizationMetadataProvider == null) {
             throw new AuthorizationException("The authorizationMetadataProvider is not configured");
         }
@@ -63,16 +41,10 @@ public class AclAuthorizationHandler implements Handler<DefaultAuthorizationCont
             if (acl == null) {
                 throwException(context, "no matched policies.");
             }
-
-            // 1. get the defined acl entries which match the request.
             PolicyEntry matchedEntry = matchPolicyEntries(context, acl);
-
-            // 2. if no matched acl entries, return deny
             if (matchedEntry == null) {
                 throwException(context, "no matched policies.");
             }
-
-            // 3. judge is the entries has denied decision.
             if (matchedEntry.getDecision() == Decision.DENY) {
                 throwException(context, "the decision is deny.");
             }
@@ -81,7 +53,6 @@ public class AclAuthorizationHandler implements Handler<DefaultAuthorizationCont
 
     private PolicyEntry matchPolicyEntries(DefaultAuthorizationContext context, Acl acl) {
         List<PolicyEntry> policyEntries = new ArrayList<>();
-
         Policy policy = acl.getPolicy(PolicyType.CUSTOM);
         if (policy != null) {
             List<PolicyEntry> entries = matchPolicyEntries(context, policy.getEntries());
@@ -89,7 +60,6 @@ public class AclAuthorizationHandler implements Handler<DefaultAuthorizationCont
                 policyEntries.addAll(entries);
             }
         }
-
         if (CollectionUtils.isEmpty(policyEntries)) {
             policy = acl.getPolicy(PolicyType.DEFAULT);
             if (policy != null) {
@@ -99,13 +69,10 @@ public class AclAuthorizationHandler implements Handler<DefaultAuthorizationCont
                 }
             }
         }
-
         if (CollectionUtils.isEmpty(policyEntries)) {
             return null;
         }
-
         policyEntries.sort(this::comparePolicyEntries);
-
         return policyEntries.get(0);
     }
 
@@ -113,11 +80,7 @@ public class AclAuthorizationHandler implements Handler<DefaultAuthorizationCont
         if (CollectionUtils.isEmpty(entries)) {
             return null;
         }
-        return entries.stream()
-                .filter(entry -> entry.isMatchResource(context.getResource()))
-                .filter(entry -> entry.isMatchAction(context.getActions()))
-                .filter(entry -> entry.isMatchEnvironment(Environment.of(context.getSourceIp())))
-                .collect(Collectors.toList());
+        return entries.stream().filter(entry -> entry.isMatchResource(context.getResource())).filter(entry -> entry.isMatchAction(context.getActions())).filter(entry -> entry.isMatchEnvironment(Environment.of(context.getSourceIp()))).collect(Collectors.toList());
     }
 
     private int comparePolicyEntries(PolicyEntry o1, PolicyEntry o2) {
@@ -151,14 +114,12 @@ public class AclAuthorizationHandler implements Handler<DefaultAuthorizationCont
                 compare = -1;
             }
         }
-
         if (compare != 0) {
             return compare;
         }
-
-        // the decision deny has higher priority
         Decision d1 = o1.getDecision();
         Decision d2 = o2.getDecision();
         return d1 == Decision.DENY ? 1 : d2 == Decision.DENY ? -1 : 0;
     }
+
 }

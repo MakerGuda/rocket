@@ -1,22 +1,8 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.auth.authorization.model;
 
 import com.google.common.collect.Lists;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.rocketmq.auth.authentication.model.Subject;
 import org.apache.rocketmq.auth.authorization.enums.Decision;
@@ -26,6 +12,8 @@ import org.apache.rocketmq.common.action.Action;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@Setter
 public class Acl {
 
     private Subject subject;
@@ -43,17 +31,12 @@ public class Acl {
         return acl;
     }
 
-    public static Acl of(Subject subject, List<Resource> resources, List<Action> actions, Environment environment,
-                         Decision decision) {
+    public static Acl of(Subject subject, List<Resource> resources, List<Action> actions, Environment environment, Decision decision) {
         Acl acl = new Acl();
         acl.setSubject(subject);
         Policy policy = Policy.of(resources, actions, environment, decision);
         acl.setPolicies(Lists.newArrayList(policy));
         return acl;
-    }
-
-    public void updatePolicy(Policy policy) {
-        this.updatePolicy(Lists.newArrayList(policy));
     }
 
     public void updatePolicy(List<Policy> policies) {
@@ -93,19 +76,4 @@ public class Acl {
         return null;
     }
 
-    public Subject getSubject() {
-        return subject;
-    }
-
-    public void setSubject(Subject subject) {
-        this.subject = subject;
-    }
-
-    public List<Policy> getPolicies() {
-        return policies;
-    }
-
-    public void setPolicies(List<Policy> policies) {
-        this.policies = policies;
-    }
 }

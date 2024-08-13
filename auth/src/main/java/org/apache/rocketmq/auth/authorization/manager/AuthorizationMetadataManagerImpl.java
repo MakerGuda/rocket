@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.auth.authorization.manager;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -69,9 +53,7 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
     public CompletableFuture<Void> createAcl(Acl acl) {
         try {
             validate(acl);
-
             initAcl(acl);
-
             CompletableFuture<? extends Subject> subjectFuture;
             if (acl.getSubject().isSubject(SubjectType.USER)) {
                 User user = (User) acl.getSubject();
@@ -79,7 +61,6 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
             } else {
                 subjectFuture = CompletableFuture.completedFuture(acl.getSubject());
             }
-
             return subjectFuture.thenCompose(subject -> {
                 if (subject == null) {
                     throw new AuthorizationException("The subject of {} is not exist.", acl.getSubject().getSubjectKey());
@@ -102,9 +83,7 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
     public CompletableFuture<Void> updateAcl(Acl acl) {
         try {
             validate(acl);
-
             initAcl(acl);
-
             CompletableFuture<? extends Subject> subjectFuture;
             if (acl.getSubject().isSubject(SubjectType.USER)) {
                 User user = (User) acl.getSubject();
@@ -112,7 +91,6 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
             } else {
                 subjectFuture = CompletableFuture.completedFuture(acl.getSubject());
             }
-
             return subjectFuture.thenCompose(subject -> {
                 if (subject == null) {
                     throw new AuthorizationException("The subject of {} is not exist.", acl.getSubject().getSubjectKey());
@@ -125,15 +103,9 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
                 oldAcl.updatePolicy(acl.getPolicies());
                 return this.getAuthorizationMetadataProvider().updateAcl(oldAcl);
             });
-
         } catch (Exception e) {
             return this.handleException(e);
         }
-    }
-
-    @Override
-    public CompletableFuture<Void> deleteAcl(Subject subject) {
-        return this.deleteAcl(subject, null, null);
     }
 
     @Override
@@ -145,7 +117,6 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
             if (policyType == null) {
                 policyType = PolicyType.CUSTOM;
             }
-
             CompletableFuture<? extends Subject> subjectFuture;
             if (subject.isSubject(SubjectType.USER)) {
                 User user = (User) subject;
@@ -154,7 +125,6 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
                 subjectFuture = CompletableFuture.completedFuture(subject);
             }
             CompletableFuture<Acl> aclFuture = this.getAuthorizationMetadataProvider().getAcl(subject);
-
             PolicyType finalPolicyType = policyType;
             return subjectFuture.thenCombine(aclFuture, (sub, oldAcl) -> {
                 if (sub == null) {
@@ -173,7 +143,6 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
                 }
                 return this.getAuthorizationMetadataProvider().updateAcl(oldAcl);
             });
-
         } catch (Exception e) {
             return this.handleException(e);
         }
@@ -278,4 +247,5 @@ public class AuthorizationMetadataManagerImpl implements AuthorizationMetadataMa
         }
         return authorizationMetadataProvider;
     }
+
 }

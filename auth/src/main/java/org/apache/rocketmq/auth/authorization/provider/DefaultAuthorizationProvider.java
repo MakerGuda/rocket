@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.auth.authorization.provider;
 
 import com.google.protobuf.GeneratedMessageV3;
@@ -41,8 +25,11 @@ import java.util.stream.Collectors;
 public class DefaultAuthorizationProvider implements AuthorizationProvider<DefaultAuthorizationContext> {
 
     protected final Logger log = LoggerFactory.getLogger(LoggerName.ROCKETMQ_AUTH_AUDIT_LOGGER_NAME);
+
     protected AuthConfig authConfig;
+
     protected Supplier<?> metadataService;
+
     protected AuthorizationContextBuilder authorizationContextBuilder;
 
     @Override
@@ -59,8 +46,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider<Defau
 
     @Override
     public CompletableFuture<Void> authorize(DefaultAuthorizationContext context) {
-        return this.newHandlerChain().handle(context)
-                .whenComplete((nil, ex) -> doAuditLog(context, ex));
+        return this.newHandlerChain().handle(context).whenComplete((nil, ex) -> doAuditLog(context, ex));
     }
 
     @Override
@@ -74,9 +60,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider<Defau
     }
 
     protected HandlerChain<DefaultAuthorizationContext, CompletableFuture<Void>> newHandlerChain() {
-        return HandlerChain.<DefaultAuthorizationContext, CompletableFuture<Void>>create()
-                .addNext(new UserAuthorizationHandler(authConfig, metadataService))
-                .addNext(new AclAuthorizationHandler(authConfig, metadataService));
+        return HandlerChain.<DefaultAuthorizationContext, CompletableFuture<Void>>create().addNext(new UserAuthorizationHandler(authConfig, metadataService)).addNext(new AclAuthorizationHandler(authConfig, metadataService));
     }
 
     protected void doAuditLog(DefaultAuthorizationContext context, Throwable ex) {
@@ -88,8 +72,7 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider<Defau
             decision = Decision.DENY;
         }
         String subject = context.getSubject().getSubjectKey();
-        String actions = context.getActions().stream().map(Action::getName)
-                .collect(Collectors.joining(","));
+        String actions = context.getActions().stream().map(Action::getName).collect(Collectors.joining(","));
         String sourceIp = context.getSourceIp();
         String resource = context.getResource().getResourceKey();
         String request = context.getRpcCode();
@@ -100,4 +83,5 @@ public class DefaultAuthorizationProvider implements AuthorizationProvider<Defau
             log.info(format, subject, decision.getName(), actions, sourceIp, resource, request);
         }
     }
+
 }

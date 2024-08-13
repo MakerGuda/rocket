@@ -1,21 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.broker.longpolling;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.broker.BrokerController;
 import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.common.SystemClock;
@@ -30,13 +16,22 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+@Getter
+@Setter
 public class PullRequestHoldService extends ServiceThread {
+
     protected static final String TOPIC_QUEUEID_SEPARATOR = "@";
+
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
+
     protected final BrokerController brokerController;
+
     private final SystemClock systemClock = new SystemClock();
-    protected ConcurrentMap<String/* topic@queueId */, ManyPullRequest> pullRequestTable =
-            new ConcurrentHashMap<>(1024);
+
+    /**
+     * key: topicQueueId
+     */
+    protected ConcurrentMap<String, ManyPullRequest> pullRequestTable = new ConcurrentHashMap<>(1024);
 
     public PullRequestHoldService(final BrokerController brokerController) {
         this.brokerController = brokerController;
@@ -52,7 +47,6 @@ public class PullRequestHoldService extends ServiceThread {
                 mpr = prev;
             }
         }
-
         pullRequest.getRequestCommand().setSuspended(true);
         mpr.addPullRequest(pullRequest);
     }
@@ -75,7 +69,6 @@ public class PullRequestHoldService extends ServiceThread {
                 } else {
                     this.waitForRunning(this.brokerController.getBrokerConfig().getShortPollingTimeMills());
                 }
-
                 long beginLockTimestamp = this.systemClock.now();
                 this.checkHoldRequest();
                 long costTime = this.systemClock.now() - beginLockTimestamp;
@@ -86,7 +79,6 @@ public class PullRequestHoldService extends ServiceThread {
                 log.warn(this.getServiceName() + " service has exception. ", e);
             }
         }
-
         log.info("{} service end", this.getServiceName());
     }
 
@@ -108,9 +100,7 @@ public class PullRequestHoldService extends ServiceThread {
                 try {
                     this.notifyMessageArriving(topic, queueId, offset);
                 } catch (Throwable e) {
-                    log.error(
-                            "PullRequestHoldService: failed to check hold request failed, topic={}, queueId={}", topic,
-                            queueId, e);
+                    log.error("PullRequestHoldService: failed to check hold request failed, topic={}, queueId={}", topic, queueId, e);
                 }
             }
         }
@@ -120,57 +110,42 @@ public class PullRequestHoldService extends ServiceThread {
         notifyMessageArriving(topic, queueId, maxOffset, null, 0, null, null);
     }
 
-    public void notifyMessageArriving(final String topic, final int queueId, final long maxOffset, final Long tagsCode,
-                                      long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
+    public void notifyMessageArriving(final String topic, final int queueId, final long maxOffset, final Long tagsCode, long msgStoreTime, byte[] filterBitMap, Map<String, String> properties) {
         String key = this.buildKey(topic, queueId);
         ManyPullRequest mpr = this.pullRequestTable.get(key);
         if (mpr != null) {
             List<PullRequest> requestList = mpr.cloneListAndClear();
             if (requestList != null) {
                 List<PullRequest> replayList = new ArrayList<>();
-
                 for (PullRequest request : requestList) {
                     long newestOffset = maxOffset;
                     if (newestOffset <= request.getPullFromThisOffset()) {
                         newestOffset = this.brokerController.getMessageStore().getMaxOffsetInQueue(topic, queueId);
                     }
-
                     if (newestOffset > request.getPullFromThisOffset()) {
-                        boolean match = request.getMessageFilter().isMatchedByConsumeQueue(tagsCode,
-                                new ConsumeQueueExt.CqExtUnit(tagsCode, msgStoreTime, filterBitMap));
-                        // match by bit map, need eval again when properties is not null.
+                        boolean match = request.getMessageFilter().isMatchedByConsumeQueue(tagsCode, new ConsumeQueueExt.CqExtUnit(tagsCode, msgStoreTime, filterBitMap));
                         if (match && properties != null) {
                             match = request.getMessageFilter().isMatchedByCommitLog(null, properties);
                         }
-
                         if (match) {
                             try {
-                                this.brokerController.getPullMessageProcessor().executeRequestWhenWakeup(request.getClientChannel(),
-                                        request.getRequestCommand());
+                                this.brokerController.getPullMessageProcessor().executeRequestWhenWakeup(request.getClientChannel(), request.getRequestCommand());
                             } catch (Throwable e) {
-                                log.error(
-                                        "PullRequestHoldService#notifyMessageArriving: failed to execute request when "
-                                                + "message matched, topic={}, queueId={}", topic, queueId, e);
+                                log.error("PullRequestHoldService#notifyMessageArriving: failed to execute request when " + "message matched, topic={}, queueId={}", topic, queueId, e);
                             }
                             continue;
                         }
                     }
-
                     if (System.currentTimeMillis() >= (request.getSuspendTimestamp() + request.getTimeoutMillis())) {
                         try {
-                            this.brokerController.getPullMessageProcessor().executeRequestWhenWakeup(request.getClientChannel(),
-                                    request.getRequestCommand());
+                            this.brokerController.getPullMessageProcessor().executeRequestWhenWakeup(request.getClientChannel(), request.getRequestCommand());
                         } catch (Throwable e) {
-                            log.error(
-                                    "PullRequestHoldService#notifyMessageArriving: failed to execute request when time's "
-                                            + "up, topic={}, queueId={}", topic, queueId, e);
+                            log.error("PullRequestHoldService#notifyMessageArriving: failed to execute request when time's " + "up, topic={}, queueId={}", topic, queueId, e);
                         }
                         continue;
                     }
-
                     replayList.add(request);
                 }
-
                 if (!replayList.isEmpty()) {
                     mpr.addPullRequest(replayList);
                 }
@@ -186,13 +161,12 @@ public class PullRequestHoldService extends ServiceThread {
             for (PullRequest request : mpr.cloneListAndClear()) {
                 try {
                     log.info("notify master online, wakeup {} {}", request.getClientChannel(), request.getRequestCommand());
-                    this.brokerController.getPullMessageProcessor().executeRequestWhenWakeup(request.getClientChannel(),
-                            request.getRequestCommand());
+                    this.brokerController.getPullMessageProcessor().executeRequestWhenWakeup(request.getClientChannel(), request.getRequestCommand());
                 } catch (Throwable e) {
                     log.error("execute request when master online failed.", e);
                 }
             }
         }
-
     }
+
 }

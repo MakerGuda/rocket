@@ -1,21 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.auth.authorization.model;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.rocketmq.auth.authorization.enums.Decision;
 import org.apache.rocketmq.common.action.Action;
@@ -23,6 +9,8 @@ import org.apache.rocketmq.common.action.Action;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Getter
+@Setter
 public class PolicyEntry {
 
     private Resource resource;
@@ -42,8 +30,7 @@ public class PolicyEntry {
         return policyEntry;
     }
 
-    public void updateEntry(List<Action> actions, Environment environment,
-                            Decision decision) {
+    public void updateEntry(List<Action> actions, Environment environment, Decision decision) {
         this.setActions(actions);
         this.setEnvironment(environment);
         this.setDecision(decision);
@@ -60,9 +47,7 @@ public class PolicyEntry {
         if (actions.contains(Action.ANY)) {
             return true;
         }
-        return actions.stream()
-                .anyMatch(action -> this.actions.contains(action)
-                        || this.actions.contains(Action.ALL));
+        return actions.stream().anyMatch(action -> this.actions.contains(action) || this.actions.contains(Action.ALL));
     }
 
     public boolean isMatchEnvironment(Environment environment) {
@@ -83,39 +68,7 @@ public class PolicyEntry {
         if (CollectionUtils.isEmpty(actions)) {
             return null;
         }
-        return actions.stream().map(Action::getName)
-                .collect(Collectors.toList());
+        return actions.stream().map(Action::getName).collect(Collectors.toList());
     }
 
-    public Resource getResource() {
-        return resource;
-    }
-
-    public void setResource(Resource resource) {
-        this.resource = resource;
-    }
-
-    public List<Action> getActions() {
-        return actions;
-    }
-
-    public void setActions(List<Action> actions) {
-        this.actions = actions;
-    }
-
-    public Environment getEnvironment() {
-        return environment;
-    }
-
-    public void setEnvironment(Environment environment) {
-        this.environment = environment;
-    }
-
-    public Decision getDecision() {
-        return decision;
-    }
-
-    public void setDecision(Decision decision) {
-        this.decision = decision;
-    }
 }

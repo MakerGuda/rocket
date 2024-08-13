@@ -103,7 +103,7 @@ public class ClientProcessor extends AbstractProcessor {
     }
 
     public void doChannelCloseEvent(String remoteAddr, Channel channel) {
-        this.serviceManager.getConsumerManager().doChannelCloseEvent(remoteAddr, channel);
+        this.serviceManager.getConsumerManager().doChannelCloseEvent(channel);
         this.serviceManager.getProducerManager().doChannelCloseEvent(remoteAddr, channel);
     }
 
