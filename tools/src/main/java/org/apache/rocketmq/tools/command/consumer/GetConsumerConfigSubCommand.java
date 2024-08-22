@@ -1,21 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.consumer;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -56,16 +42,13 @@ public class GetConsumerConfigSubCommand implements SubCommand {
     }
 
     @Override
-    public void execute(CommandLine commandLine, Options options,
-                        RPCHook rpcHook) throws SubCommandException {
+    public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt adminExt = new DefaultMQAdminExt(rpcHook);
         adminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
         String groupName = commandLine.getOptionValue('g').trim();
-
         if (commandLine.hasOption('n')) {
             adminExt.setNamesrvAddr(commandLine.getOptionValue('n').trim());
         }
-
         try {
             adminExt.start();
             List<ConsumerConfigInfo> consumerConfigInfoList = new ArrayList<>();
@@ -84,8 +67,7 @@ public class GetConsumerConfigSubCommand implements SubCommand {
                 return;
             }
             for (ConsumerConfigInfo info : consumerConfigInfoList) {
-                System.out.printf("=============================%s:%s=============================\n",
-                        info.getClusterName(), info.getBrokerName());
+                System.out.printf("=============================%s:%s=============================\n", info.getClusterName(), info.getBrokerName());
                 SubscriptionGroupConfig config = info.getSubscriptionGroupConfig();
                 Field[] fields = config.getClass().getDeclaredFields();
                 for (Field field : fields) {
@@ -115,7 +97,10 @@ public class GetConsumerConfigSubCommand implements SubCommand {
     }
 }
 
+@Getter
+@Setter
 class ConsumerConfigInfo {
+
     private String clusterName;
 
     private String brokerName;
@@ -128,27 +113,4 @@ class ConsumerConfigInfo {
         this.subscriptionGroupConfig = subscriptionGroupConfig;
     }
 
-    public String getClusterName() {
-        return clusterName;
-    }
-
-    public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
-    }
-
-    public String getBrokerName() {
-        return brokerName;
-    }
-
-    public void setBrokerName(String brokerName) {
-        this.brokerName = brokerName;
-    }
-
-    public SubscriptionGroupConfig getSubscriptionGroupConfig() {
-        return subscriptionGroupConfig;
-    }
-
-    public void setSubscriptionGroupConfig(SubscriptionGroupConfig subscriptionGroupConfig) {
-        this.subscriptionGroupConfig = subscriptionGroupConfig;
-    }
 }

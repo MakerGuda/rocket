@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.broker;
 
 import com.alibaba.fastjson.JSON;
@@ -39,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 public class GetColdDataFlowCtrInfoSubCommand implements SubCommand {
+
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Override
@@ -56,20 +41,16 @@ public class GetColdDataFlowCtrInfoSubCommand implements SubCommand {
         Option opt = new Option("b", "brokerAddr", true, "get from which broker");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("c", "clusterName", true, "get from which cluster");
         opt.setRequired(false);
         options.addOption(opt);
-
         return options;
     }
 
     @Override
-    public void execute(final CommandLine commandLine, final Options options, final RPCHook rpcHook)
-            throws SubCommandException {
+    public void execute(final CommandLine commandLine, final Options options, final RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-
         try {
             if (commandLine.hasOption('b')) {
                 String brokerAddr = commandLine.getOptionValue('b').trim();
@@ -93,11 +74,7 @@ public class GetColdDataFlowCtrInfoSubCommand implements SubCommand {
         }
     }
 
-    protected void getAndPrint(final MQAdminExt defaultMQAdminExt, final String printPrefix, final String addr)
-            throws InterruptedException, RemotingConnectException,
-            UnsupportedEncodingException, RemotingTimeoutException,
-            MQBrokerException, RemotingSendRequestException {
-
+    protected void getAndPrint(final MQAdminExt defaultMQAdminExt, final String printPrefix, final String addr) throws InterruptedException, RemotingConnectException, UnsupportedEncodingException, RemotingTimeoutException, MQBrokerException, RemotingSendRequestException {
         System.out.print(" " + printPrefix);
         String rstStr = defaultMQAdminExt.getColdDataFlowCtrInfo(addr);
         if (rstStr == null) {
@@ -106,17 +83,14 @@ public class GetColdDataFlowCtrInfoSubCommand implements SubCommand {
         }
         JSONObject jsonObject = JSON.parseObject(rstStr);
         Map<String, JSONObject> runtimeTable = (Map<String, JSONObject>) jsonObject.get("runtimeTable");
-        runtimeTable.entrySet().stream().forEach(i -> {
-            JSONObject value = i.getValue();
+        runtimeTable.forEach((key, value) -> {
             Date lastColdReadTimeMillsDate = new Date(Long.parseLong(String.valueOf(value.get("lastColdReadTimeMills"))));
             value.put("lastColdReadTimeFormat", sdf.format(lastColdReadTimeMillsDate));
             value.remove("lastColdReadTimeMills");
-
             Date createTimeMillsDate = new Date(Long.parseLong(String.valueOf(value.get("createTimeMills"))));
             value.put("createTimeFormat", sdf.format(createTimeMillsDate));
             value.remove("createTimeMills");
         });
-
         String formatStr = JSON.toJSONString(jsonObject, true);
         System.out.printf(formatStr);
         System.out.printf("%n");

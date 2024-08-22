@@ -1,24 +1,4 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.client.consumer;
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.QueryResult;
@@ -36,11 +16,10 @@ import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.apache.rocketmq.remoting.protocol.NamespaceUtil;
 import org.apache.rocketmq.remoting.protocol.heartbeat.MessageModel;
 
-/**
- * @deprecated Default pulling consumer. This class will be removed in 2022, and a better implementation
- * {@link DefaultLitePullConsumer} is recommend to use in the scenario of actively pulling messages.
- */
-@Deprecated
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsumer {
 
     protected final transient DefaultMQPullConsumerImpl defaultMQPullConsumerImpl;
@@ -424,10 +403,6 @@ public class DefaultMQPullConsumer extends ClientConfig implements MQPullConsume
         this.defaultMQPullConsumerImpl.sendMessageBack(msg, delayLevel, brokerName, consumerGroup);
     }
 
-    /**
-     * This method will be removed in a certain version after April 5, 2020, so please do not use this method.
-     */
-    @Deprecated
     public OffsetStore getOffsetStore() {
         return offsetStore;
     }

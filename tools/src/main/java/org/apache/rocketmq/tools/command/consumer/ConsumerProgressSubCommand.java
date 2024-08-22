@@ -1,21 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.consumer;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -42,6 +28,7 @@ import org.apache.rocketmq.tools.command.SubCommandException;
 import java.util.*;
 
 public class ConsumerProgressSubCommand implements SubCommand {
+
     private static final Logger log = LoggerFactory.getLogger(ConsumerProgressSubCommand.class);
 
     @Override
@@ -59,27 +46,22 @@ public class ConsumerProgressSubCommand implements SubCommand {
         Option opt = new Option("g", "groupName", true, "consumer group name");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("t", "topicName", true, "topic name");
         opt.setRequired(false);
         options.addOption(opt);
-
         Option optionShowClientIP = new Option("s", "showClientIP", true, "Show Client IP per Queue");
         optionShowClientIP.setRequired(false);
         options.addOption(optionShowClientIP);
-
         return options;
     }
 
-    private Map<MessageQueue, String> getMessageQueueAllocationResult(DefaultMQAdminExt defaultMQAdminExt,
-                                                                      String groupName) {
+    private Map<MessageQueue, String> getMessageQueueAllocationResult(DefaultMQAdminExt defaultMQAdminExt, String groupName) {
         Map<MessageQueue, String> results = new HashMap<>();
         try {
             ConsumerConnection consumerConnection = defaultMQAdminExt.examineConsumerConnectionInfo(groupName);
             for (Connection connection : consumerConnection.getConnectionSet()) {
                 String clientId = connection.getClientId();
-                ConsumerRunningInfo consumerRunningInfo = defaultMQAdminExt.getConsumerRunningInfo(groupName, clientId,
-                        false, false);
+                ConsumerRunningInfo consumerRunningInfo = defaultMQAdminExt.getConsumerRunningInfo(groupName, clientId, false, false);
                 for (MessageQueue messageQueue : consumerRunningInfo.getMqTable().keySet()) {
                     results.put(messageQueue, clientId.split("@")[0]);
                 }
@@ -94,17 +76,12 @@ public class ConsumerProgressSubCommand implements SubCommand {
     public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-
         if (commandLine.hasOption('n')) {
             defaultMQAdminExt.setNamesrvAddr(commandLine.getOptionValue('n').trim());
         }
-
         try {
             defaultMQAdminExt.start();
-
-            boolean showClientIP = commandLine.hasOption('s')
-                    && "true".equalsIgnoreCase(commandLine.getOptionValue('s'));
-
+            boolean showClientIP = commandLine.hasOption('s') && "true".equalsIgnoreCase(commandLine.getOptionValue('s'));
             if (commandLine.hasOption('g')) {
                 String consumerGroup = commandLine.getOptionValue('g').trim();
                 String topicName = commandLine.hasOption('t') ? commandLine.getOptionValue('t').trim() : null;
@@ -116,32 +93,14 @@ public class ConsumerProgressSubCommand implements SubCommand {
                 }
                 List<MessageQueue> mqList = new LinkedList<>(consumeStats.getOffsetTable().keySet());
                 Collections.sort(mqList);
-
                 Map<MessageQueue, String> messageQueueAllocationResult = null;
                 if (showClientIP) {
                     messageQueueAllocationResult = getMessageQueueAllocationResult(defaultMQAdminExt, consumerGroup);
                 }
                 if (showClientIP) {
-                    System.out.printf("%-64s  %-32s  %-4s  %-20s  %-20s  %-20s %-20s %-20s%s%n",
-                            "#Topic",
-                            "#Broker Name",
-                            "#QID",
-                            "#Broker Offset",
-                            "#Consumer Offset",
-                            "#Client IP",
-                            "#Diff",
-                            "#Inflight",
-                            "#LastTime");
+                    System.out.printf("%-64s  %-32s  %-4s  %-20s  %-20s  %-20s %-20s %-20s%s%n", "#Topic", "#Broker Name", "#QID", "#Broker Offset", "#Consumer Offset", "#Client IP", "#Diff", "#Inflight", "#LastTime");
                 } else {
-                    System.out.printf("%-64s  %-32s  %-4s  %-20s  %-20s  %-20s %-20s%s%n",
-                            "#Topic",
-                            "#Broker Name",
-                            "#QID",
-                            "#Broker Offset",
-                            "#Consumer Offset",
-                            "#Diff",
-                            "#Inflight",
-                            "#LastTime");
+                    System.out.printf("%-64s  %-32s  %-4s  %-20s  %-20s  %-20s %-20s%s%n", "#Topic", "#Broker Name", "#QID", "#Broker Offset", "#Consumer Offset", "#Diff", "#Inflight", "#LastTime");
                 }
                 long diffTotal = 0L;
                 long inflightTotal = 0L;
@@ -158,54 +117,24 @@ public class ConsumerProgressSubCommand implements SubCommand {
                         } else {
                             lastTime = UtilAll.formatDate(new Date(offsetWrapper.getLastTimestamp()), UtilAll.YYYY_MM_DD_HH_MM_SS);
                         }
-                    } catch (Exception e) {
-                        // ignore
+                    } catch (Exception ignore) {
                     }
-
                     String clientIP = null;
                     if (showClientIP) {
                         clientIP = messageQueueAllocationResult.get(mq);
                     }
                     if (showClientIP) {
-                        System.out.printf("%-64s  %-32s  %-4d  %-20d  %-20d  %-20s %-20d %-20d %s%n",
-                                UtilAll.frontStringAtLeast(mq.getTopic(), 64),
-                                UtilAll.frontStringAtLeast(mq.getBrokerName(), 32),
-                                mq.getQueueId(),
-                                offsetWrapper.getBrokerOffset(),
-                                offsetWrapper.getConsumerOffset(),
-                                null != clientIP ? clientIP : "N/A",
-                                diff,
-                                inflight,
-                                lastTime
-                        );
+                        System.out.printf("%-64s  %-32s  %-4d  %-20d  %-20d  %-20s %-20d %-20d %s%n", UtilAll.frontStringAtLeast(mq.getTopic(), 64), UtilAll.frontStringAtLeast(mq.getBrokerName(), 32), mq.getQueueId(), offsetWrapper.getBrokerOffset(), offsetWrapper.getConsumerOffset(), null != clientIP ? clientIP : "N/A", diff, inflight, lastTime);
                     } else {
-                        System.out.printf("%-64s  %-32s  %-4d  %-20d  %-20d  %-20d %-20d %s%n",
-                                UtilAll.frontStringAtLeast(mq.getTopic(), 64),
-                                UtilAll.frontStringAtLeast(mq.getBrokerName(), 32),
-                                mq.getQueueId(),
-                                offsetWrapper.getBrokerOffset(),
-                                offsetWrapper.getConsumerOffset(),
-                                diff,
-                                inflight,
-                                lastTime
-                        );
+                        System.out.printf("%-64s  %-32s  %-4d  %-20d  %-20d  %-20d %-20d %s%n", UtilAll.frontStringAtLeast(mq.getTopic(), 64), UtilAll.frontStringAtLeast(mq.getBrokerName(), 32), mq.getQueueId(), offsetWrapper.getBrokerOffset(), offsetWrapper.getConsumerOffset(), diff, inflight, lastTime);
                     }
                 }
-
                 System.out.printf("%n");
                 System.out.printf("Consume TPS: %.2f%n", consumeStats.getConsumeTps());
                 System.out.printf("Consume Diff Total: %d%n", diffTotal);
                 System.out.printf("Consume Inflight Total: %d%n", inflightTotal);
             } else {
-                System.out.printf("%-64s  %-6s  %-24s %-5s  %-14s  %-7s  %s%n",
-                        "#Group",
-                        "#Count",
-                        "#Version",
-                        "#Type",
-                        "#Model",
-                        "#TPS",
-                        "#Diff Total"
-                );
+                System.out.printf("%-64s  %-6s  %-24s %-5s  %-14s  %-7s  %s%n", "#Group", "#Count", "#Version", "#Type", "#Model", "#TPS", "#Diff Total");
                 TopicList topicList = defaultMQAdminExt.fetchAllTopicList();
                 for (String topic : topicList.getTopicList()) {
                     if (topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
@@ -217,29 +146,24 @@ public class ConsumerProgressSubCommand implements SubCommand {
                             } catch (Exception e) {
                                 log.warn("examineConsumeStats exception, " + consumerGroup, e);
                             }
-
                             ConsumerConnection cc = null;
                             try {
                                 cc = defaultMQAdminExt.examineConsumerConnectionInfo(consumerGroup);
                             } catch (Exception e) {
                                 log.warn("examineConsumerConnectionInfo exception, " + consumerGroup, e);
                             }
-
                             GroupConsumeInfo groupConsumeInfo = new GroupConsumeInfo();
                             groupConsumeInfo.setGroup(consumerGroup);
-
                             if (consumeStats != null) {
                                 groupConsumeInfo.setConsumeTps((int) consumeStats.getConsumeTps());
                                 groupConsumeInfo.setDiffTotal(consumeStats.computeTotalDiff());
                             }
-
                             if (cc != null) {
                                 groupConsumeInfo.setCount(cc.getConnectionSet().size());
                                 groupConsumeInfo.setMessageModel(cc.getMessageModel());
                                 groupConsumeInfo.setConsumeType(cc.getConsumeType());
                                 groupConsumeInfo.setVersion(cc.computeMinVersion());
                             }
-
                             System.out.printf("%-64s  %-6d  %-24s %-5s  %-14s  %-7d  %d%n",
                                     UtilAll.frontStringAtLeast(groupConsumeInfo.getGroup(), 64),
                                     groupConsumeInfo.getCount(),
@@ -263,36 +187,29 @@ public class ConsumerProgressSubCommand implements SubCommand {
     }
 }
 
+@Getter
+@Setter
 class GroupConsumeInfo implements Comparable<GroupConsumeInfo> {
+
     private String group;
+
     private int version;
+
     private int count;
+
     private ConsumeType consumeType;
+
     private MessageModel messageModel;
+
     private int consumeTps;
+
     private long diffTotal;
-
-    public String getGroup() {
-        return group;
-    }
-
-    public void setGroup(String group) {
-        this.group = group;
-    }
 
     public String consumeTypeDesc() {
         if (this.count != 0) {
             return this.getConsumeType() == ConsumeType.CONSUME_ACTIVELY ? "PULL" : "PUSH";
         }
         return "";
-    }
-
-    public ConsumeType getConsumeType() {
-        return consumeType;
-    }
-
-    public void setConsumeType(ConsumeType consumeType) {
-        this.consumeType = consumeType;
     }
 
     public String messageModelDesc() {
@@ -302,14 +219,6 @@ class GroupConsumeInfo implements Comparable<GroupConsumeInfo> {
         return "";
     }
 
-    public MessageModel getMessageModel() {
-        return messageModel;
-    }
-
-    public void setMessageModel(MessageModel messageModel) {
-        this.messageModel = messageModel;
-    }
-
     public String versionDesc() {
         if (this.count != 0) {
             return MQVersion.getVersionDesc(this.version);
@@ -317,44 +226,12 @@ class GroupConsumeInfo implements Comparable<GroupConsumeInfo> {
         return "";
     }
 
-    public int getCount() {
-        return count;
-    }
-
-    public void setCount(int count) {
-        this.count = count;
-    }
-
-    public long getDiffTotal() {
-        return diffTotal;
-    }
-
-    public void setDiffTotal(long diffTotal) {
-        this.diffTotal = diffTotal;
-    }
-
     @Override
     public int compareTo(GroupConsumeInfo o) {
         if (this.count != o.count) {
             return o.count - this.count;
         }
-
         return (int) (o.diffTotal - diffTotal);
     }
 
-    public int getConsumeTps() {
-        return consumeTps;
-    }
-
-    public void setConsumeTps(int consumeTps) {
-        this.consumeTps = consumeTps;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
-    }
 }

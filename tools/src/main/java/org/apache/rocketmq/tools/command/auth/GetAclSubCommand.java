@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.auth;
 
 import org.apache.commons.cli.CommandLine;
@@ -50,36 +34,26 @@ public class GetAclSubCommand implements SubCommand {
     @Override
     public Options buildCommandlineOptions(Options options) {
         OptionGroup optionGroup = new OptionGroup();
-
         Option opt = new Option("b", "brokerAddr", true, "get acl for which broker");
         optionGroup.addOption(opt);
-
         opt = new Option("c", "clusterName", true, "get acl for specified cluster");
         optionGroup.addOption(opt);
-
         optionGroup.setRequired(true);
         options.addOptionGroup(optionGroup);
-
         opt = new Option("s", "subject", true, "the subject of acl to get");
         options.addOption(opt);
-
         return options;
     }
 
     @Override
-    public void execute(CommandLine commandLine, Options options,
-                        RPCHook rpcHook) throws SubCommandException {
-
+    public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-
         try {
             String subject = StringUtils.trim(commandLine.getOptionValue('s'));
-
             if (commandLine.hasOption('b')) {
                 String addr = StringUtils.trim(commandLine.getOptionValue('b'));
                 defaultMQAdminExt.start();
-
                 AclInfo aclInfo = defaultMQAdminExt.getAcl(addr, subject);
                 if (aclInfo != null) {
                     printAcl(aclInfo);
@@ -87,11 +61,8 @@ public class GetAclSubCommand implements SubCommand {
                 return;
             } else if (commandLine.hasOption('c')) {
                 String clusterName = StringUtils.trim(commandLine.getOptionValue('c'));
-
                 defaultMQAdminExt.start();
-
-                Set<String> masterSet =
-                        CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
+                Set<String> masterSet = CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
                 if (CollectionUtils.isEmpty(masterSet)) {
                     throw new SubCommandException(this.getClass().getSimpleName() + " command failed, there is no broker in cluster.");
                 }
@@ -103,7 +74,6 @@ public class GetAclSubCommand implements SubCommand {
                 }
                 return;
             }
-
             ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
         } catch (Exception e) {
             throw new SubCommandException(this.getClass().getSimpleName() + " command failed", e);
@@ -126,10 +96,8 @@ public class GetAclSubCommand implements SubCommand {
             if (CollectionUtils.isEmpty(entries)) {
                 return;
             }
-            entries.forEach(entry -> {
-                System.out.printf(FORMAT, acl.getSubject(), policy.getPolicyType(), entry.getResource(),
-                        entry.getActions(), entry.getSourceIps(), entry.getDecision());
-            });
+            entries.forEach(entry -> System.out.printf(FORMAT, acl.getSubject(), policy.getPolicyType(), entry.getResource(), entry.getActions(), entry.getSourceIps(), entry.getDecision()));
         });
     }
+
 }

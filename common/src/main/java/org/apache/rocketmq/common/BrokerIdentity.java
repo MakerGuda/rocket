@@ -18,8 +18,11 @@ import java.net.UnknownHostException;
 public class BrokerIdentity {
 
     public static final BrokerIdentity BROKER_CONTAINER_IDENTITY = new BrokerIdentity(true);
+
     protected static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
+
     private static final String DEFAULT_CLUSTER_NAME = "DefaultCluster";
+
     private static String localHostName;
 
     static {

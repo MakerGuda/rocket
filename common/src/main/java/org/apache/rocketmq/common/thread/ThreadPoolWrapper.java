@@ -18,8 +18,7 @@ public class ThreadPoolWrapper {
 
     private List<ThreadPoolStatusMonitor> statusPrinters;
 
-    ThreadPoolWrapper(final String name, final ThreadPoolExecutor threadPoolExecutor,
-                      final List<ThreadPoolStatusMonitor> statusPrinters) {
+    ThreadPoolWrapper(final String name, final ThreadPoolExecutor threadPoolExecutor, final List<ThreadPoolStatusMonitor> statusPrinters) {
         this.name = name;
         this.threadPoolExecutor = threadPoolExecutor;
         this.statusPrinters = statusPrinters;
@@ -81,10 +80,6 @@ public class ThreadPoolWrapper {
             return new ThreadPoolWrapper(this.name, this.threadPoolExecutor, this.statusPrinters);
         }
 
-        @java.lang.Override
-        public java.lang.String toString() {
-            return "ThreadPoolWrapper.ThreadPoolWrapperBuilder(name=" + this.name + ", threadPoolExecutor=" + this.threadPoolExecutor + ", statusPrinters=" + this.statusPrinters + ")";
-        }
     }
 
 }

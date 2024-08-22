@@ -89,8 +89,7 @@ public class StatisticsItem {
         if (item == null) {
             return snapshot();
         }
-        if (!statKind.equals(item.statKind) || !statObject.equals(item.statObject) || !Arrays.equals(itemNames,
-                item.itemNames)) {
+        if (!statKind.equals(item.statKind) || !statObject.equals(item.statObject) || !Arrays.equals(itemNames, item.itemNames)) {
             throw new IllegalArgumentException("StatisticsItem's kind, key and itemNames must be exactly the same");
         }
         StatisticsItem ret = new StatisticsItem(statKind, statObject, itemNames);

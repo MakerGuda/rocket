@@ -120,8 +120,7 @@ public class DefaultTopAddressing implements TopAddressing {
             }
         }
         if (verbose) {
-            String errorMsg =
-                    "connect to " + url + " failed, maybe the domain name " + MixAll.getWSAddr() + " not bind in /etc/hosts";
+            String errorMsg = "connect to " + url + " failed, maybe the domain name " + MixAll.getWSAddr() + " not bind in /etc/hosts";
             errorMsg += FAQUrl.suggestTodo(FAQUrl.NAME_SERVER_ADDR_NOT_EXIST_URL);
             LOGGER.warn(errorMsg);
         }

@@ -40,9 +40,4 @@ public class MessageQueueAssignment implements Serializable {
         return messageQueue.equals(other.messageQueue);
     }
 
-    @Override
-    public String toString() {
-        return "MessageQueueAssignment [MessageQueue=" + messageQueue + ", Mode=" + mode + "]";
-    }
-
 }

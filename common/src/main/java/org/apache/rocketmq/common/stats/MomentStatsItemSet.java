@@ -34,7 +34,7 @@ public class MomentStatsItemSet {
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 printAtMinutes();
-            } catch (Throwable ignored) {
+            } catch (Throwable ignore) {
             }
         }, Math.abs(UtilAll.computeNextMinutesTimeMillis() - System.currentTimeMillis()), 1000 * 60 * 5, TimeUnit.MILLISECONDS);
     }
@@ -56,8 +56,7 @@ public class MomentStatsItemSet {
     public MomentStatsItem getAndCreateStatsItem(final String statsKey) {
         MomentStatsItem statsItem = this.statsItemTable.get(statsKey);
         if (null == statsItem) {
-            statsItem =
-                    new MomentStatsItem(this.statsName, statsKey, this.scheduledExecutorService, this.log);
+            statsItem = new MomentStatsItem(this.statsName, statsKey, this.scheduledExecutorService, this.log);
             MomentStatsItem prev = this.statsItemTable.putIfAbsent(statsKey, statsItem);
             if (null != prev) {
                 statsItem = prev;

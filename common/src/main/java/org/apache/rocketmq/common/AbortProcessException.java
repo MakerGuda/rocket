@@ -20,9 +20,4 @@ public class AbortProcessException extends RuntimeException {
         this.errorMessage = errorMessage;
     }
 
-    public AbortProcessException setResponseCode(final int responseCode) {
-        this.responseCode = responseCode;
-        return this;
-    }
-
 }

@@ -19,9 +19,4 @@ public class AccAndTimeStamp {
         this.coldAcc = coldAcc;
     }
 
-    @Override
-    public String toString() {
-        return "AccAndTimeStamp{" + "coldAcc=" + coldAcc + ", lastColdReadTimeMills=" + lastColdReadTimeMills + ", createTimeMills=" + createTimeMills + '}';
-    }
-
 }

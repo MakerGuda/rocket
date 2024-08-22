@@ -17,10 +17,15 @@ import java.util.function.BiConsumer;
 public class RocksDBConfigManager {
 
     protected static final Logger BROKER_LOG = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
+
     private final long memTableFlushInterval;
+
     protected volatile boolean isStop = false;
+
     protected ConfigRocksDBStorage configRocksDBStorage = null;
+
     private FlushOptions flushOptions = null;
+
     private volatile long lastFlushMemTableMicroSecond = 0;
 
     public RocksDBConfigManager(long memTableFlushInterval) {

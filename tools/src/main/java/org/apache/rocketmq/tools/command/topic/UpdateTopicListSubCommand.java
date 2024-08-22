@@ -1,20 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.tools.command.topic;
 
 import com.alibaba.fastjson2.JSON;
@@ -37,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 public class UpdateTopicListSubCommand implements SubCommand {
+
     @Override
     public String commandName() {
         return "updateTopicList";
@@ -56,23 +40,17 @@ public class UpdateTopicListSubCommand implements SubCommand {
         optionGroup.addOption(opt);
         optionGroup.setRequired(true);
         options.addOptionGroup(optionGroup);
-
         opt = new Option("f", "filename", true, "Path to a file with list of org.apache.rocketmq.common.TopicConfig in json format");
         opt.setRequired(true);
         options.addOption(opt);
-
         return options;
     }
 
     @Override
-    public void execute(CommandLine commandLine, Options options,
-                        RPCHook rpcHook) throws SubCommandException {
+    public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) throws SubCommandException {
         final DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-
         final String fileName = commandLine.getOptionValue('f').trim();
-
-
         try {
             final Path filePath = Paths.get(fileName);
             if (!Files.exists(filePath)) {
@@ -84,31 +62,21 @@ public class UpdateTopicListSubCommand implements SubCommand {
             if (null == topicConfigs || topicConfigs.isEmpty()) {
                 return;
             }
-
             if (commandLine.hasOption('b')) {
                 String brokerAddress = commandLine.getOptionValue('b').trim();
                 defaultMQAdminExt.start();
                 defaultMQAdminExt.createAndUpdateTopicConfigList(brokerAddress, topicConfigs);
-
-                System.out.printf("submit batch of topic config to %s success, please check the result later.%n",
-                        brokerAddress);
+                System.out.printf("submit batch of topic config to %s success, please check the result later.%n", brokerAddress);
                 return;
-
             } else if (commandLine.hasOption('c')) {
                 final String clusterName = commandLine.getOptionValue('c').trim();
-
                 defaultMQAdminExt.start();
-
-                Set<String> masterSet =
-                        CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
+                Set<String> masterSet = CommandUtil.fetchMasterAddrByClusterName(defaultMQAdminExt, clusterName);
                 for (String brokerAddress : masterSet) {
                     defaultMQAdminExt.createAndUpdateTopicConfigList(brokerAddress, topicConfigs);
-
-                    System.out.printf("submit batch of topic config to %s success, please check the result later.%n",
-                            brokerAddress);
+                    System.out.printf("submit batch of topic config to %s success, please check the result later.%n", brokerAddress);
                 }
             }
-
             ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
         } catch (Exception e) {
             throw new SubCommandException(this.getClass().getSimpleName() + " command failed", e);
@@ -116,4 +84,5 @@ public class UpdateTopicListSubCommand implements SubCommand {
             defaultMQAdminExt.shutdown();
         }
     }
+
 }

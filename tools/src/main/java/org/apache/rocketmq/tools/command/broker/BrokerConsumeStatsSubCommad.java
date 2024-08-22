@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.broker;
 
 import org.apache.commons.cli.CommandLine;
@@ -65,19 +49,15 @@ public class BrokerConsumeStatsSubCommad implements SubCommand {
         Option opt = new Option("b", "brokerAddr", true, "Broker address");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("t", "timeoutMillis", true, "request timeout Millis");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("l", "level", true, "threshold of print diff");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("o", "order", true, "order topic");
         opt.setRequired(false);
         options.addOption(opt);
-
         return options;
     }
 
@@ -85,7 +65,6 @@ public class BrokerConsumeStatsSubCommad implements SubCommand {
     public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) throws SubCommandException {
         try {
             defaultMQAdminExt = createMQAdminExt(rpcHook);
-
             String brokerAddr = commandLine.getOptionValue('b').trim();
             boolean isOrder = false;
             long timeoutMillis = 50000;
@@ -99,7 +78,6 @@ public class BrokerConsumeStatsSubCommad implements SubCommand {
             if (commandLine.hasOption('l')) {
                 diffLevel = Long.parseLong(commandLine.getOptionValue('l').trim());
             }
-
             ConsumeStatsList consumeStatsList = defaultMQAdminExt.fetchConsumeStatsInBroker(brokerAddr, isOrder, timeoutMillis);
             System.out.printf("%-64s  %-64s  %-32s  %-4s  %-20s  %-20s  %-20s  %s%n",
                     "#Topic",
@@ -115,20 +93,18 @@ public class BrokerConsumeStatsSubCommad implements SubCommand {
                     String group = entry.getKey();
                     List<ConsumeStats> consumeStatsArray = entry.getValue();
                     for (ConsumeStats consumeStats : consumeStatsArray) {
-                        List<MessageQueue> mqList = new LinkedList<>();
-                        mqList.addAll(consumeStats.getOffsetTable().keySet());
+                        List<MessageQueue> mqList = new LinkedList<>(consumeStats.getOffsetTable().keySet());
                         Collections.sort(mqList);
                         for (MessageQueue mq : mqList) {
                             OffsetWrapper offsetWrapper = consumeStats.getOffsetTable().get(mq);
                             long diff = offsetWrapper.getBrokerOffset() - offsetWrapper.getConsumerOffset();
-
                             if (diff < diffLevel) {
                                 continue;
                             }
                             String lastTime = "-";
                             try {
                                 lastTime = UtilAll.formatDate(new Date(offsetWrapper.getLastTimestamp()), UtilAll.YYYY_MM_DD_HH_MM_SS);
-                            } catch (Exception ignored) {
+                            } catch (Exception ignore) {
 
                             }
                             if (offsetWrapper.getLastTimestamp() > 0)
@@ -153,4 +129,5 @@ public class BrokerConsumeStatsSubCommad implements SubCommand {
             defaultMQAdminExt.shutdown();
         }
     }
+
 }

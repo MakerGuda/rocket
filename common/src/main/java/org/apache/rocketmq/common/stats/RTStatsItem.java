@@ -6,8 +6,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public class RTStatsItem extends StatsItem {
 
-    public RTStatsItem(String statsName, String statsKey, ScheduledExecutorService scheduledExecutorService,
-                       Logger logger) {
+    public RTStatsItem(String statsName, String statsKey, ScheduledExecutorService scheduledExecutorService, Logger logger) {
         super(statsName, statsKey, scheduledExecutorService, logger);
     }
 

@@ -3,6 +3,9 @@ package org.apache.rocketmq.common.compression;
 import lombok.Getter;
 import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 
+/**
+ * 压缩类型枚举
+ */
 @Getter
 public enum CompressionType {
 
@@ -16,7 +19,6 @@ public enum CompressionType {
      * |  zlib 1.2.11   |  2.743  |    95 MB/s  |   400 MB/s |
      * |    lz4 1.9.3   |  2.101  |   740 MB/s  |  4500 MB/s |
      */
-
     LZ4(1), ZSTD(2), ZLIB(3);
 
     private final int value;

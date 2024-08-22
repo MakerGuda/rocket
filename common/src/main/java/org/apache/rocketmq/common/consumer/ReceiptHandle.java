@@ -13,9 +13,13 @@ import java.util.List;
 public class ReceiptHandle {
 
     public static final String NORMAL_TOPIC = "0";
+
     public static final String RETRY_TOPIC = "1";
+
     public static final String RETRY_TOPIC_V2 = "2";
+
     private static final String SEPARATOR = MessageConst.KEY_SEPARATOR;
+
     private final long startOffset;
 
     private final long retrieveTime;
@@ -38,9 +42,7 @@ public class ReceiptHandle {
 
     private final String receiptHandle;
 
-    ReceiptHandle(final long startOffset, final long retrieveTime, final long invisibleTime, final long nextVisibleTime,
-                  final int reviveQueueId, final String topicType, final String brokerName, final int queueId, final long offset,
-                  final long commitLogOffset, final String receiptHandle) {
+    ReceiptHandle(final long startOffset, final long retrieveTime, final long invisibleTime, final long nextVisibleTime, final int reviveQueueId, final String topicType, final String brokerName, final int queueId, final long offset, final long commitLogOffset, final String receiptHandle) {
         this.startOffset = startOffset;
         this.retrieveTime = retrieveTime;
         this.invisibleTime = invisibleTime;
@@ -89,9 +91,7 @@ public class ReceiptHandle {
     }
 
     public String encode() {
-        return startOffset + SEPARATOR + retrieveTime + SEPARATOR + invisibleTime + SEPARATOR + reviveQueueId
-                + SEPARATOR + topicType + SEPARATOR + brokerName + SEPARATOR + queueId + SEPARATOR + offset + SEPARATOR
-                + commitLogOffset;
+        return startOffset + SEPARATOR + retrieveTime + SEPARATOR + invisibleTime + SEPARATOR + reviveQueueId + SEPARATOR + topicType + SEPARATOR + brokerName + SEPARATOR + queueId + SEPARATOR + offset + SEPARATOR + commitLogOffset;
     }
 
     public boolean isExpired() {
@@ -190,15 +190,8 @@ public class ReceiptHandle {
         }
 
         public ReceiptHandle build() {
-            return new ReceiptHandle(this.startOffset, this.retrieveTime, this.invisibleTime, this.retrieveTime + this.invisibleTime,
-                    this.reviveQueueId, this.topicType, this.brokerName, this.queueId, this.offset, this.commitLogOffset, this.receiptHandle);
+            return new ReceiptHandle(this.startOffset, this.retrieveTime, this.invisibleTime, this.retrieveTime + this.invisibleTime, this.reviveQueueId, this.topicType, this.brokerName, this.queueId, this.offset, this.commitLogOffset, this.receiptHandle);
         }
-
-        @Override
-        public String toString() {
-            return "ReceiptHandle.ReceiptHandleBuilder(startOffset=" + this.startOffset + ", retrieveTime=" + this.retrieveTime + ", invisibleTime=" + this.invisibleTime + ", reviveQueueId=" + this.reviveQueueId + ", topic=" + this.topicType + ", brokerName=" + this.brokerName + ", queueId=" + this.queueId + ", offset=" + this.offset + ", commitLogOffset=" + this.commitLogOffset + ", receiptHandle=" + this.receiptHandle + ")";
-        }
-
     }
 
 }

@@ -30,19 +30,6 @@ public class PlainAccessConfig implements Serializable {
     private List<String> groupPerms;
 
     @Override
-    public String toString() {
-        return "PlainAccessConfig{" +
-                "accessKey='" + accessKey + '\'' +
-                ", whiteRemoteAddress='" + whiteRemoteAddress + '\'' +
-                ", admin=" + admin +
-                ", defaultTopicPerm='" + defaultTopicPerm + '\'' +
-                ", defaultGroupPerm='" + defaultGroupPerm + '\'' +
-                ", topicPerms=" + topicPerms +
-                ", groupPerms=" + groupPerms +
-                '}';
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o)
             return true;

@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.topic;
 
 import org.apache.commons.cli.CommandLine;
@@ -50,61 +34,41 @@ public class UpdateStaticTopicSubCommand implements SubCommand {
     @Override
     public Options buildCommandlineOptions(Options options) {
         OptionGroup optionGroup = new OptionGroup();
-
-        Option opt = null;
-
+        Option opt;
         opt = new Option("c", "clusters", true, "remapping static topic to clusters, comma separated");
         optionGroup.addOption(opt);
-
         opt = new Option("b", "brokers", true, "remapping static topic to brokers, comma separated");
         optionGroup.addOption(opt);
-
         optionGroup.setRequired(true);
         options.addOptionGroup(optionGroup);
-
         opt = new Option("t", "topic", true, "topic name");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("qn", "totalQueueNum", true, "total queue num");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("mf", "mapFile", true, "The mapping data file name");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("fr", "forceReplace", true, "Force replace the old mapping");
         opt.setRequired(false);
         options.addOption(opt);
-
         return options;
     }
 
-
-    public void executeFromFile(final CommandLine commandLine, final Options options,
-                                RPCHook rpcHook) throws SubCommandException {
+    public void executeFromFile(final CommandLine commandLine, RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-
         try {
             defaultMQAdminExt.start();
             String topic = commandLine.getOptionValue('t').trim();
             String mapFileName = commandLine.getOptionValue('f').trim();
             String mapData = MixAll.file2String(mapFileName);
-            TopicRemappingDetailWrapper wrapper = TopicRemappingDetailWrapper.decode(mapData.getBytes(StandardCharsets.UTF_8),
-                    TopicRemappingDetailWrapper.class);
-            //double check the config
+            TopicRemappingDetailWrapper wrapper = TopicRemappingDetailWrapper.decode(mapData.getBytes(StandardCharsets.UTF_8), TopicRemappingDetailWrapper.class);
             TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, wrapper.getBrokerConfigMap());
-            boolean force = false;
-            if (commandLine.hasOption("fr") && Boolean.parseBoolean(commandLine.getOptionValue("fr").trim())) {
-                force = true;
-            }
             TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(TopicQueueMappingUtils.getMappingDetailFromConfig(wrapper.getBrokerConfigMap().values())), false, true);
-
             MQAdminUtils.completeNoTargetBrokers(wrapper.getBrokerConfigMap(), defaultMQAdminExt);
             MQAdminUtils.updateTopicConfigMappingAll(wrapper.getBrokerConfigMap(), defaultMQAdminExt, false);
-            return;
         } catch (Exception e) {
             throw new SubCommandException(this.getClass().getSimpleName() + " command failed", e);
         } finally {
@@ -112,38 +76,29 @@ public class UpdateStaticTopicSubCommand implements SubCommand {
         }
     }
 
-
     @Override
-    public void execute(final CommandLine commandLine, final Options options,
-                        RPCHook rpcHook) throws SubCommandException {
+    public void execute(final CommandLine commandLine, final Options options, RPCHook rpcHook) throws SubCommandException {
         if (!commandLine.hasOption('t')) {
             ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
             return;
         }
-
         if (commandLine.hasOption("f")) {
-            executeFromFile(commandLine, options, rpcHook);
+            executeFromFile(commandLine, rpcHook);
             return;
         }
-
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-
-        Map<String, TopicConfigAndQueueMapping> brokerConfigMap = new HashMap<>();
+        Map<String, TopicConfigAndQueueMapping> brokerConfigMap;
         Set<String> targetBrokers = new HashSet<>();
-
         try {
             defaultMQAdminExt.start();
-            if (!commandLine.hasOption("b") && !commandLine.hasOption('c')
-                    || !commandLine.hasOption("qn")) {
+            if (!commandLine.hasOption("b") && !commandLine.hasOption('c') || !commandLine.hasOption("qn")) {
                 ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
                 return;
             }
             String topic = commandLine.getOptionValue('t').trim();
-
             ClusterInfo clusterInfo = defaultMQAdminExt.examineBrokerClusterInfo();
-            if (clusterInfo == null
-                    || clusterInfo.getClusterAddrTable().isEmpty()) {
+            if (clusterInfo == null || clusterInfo.getClusterAddrTable().isEmpty()) {
                 throw new RuntimeException("The Cluster info is empty");
             }
             {
@@ -165,33 +120,23 @@ public class UpdateStaticTopicSubCommand implements SubCommand {
                     throw new RuntimeException("Find none brokers, do nothing");
                 }
             }
-
-            //get the existed topic config and mapping
-
             brokerConfigMap = MQAdminUtils.examineTopicConfigAll(topic, defaultMQAdminExt);
             int queueNum = Integer.parseInt(commandLine.getOptionValue("qn").trim());
-
             Map.Entry<Long, Integer> maxEpochAndNum = new AbstractMap.SimpleImmutableEntry<>(System.currentTimeMillis(), queueNum);
             if (!brokerConfigMap.isEmpty()) {
                 maxEpochAndNum = TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, brokerConfigMap);
             }
-
             {
                 TopicRemappingDetailWrapper oldWrapper = new TopicRemappingDetailWrapper(topic, TopicRemappingDetailWrapper.TYPE_CREATE_OR_UPDATE, maxEpochAndNum.getKey(), brokerConfigMap, new HashSet<>(), new HashSet<>());
                 String oldMappingDataFile = TopicQueueMappingUtils.writeToTemp(oldWrapper, false);
                 System.out.printf("The old mapping data is written to file " + oldMappingDataFile + "\n");
             }
-            //add the existed brokers to target brokers
             targetBrokers.addAll(brokerConfigMap.keySet());
-
-            //calculate the new data
             TopicRemappingDetailWrapper newWrapper = TopicQueueMappingUtils.createTopicConfigMapping(topic, queueNum, targetBrokers, brokerConfigMap);
-
             {
                 String newMappingDataFile = TopicQueueMappingUtils.writeToTemp(newWrapper, true);
                 System.out.printf("The new mapping data is written to file " + newMappingDataFile + "\n");
             }
-
             MQAdminUtils.completeNoTargetBrokers(brokerConfigMap, defaultMQAdminExt);
             MQAdminUtils.updateTopicConfigMappingAll(brokerConfigMap, defaultMQAdminExt, false);
         } catch (Exception e) {
@@ -200,4 +145,5 @@ public class UpdateStaticTopicSubCommand implements SubCommand {
             defaultMQAdminExt.shutdown();
         }
     }
+
 }

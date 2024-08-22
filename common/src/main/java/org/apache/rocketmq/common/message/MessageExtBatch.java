@@ -12,6 +12,7 @@ public class MessageExtBatch extends MessageExtBrokerInner {
     private static final long serialVersionUID = -2353110995348498537L;
 
     private boolean isInnerBatch = false;
+
     private ByteBuffer encodedBuff;
 
     public ByteBuffer wrap() {

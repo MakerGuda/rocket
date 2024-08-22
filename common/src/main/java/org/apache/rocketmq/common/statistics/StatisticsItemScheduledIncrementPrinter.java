@@ -13,10 +13,15 @@ import java.util.concurrent.TimeUnit;
 public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemScheduledPrinter {
 
     public static final int TPS_INITIAL_DELAY = 0;
+
     public static final int TPS_INTREVAL = 1000;
+
     public static final String SEPARATOR = "|";
+
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItem>> lastItemSnapshots = new ConcurrentHashMap<>();
+
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, StatisticsItemSampleBrief>> sampleBriefs = new ConcurrentHashMap<>();
+
     private String[] tpsItemNames;
 
     public StatisticsItemScheduledIncrementPrinter(String name, StatisticsItemPrinter printer, ScheduledExecutorService executor, InitialDelay initialDelay, long interval, String[] tpsItemNames, Valve valve) {
@@ -49,7 +54,6 @@ public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemSched
             }
         }, getInitialDelay(), interval, TimeUnit.MILLISECONDS);
         addFuture(item, future);
-
         ScheduledFuture<?> futureSample = executor.scheduleAtFixedRate(() -> {
             if (!enabled()) {
                 return;
@@ -136,7 +140,9 @@ public class StatisticsItemScheduledIncrementPrinter extends StatisticsItemSched
     public static class StatisticsItemSampleBrief {
 
         public String[] itemNames;
+
         public ItemSampleBrief[] briefs;
+
         private StatisticsItem lastSnapshot;
 
         public StatisticsItemSampleBrief(StatisticsItem statItem, String[] itemNames) {

@@ -1,36 +1,15 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.example.operation;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.MessageExt;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Consumer {
 
@@ -41,18 +20,13 @@ public class Consumer {
             String topic = commandLine.getOptionValue('t');
             String subExpression = commandLine.getOptionValue('s');
             final String returnFailedHalf = commandLine.getOptionValue('f');
-
             DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(subGroup);
             consumer.setInstanceName(Long.toString(System.currentTimeMillis()));
-
             consumer.subscribe(topic, subExpression);
-
             consumer.registerMessageListener(new MessageListenerConcurrently() {
-                AtomicLong consumeTimes = new AtomicLong(0);
-
+                final AtomicLong consumeTimes = new AtomicLong(0);
                 @Override
-                public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
-                                                                ConsumeConcurrentlyContext context) {
+                public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
                     long currentTimes = this.consumeTimes.incrementAndGet();
                     System.out.printf("%-8d %s%n", currentTimes, msgs);
                     if (Boolean.parseBoolean(returnFailedHalf)) {
@@ -63,9 +37,7 @@ public class Consumer {
                     return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
                 }
             });
-
             consumer.start();
-
             System.out.printf("Consumer Started.%n");
         }
     }
@@ -75,27 +47,22 @@ public class Consumer {
         Option opt = new Option("h", "help", false, "Print help");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("g", "consumerGroup", true, "Consumer Group Name");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("t", "topic", true, "Topic Name");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("s", "subscription", true, "subscription");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("f", "returnFailedHalf", true, "return failed result, for half message");
         opt.setRequired(true);
         options.addOption(opt);
-
         DefaultParser parser = new DefaultParser();
         HelpFormatter hf = new HelpFormatter();
         hf.setWidth(110);
-        CommandLine commandLine = null;
+        CommandLine commandLine;
         try {
             commandLine = parser.parse(options, args);
             if (commandLine.hasOption('h')) {
@@ -106,7 +73,7 @@ public class Consumer {
             hf.printHelp("producer", options, true);
             return null;
         }
-
         return commandLine;
     }
+
 }

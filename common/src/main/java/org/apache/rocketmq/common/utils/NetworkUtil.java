@@ -50,7 +50,7 @@ public class NetworkUtil {
                 } catch (final Exception e) {
                     log.warn("Open ePoll Selector for linux platform exception", e);
                 }
-            } catch (final Exception ignored) {
+            } catch (final Exception ignore) {
             }
         }
         if (result == null) {

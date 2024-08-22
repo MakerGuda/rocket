@@ -1,20 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.common.stats;
 
 import lombok.Getter;
@@ -40,8 +23,7 @@ public class MomentStatsItem {
 
     private final Logger log;
 
-    public MomentStatsItem(String statsName, String statsKey,
-                           ScheduledExecutorService scheduledExecutorService, Logger log) {
+    public MomentStatsItem(String statsName, String statsKey, ScheduledExecutorService scheduledExecutorService, Logger log) {
         this.statsName = statsName;
         this.statsKey = statsKey;
         this.scheduledExecutorService = scheduledExecutorService;
@@ -53,16 +35,13 @@ public class MomentStatsItem {
             try {
                 printAtMinutes();
                 MomentStatsItem.this.value.set(0);
-            } catch (Throwable ignored) {
+            } catch (Throwable ignore) {
             }
         }, Math.abs(UtilAll.computeNextMinutesTimeMillis() - System.currentTimeMillis()), 1000 * 60 * 5, TimeUnit.MILLISECONDS);
     }
 
     public void printAtMinutes() {
-        log.info("[{}] [{}] Stats Every 5 Minutes, Value: {}",
-                this.statsName,
-                this.statsKey,
-                this.value.get());
+        log.info("[{}] [{}] Stats Every 5 Minutes, Value: {}", this.statsName, this.statsKey, this.value.get());
     }
 
 }

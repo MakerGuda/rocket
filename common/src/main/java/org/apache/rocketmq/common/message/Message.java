@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -190,25 +189,6 @@ public class Message implements Serializable {
         this.putProperty(MessageConst.PROPERTY_INSTANCE_ID, instanceId);
     }
 
-    public String getBuyerId() {
-        return getProperty(MessageConst.PROPERTY_BUYER_ID);
-    }
-
-    public void setBuyerId(String buyerId) {
-        putProperty(MessageConst.PROPERTY_BUYER_ID, buyerId);
-    }
-
-    @Override
-    public String toString() {
-        return "Message{" +
-                "topic='" + topic + '\'' +
-                ", flag=" + flag +
-                ", properties=" + properties +
-                ", body=" + Arrays.toString(body) +
-                ", transactionId='" + transactionId + '\'' +
-                '}';
-    }
-
     /**
      * 获取消息的延迟时间秒数
      */
@@ -218,13 +198,6 @@ public class Message implements Serializable {
             return Long.parseLong(t);
         }
         return 0;
-    }
-
-    /**
-     * 设置消息的延迟时间
-     */
-    public void setDelayTimeSec(long sec) {
-        this.putProperty(MessageConst.PROPERTY_TIMER_DELAY_SEC, String.valueOf(sec));
     }
 
     /**

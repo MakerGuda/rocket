@@ -25,16 +25,6 @@ public class Operator extends Op {
         this.comparable = comparable;
     }
 
-    public static Operator createOperator(String operator) {
-        if (LEFT_PARENTHESIS.getSymbol().equals(operator)) return LEFT_PARENTHESIS;
-        else if (RIGHT_PARENTHESIS.getSymbol().equals(operator)) return RIGHT_PARENTHESIS;
-        else if (AND.getSymbol().equals(operator))
-            return AND;
-        else if (OR.getSymbol().equals(operator))
-            return OR;
-        else throw new IllegalArgumentException("un support operator " + operator);
-    }
-
     public int compare(Operator operator) {
         return Integer.compare(this.priority, operator.priority);
     }

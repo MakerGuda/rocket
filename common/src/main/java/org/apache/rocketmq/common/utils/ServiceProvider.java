@@ -18,7 +18,9 @@ import java.util.List;
 public class ServiceProvider {
 
     public static final String PREFIX = "META-INF/service/";
+
     private static final Logger LOG = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
+
     private static ClassLoader thisClassLoader;
 
     static {

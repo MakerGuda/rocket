@@ -31,7 +31,7 @@ public class ZlibCompressor implements Compressor {
         } finally {
             try {
                 byteArrayOutputStream.close();
-            } catch (IOException ignored) {
+            } catch (IOException ignore) {
             }
             defeater.end();
         }

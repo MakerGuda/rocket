@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.topic;
 
 import org.apache.commons.cli.CommandLine;
@@ -54,59 +38,39 @@ public class RemappingStaticTopicSubCommand implements SubCommand {
     @Override
     public Options buildCommandlineOptions(Options options) {
         OptionGroup optionGroup = new OptionGroup();
-
-        Option opt = null;
-
+        Option opt;
         opt = new Option("c", "clusters", true, "remapping static topic to clusters, comma separated");
         optionGroup.addOption(opt);
-
         opt = new Option("b", "brokers", true, "remapping static topic to brokers, comma separated");
         optionGroup.addOption(opt);
-
         optionGroup.setRequired(true);
         options.addOptionGroup(optionGroup);
-
         opt = new Option("t", "topic", true, "topic name");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("mf", "mapFile", true, "The mapping data file name ");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("fr", "forceReplace", true, "Force replace the old mapping");
         opt.setRequired(false);
         options.addOption(opt);
-
         return options;
     }
 
 
-    public void executeFromFile(final CommandLine commandLine, final Options options,
-                                RPCHook rpcHook) throws SubCommandException {
-
+    public void executeFromFile(final CommandLine commandLine, RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-
         try {
             defaultMQAdminExt.start();
             String topic = commandLine.getOptionValue('t').trim();
-
             String mapFileName = commandLine.getOptionValue('f').trim();
             String mapData = MixAll.file2String(mapFileName);
-            TopicRemappingDetailWrapper wrapper = TopicRemappingDetailWrapper.decode(mapData.getBytes(StandardCharsets.UTF_8),
-                    TopicRemappingDetailWrapper.class);
-            //double check the config
+            TopicRemappingDetailWrapper wrapper = TopicRemappingDetailWrapper.decode(mapData.getBytes(StandardCharsets.UTF_8), TopicRemappingDetailWrapper.class);
             TopicQueueMappingUtils.checkNameEpochNumConsistence(topic, wrapper.getBrokerConfigMap());
             TopicQueueMappingUtils.checkAndBuildMappingItems(new ArrayList<>(TopicQueueMappingUtils.getMappingDetailFromConfig(wrapper.getBrokerConfigMap().values())), false, true);
-
-
-            boolean force = false;
-            if (commandLine.hasOption("fr") && Boolean.parseBoolean(commandLine.getOptionValue("fr").trim())) {
-                force = true;
-            }
+            boolean force = commandLine.hasOption("fr") && Boolean.parseBoolean(commandLine.getOptionValue("fr").trim());
             MQAdminUtils.remappingStaticTopic(topic, wrapper.getBrokerToMapIn(), wrapper.getBrokerToMapOut(), wrapper.getBrokerConfigMap(), 10000, force, defaultMQAdminExt);
-            return;
         } catch (Exception e) {
             throw new SubCommandException(this.getClass().getSimpleName() + " command failed", e);
         } finally {
@@ -114,27 +78,21 @@ public class RemappingStaticTopicSubCommand implements SubCommand {
         }
     }
 
-
     @Override
-    public void execute(final CommandLine commandLine, final Options options,
-                        RPCHook rpcHook) throws SubCommandException {
+    public void execute(final CommandLine commandLine, final Options options, RPCHook rpcHook) throws SubCommandException {
         if (!commandLine.hasOption('t')) {
             ServerUtil.printCommandLineHelp("mqadmin " + this.commandName(), options);
             return;
         }
-
         if (commandLine.hasOption("f")) {
-            executeFromFile(commandLine, options, rpcHook);
+            executeFromFile(commandLine, rpcHook);
             return;
         }
-
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-
         ClientMetadata clientMetadata = new ClientMetadata();
         Map<String, TopicConfigAndQueueMapping> brokerConfigMap;
         Set<String> targetBrokers = new HashSet<>();
-
         try {
             defaultMQAdminExt.start();
             if (!commandLine.hasOption("b") && !commandLine.hasOption('c')) {
@@ -142,10 +100,8 @@ public class RemappingStaticTopicSubCommand implements SubCommand {
                 return;
             }
             String topic = commandLine.getOptionValue('t').trim();
-
             ClusterInfo clusterInfo = defaultMQAdminExt.examineBrokerClusterInfo();
-            if (clusterInfo == null
-                    || clusterInfo.getClusterAddrTable().isEmpty()) {
+            if (clusterInfo == null || clusterInfo.getClusterAddrTable().isEmpty()) {
                 throw new RuntimeException("The Cluster info is empty");
             }
             clientMetadata.refreshClusterInfo(clusterInfo);
@@ -174,7 +130,6 @@ public class RemappingStaticTopicSubCommand implements SubCommand {
                     }
                 }
             }
-
             brokerConfigMap = MQAdminUtils.examineTopicConfigAll(topic, defaultMQAdminExt);
             if (brokerConfigMap.isEmpty()) {
                 throw new RuntimeException("No topic route to do the remapping");
@@ -185,22 +140,18 @@ public class RemappingStaticTopicSubCommand implements SubCommand {
                 String oldMappingDataFile = TopicQueueMappingUtils.writeToTemp(oldWrapper, false);
                 System.out.printf("The old mapping data is written to file " + oldMappingDataFile + "\n");
             }
-
             TopicRemappingDetailWrapper newWrapper = TopicQueueMappingUtils.remappingStaticTopic(topic, brokerConfigMap, targetBrokers);
-
             {
                 String newMappingDataFile = TopicQueueMappingUtils.writeToTemp(newWrapper, true);
                 System.out.printf("The old mapping data is written to file " + newMappingDataFile + "\n");
             }
-
             MQAdminUtils.completeNoTargetBrokers(newWrapper.getBrokerConfigMap(), defaultMQAdminExt);
-
             MQAdminUtils.remappingStaticTopic(topic, newWrapper.getBrokerToMapIn(), newWrapper.getBrokerToMapOut(), newWrapper.getBrokerConfigMap(), 10000, false, defaultMQAdminExt);
-
         } catch (Exception e) {
             throw new SubCommandException(this.getClass().getSimpleName() + " command failed", e);
         } finally {
             defaultMQAdminExt.shutdown();
         }
     }
+
 }

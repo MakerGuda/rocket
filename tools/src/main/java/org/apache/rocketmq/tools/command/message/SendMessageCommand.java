@@ -1,20 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.rocketmq.tools.command.message;
 
 import org.apache.commons.cli.CommandLine;
@@ -49,31 +32,24 @@ public class SendMessageCommand implements SubCommand {
         Option opt = new Option("t", "topic", true, "Topic name");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("p", "body", true, "UTF-8 string format of the message body");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("k", "key", true, "Message keys");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("c", "tags", true, "Message tags");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("b", "broker", true, "Send message to target broker");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("i", "qid", true, "Send message to target queue");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("m", "msgTraceEnable", true, "Message Trace Enable, Default: false");
         opt.setRequired(false);
         options.addOption(opt);
-
         return options;
     }
 
@@ -89,7 +65,7 @@ public class SendMessageCommand implements SubCommand {
 
     @Override
     public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) throws SubCommandException {
-        Message msg = null;
+        Message msg;
         String topic = commandLine.getOptionValue('t').trim();
         String body = commandLine.getOptionValue('p').trim();
         String tag = null;
@@ -132,34 +108,17 @@ public class SendMessageCommand implements SubCommand {
             } else {
                 result = producer.send(msg);
             }
-
         } catch (Exception e) {
             throw new RuntimeException(this.getClass().getSimpleName() + " command failed", e);
         } finally {
             producer.shutdown();
         }
-
-        System.out.printf("%-32s  %-4s  %-20s    %s%n",
-                "#Broker Name",
-                "#QID",
-                "#Send Result",
-                "#MsgId"
-        );
-
+        System.out.printf("%-32s  %-4s  %-20s    %s%n", "#Broker Name", "#QID", "#Send Result", "#MsgId");
         if (result != null) {
-            System.out.printf("%-32s  %-4s  %-20s    %s%n",
-                    result.getMessageQueue().getBrokerName(),
-                    result.getMessageQueue().getQueueId(),
-                    result.getSendStatus(),
-                    result.getMsgId()
-            );
+            System.out.printf("%-32s  %-4s  %-20s    %s%n", result.getMessageQueue().getBrokerName(), result.getMessageQueue().getQueueId(), result.getSendStatus(), result.getMsgId());
         } else {
-            System.out.printf("%-32s  %-4s  %-20s    %s%n",
-                    "Unknown",
-                    "Unknown",
-                    "Failed",
-                    "None"
-            );
+            System.out.printf("%-32s  %-4s  %-20s    %s%n", "Unknown", "Unknown", "Failed", "None");
         }
     }
+
 }

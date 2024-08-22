@@ -7,7 +7,10 @@ import org.apache.rocketmq.common.compression.CompressorFactory;
 import org.apache.rocketmq.common.sysflag.MessageSysFlag;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -42,21 +45,6 @@ public class MessageDecoder {
 
     public static final int SYSFLAG_POSITION = 4 + 4 + 4 + 4 + 4 + 8 + 8;
 
-//    public static final int BODY_SIZE_POSITION = 4 // 1 TOTALSIZE
-//        + 4 // 2 MAGICCODE
-//        + 4 // 3 BODYCRC
-//        + 4 // 4 QUEUEID
-//        + 4 // 5 FLAG
-//        + 8 // 6 QUEUEOFFSET
-//        + 8 // 7 PHYSICALOFFSET
-//        + 4 // 8 SYSFLAG
-//        + 8 // 9 BORNTIMESTAMP
-//        + 8 // 10 BORNHOST
-//        + 8 // 11 STORETIMESTAMP
-//        + 8 // 12 STOREHOSTADDRESS
-//        + 4 // 13 RECONSUMETIMES
-//        + 8; // 14 Prepared Transaction Offset
-
     /**
      * 生成消息Id
      */
@@ -69,26 +57,13 @@ public class MessageDecoder {
         return UtilAll.bytes2string(input.array());
     }
 
-    public static String createMessageId(SocketAddress socketAddress, long transactionIdHashCode) {
-        InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
-        int msgIDLength = inetSocketAddress.getAddress() instanceof Inet4Address ? 16 : 28;
-        ByteBuffer byteBuffer = ByteBuffer.allocate(msgIDLength);
-        byteBuffer.put(inetSocketAddress.getAddress().getAddress());
-        byteBuffer.putInt(inetSocketAddress.getPort());
-        byteBuffer.putLong(transactionIdHashCode);
-        byteBuffer.flip();
-        return UtilAll.bytes2string(byteBuffer.array());
-    }
-
     public static MessageId decodeMessageId(final String msgId) throws UnknownHostException {
         byte[] bytes = UtilAll.string2bytes(msgId);
         ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-        // address(ip+port)
         byte[] ip = new byte[msgId.length() == 32 ? 4 : 16];
         byteBuffer.get(ip);
         int port = byteBuffer.getInt();
         SocketAddress address = new InetSocketAddress(InetAddress.getByAddress(ip), port);
-        // offset
         long offset = byteBuffer.getLong();
         return new MessageId(address, offset);
     }
@@ -332,8 +307,7 @@ public class MessageDecoder {
         return byteBuffer.array();
     }
 
-    public static MessageExt decode(
-            ByteBuffer byteBuffer, final boolean readBody, final boolean deCompressBody) {
+    public static MessageExt decode(ByteBuffer byteBuffer, final boolean readBody, final boolean deCompressBody) {
         return decode(byteBuffer, readBody, deCompressBody, false);
     }
 
@@ -458,14 +432,7 @@ public class MessageDecoder {
         return null;
     }
 
-    public static List<MessageExt> decodes(ByteBuffer byteBuffer) {
-        return decodes(byteBuffer, true);
-    }
-
-    public static List<MessageExt> decodesBatch(ByteBuffer byteBuffer,
-                                                final boolean readBody,
-                                                final boolean decompressBody,
-                                                final boolean isClient) {
+    public static List<MessageExt> decodesBatch(ByteBuffer byteBuffer, final boolean readBody, final boolean decompressBody, final boolean isClient) {
         List<MessageExt> msgExts = new ArrayList<>();
         while (byteBuffer.hasRemaining()) {
             MessageExt msgExt = decode(byteBuffer, readBody, decompressBody, isClient);
@@ -554,12 +521,10 @@ public class MessageDecoder {
     }
 
     public static byte[] encodeMessage(Message message) {
-        //only need flag, body, properties
         byte[] body = message.getBody();
         int bodyLen = body.length;
         String properties = messageProperties2String(message.getProperties());
         byte[] propertiesBytes = properties.getBytes(CHARSET_UTF8);
-        //note properties length must not more than Short.MAX
         short propertiesLength = (short) propertiesBytes.length;
         int storeSize = 4 // 1 TOTALSIZE
                 + 4 // 2 MAGICCOD
@@ -611,7 +576,6 @@ public class MessageDecoder {
     }
 
     public static byte[] encodeMessages(List<Message> messages) {
-        //TO DO refactor, accumulate in one buffer, avoid copies
         List<byte[]> encodedMessages = new ArrayList<>(messages.size());
         int allSize = 0;
         for (Message message : messages) {
@@ -629,7 +593,6 @@ public class MessageDecoder {
     }
 
     public static List<Message> decodeMessages(ByteBuffer byteBuffer) {
-        //TO DO add a callback for processing,  avoid creating lists
         List<Message> msgs = new ArrayList<>();
         while (byteBuffer.hasRemaining()) {
             Message msg = decodeMessage(byteBuffer);

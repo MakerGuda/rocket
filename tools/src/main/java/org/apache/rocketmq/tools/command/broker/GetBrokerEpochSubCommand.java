@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.broker;
 
 import org.apache.commons.cli.CommandLine;
@@ -32,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 public class GetBrokerEpochSubCommand implements SubCommand {
+
     @Override
     public String commandName() {
         return "getBrokerEpoch";
@@ -47,41 +32,33 @@ public class GetBrokerEpochSubCommand implements SubCommand {
         Option opt = new Option("c", "clusterName", true, "which cluster");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("b", "brokerName", true, "which broker to fetch");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("i", "interval", true, "the interval(second) of get info");
         opt.setRequired(false);
         options.addOption(opt);
-
         return options;
     }
 
     @Override
-    public void execute(CommandLine commandLine, Options options,
-                        RPCHook rpcHook) throws SubCommandException {
+    public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-
         try {
             if (commandLine.hasOption('i')) {
                 String interval = commandLine.getOptionValue('i');
                 int flushSecond = 3;
-                if (interval != null && !interval.trim().equals("")) {
+                if (interval != null && !interval.trim().isEmpty()) {
                     flushSecond = Integer.parseInt(interval);
                 }
-
                 defaultMQAdminExt.start();
-
                 while (true) {
                     this.innerExec(commandLine, options, defaultMQAdminExt);
-                    Thread.sleep(flushSecond * 1000);
+                    Thread.sleep(flushSecond * 1000L);
                 }
             } else {
                 defaultMQAdminExt.start();
-
                 this.innerExec(commandLine, options, defaultMQAdminExt);
             }
         } catch (Exception e) {
@@ -91,8 +68,7 @@ public class GetBrokerEpochSubCommand implements SubCommand {
         }
     }
 
-    private void innerExec(CommandLine commandLine, Options options,
-                           DefaultMQAdminExt defaultMQAdminExt) throws Exception {
+    private void innerExec(CommandLine commandLine, Options options, DefaultMQAdminExt defaultMQAdminExt) throws Exception {
         if (commandLine.hasOption('b')) {
             String brokerName = commandLine.getOptionValue('b').trim();
             final Set<String> brokers = CommandUtil.fetchMasterAndSlaveAddrByBrokerName(defaultMQAdminExt, brokerName);
@@ -109,8 +85,7 @@ public class GetBrokerEpochSubCommand implements SubCommand {
     private void printData(Set<String> brokers, DefaultMQAdminExt defaultMQAdminExt) throws Exception {
         for (String brokerAddr : brokers) {
             final EpochEntryCache epochCache = defaultMQAdminExt.getBrokerEpochCache(brokerAddr);
-            System.out.printf("\n#clusterName\t%s\n#brokerName\t%s\n#brokerAddr\t%s\n#brokerId\t%d",
-                    epochCache.getClusterName(), epochCache.getBrokerName(), brokerAddr, epochCache.getBrokerId());
+            System.out.printf("\n#clusterName\t%s\n#brokerName\t%s\n#brokerAddr\t%s\n#brokerId\t%d", epochCache.getClusterName(), epochCache.getBrokerName(), brokerAddr, epochCache.getBrokerId());
             final List<EpochEntry> epochList = epochCache.getEpochList();
             for (int i = 0; i < epochList.size(); i++) {
                 final EpochEntry epochEntry = epochList.get(i);
@@ -122,4 +97,5 @@ public class GetBrokerEpochSubCommand implements SubCommand {
             System.out.print("\n");
         }
     }
+
 }

@@ -19,6 +19,9 @@ import java.util.concurrent.*;
 
 import static org.rocksdb.RocksDB.NOT_FOUND;
 
+/**
+ * rocket数据存储
+ */
 @Getter
 @Setter
 public abstract class AbstractRocksDBStorage {
@@ -32,21 +35,43 @@ public abstract class AbstractRocksDBStorage {
     }
 
     protected final List<ColumnFamilyOptions> cfOptions = new ArrayList<>();
+
     private final Semaphore reloadPermit = new Semaphore(1);
+
     private final ScheduledExecutorService reloadScheduler = ThreadUtils.newScheduledThreadPool(1, new ThreadFactoryImpl("RocksDBStorageReloadService_"));
+
     private final ThreadPoolExecutor manualCompactionThread = (ThreadPoolExecutor) ThreadUtils.newThreadPoolExecutor(1, 1, 1000 * 60, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1), new ThreadFactoryImpl("RocksDBManualCompactionService_"), new ThreadPoolExecutor.DiscardOldestPolicy());
+
+    /**
+     * db存储路径
+     */
     protected String dbPath;
+
+    /**
+     * 是否只读
+     */
     protected boolean readOnly;
+
     protected RocksDB db;
+
     protected DBOptions options;
+
     protected WriteOptions writeOptions;
+
     protected WriteOptions ableWalWriteOptions;
+
     protected ReadOptions readOptions;
+
     protected ReadOptions totalOrderReadOptions;
+
     protected CompactionOptions compactionOptions;
+
     protected CompactRangeOptions compactRangeOptions;
+
     protected ColumnFamilyHandle defaultCFHandle;
+
     protected volatile boolean loaded;
+
     private volatile boolean closed;
 
     public boolean hold() {
@@ -167,21 +192,6 @@ public abstract class AbstractRocksDBStorage {
             this.db.delete(cfHandle, writeOptions, keyBB);
         } catch (RocksDBException e) {
             LOGGER.error("delete Failed. {}, {}", this.dbPath, getStatusError(e));
-            throw e;
-        } finally {
-            release();
-        }
-    }
-
-    protected void rangeDelete(ColumnFamilyHandle cfHandle, WriteOptions writeOptions, final byte[] startKey, final byte[] endKey) throws RocksDBException {
-        if (!hold()) {
-            throw new IllegalStateException("rocksDB:" + this + " is not ready");
-        }
-        try {
-            this.db.deleteRange(cfHandle, writeOptions, startKey, endKey);
-        } catch (RocksDBException e) {
-            scheduleReloadRocksdb(e);
-            LOGGER.error("rangeDelete Failed. {}, {}", this.dbPath, getStatusError(e));
             throw e;
         } finally {
             release();
@@ -412,16 +422,13 @@ public abstract class AbstractRocksDBStorage {
                         append("d: ").append(metaData.numDeletions()).append(SPACE).
                         append(metaData.beingCompacted()).append("\n");
             }
-
             map.forEach((key, value) -> logger.info("level: {}\n{}", key, value.toString()));
-
             String blockCacheMemUsage = this.db.getProperty("rocksdb.block-cache-usage");
             String indexesAndFilterBlockMemUsage = this.db.getProperty("rocksdb.estimate-table-readers-mem");
             String memTableMemUsage = this.db.getProperty("rocksdb.cur-size-all-mem-tables");
             String blocksPinnedByIteratorMemUsage = this.db.getProperty("rocksdb.block-cache-pinned-usage");
-            logger.info("MemUsage. blockCache: {}, indexesAndFilterBlock: {}, memtable: {}, blocksPinnedByIterator: {}",
-                    blockCacheMemUsage, indexesAndFilterBlockMemUsage, memTableMemUsage, blocksPinnedByIteratorMemUsage);
-        } catch (Exception ignored) {
+            logger.info("MemUsage. blockCache: {}, indexesAndFilterBlock: {}, memtable: {}, blocksPinnedByIterator: {}", blockCacheMemUsage, indexesAndFilterBlockMemUsage, memTableMemUsage, blocksPinnedByIteratorMemUsage);
+        } catch (Exception ignore) {
         }
     }
 

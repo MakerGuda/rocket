@@ -26,7 +26,6 @@ public class StatisticsItemPrinter {
         for (String str : suffixs) {
             suffix.append(str);
         }
-
         if (log != null) {
             log.info("{}{}{}", prefix, formatter.format(statItem), suffix.toString());
         }

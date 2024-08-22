@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.message;
 
 import org.apache.commons.cli.CommandLine;
@@ -47,19 +31,15 @@ public class QueryMsgByOffsetSubCommand implements SubCommand {
         Option opt = new Option("t", "topic", true, "topic name");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("b", "brokerName", true, "Broker Name");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("i", "queueId", true, "Queue Id");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("o", "offset", true, "Queue Offset");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("f", "bodyFormat", true, "print message body by the specified format");
         opt.setRequired(false);
         options.addOption(opt);
@@ -70,10 +50,8 @@ public class QueryMsgByOffsetSubCommand implements SubCommand {
     public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
         DefaultMQPullConsumer defaultMQPullConsumer = new DefaultMQPullConsumer(MixAll.TOOLS_CONSUMER_GROUP, rpcHook);
-
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
         defaultMQPullConsumer.setInstanceName(Long.toString(System.currentTimeMillis()));
-
         try {
             String topic = commandLine.getOptionValue('t').trim();
             String brokerName = commandLine.getOptionValue('b').trim();
@@ -83,15 +61,12 @@ public class QueryMsgByOffsetSubCommand implements SubCommand {
             if (commandLine.hasOption('f')) {
                 msgBodyCharset = Charset.forName(commandLine.getOptionValue('f').trim());
             }
-
             MessageQueue mq = new MessageQueue();
             mq.setTopic(topic);
             mq.setBrokerName(brokerName);
             mq.setQueueId(Integer.parseInt(queueId));
-
             defaultMQPullConsumer.start();
             defaultMQAdminExt.start();
-
             PullResult pullResult = defaultMQPullConsumer.pull(mq, "*", Long.parseLong(offset), 1);
             if (pullResult != null) {
                 switch (pullResult.getPullStatus()) {
@@ -112,4 +87,5 @@ public class QueryMsgByOffsetSubCommand implements SubCommand {
             defaultMQAdminExt.shutdown();
         }
     }
+
 }

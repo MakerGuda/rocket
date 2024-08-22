@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.namesrv;
 
 import org.apache.commons.cli.CommandLine;
@@ -49,9 +33,7 @@ public class WipeWritePermSubCommand implements SubCommand {
     @Override
     public void execute(CommandLine commandLine, Options options, RPCHook rpcHook) throws SubCommandException {
         DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt(rpcHook);
-
         defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
-
         try {
             defaultMQAdminExt.start();
             String brokerName = commandLine.getOptionValue('b').trim();
@@ -60,18 +42,9 @@ public class WipeWritePermSubCommand implements SubCommand {
                 for (String namesrvAddr : namesrvList) {
                     try {
                         int wipeTopicCount = defaultMQAdminExt.wipeWritePermOfBroker(namesrvAddr, brokerName);
-                        System.out.printf("wipe write perm of broker[%s] in name server[%s] OK, %d%n",
-                                brokerName,
-                                namesrvAddr,
-                                wipeTopicCount
-                        );
+                        System.out.printf("wipe write perm of broker[%s] in name server[%s] OK, %d%n", brokerName, namesrvAddr, wipeTopicCount);
                     } catch (Exception e) {
-                        System.out.printf("wipe write perm of broker[%s] in name server[%s] Failed%n",
-                                brokerName,
-                                namesrvAddr
-                        );
-
-                        e.printStackTrace();
+                        System.out.printf("wipe write perm of broker[%s] in name server[%s] Failed%n", brokerName, namesrvAddr);
                     }
                 }
             }
@@ -81,4 +54,5 @@ public class WipeWritePermSubCommand implements SubCommand {
             defaultMQAdminExt.shutdown();
         }
     }
+
 }

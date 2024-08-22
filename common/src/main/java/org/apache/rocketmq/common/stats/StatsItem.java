@@ -80,42 +80,42 @@ public class StatsItem {
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 samplingInSeconds();
-            } catch (Throwable ignored) {
+            } catch (Throwable ignore) {
             }
         }, 0, 10, TimeUnit.SECONDS);
 
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 samplingInMinutes();
-            } catch (Throwable ignored) {
+            } catch (Throwable ignore) {
             }
         }, 0, 10, TimeUnit.MINUTES);
 
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 samplingInHour();
-            } catch (Throwable ignored) {
+            } catch (Throwable ignore) {
             }
         }, 0, 1, TimeUnit.HOURS);
 
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 printAtMinutes();
-            } catch (Throwable ignored) {
+            } catch (Throwable ignore) {
             }
         }, Math.abs(UtilAll.computeNextMinutesTimeMillis() - System.currentTimeMillis()), 1000 * 60, TimeUnit.MILLISECONDS);
 
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 printAtHour();
-            } catch (Throwable ignored) {
+            } catch (Throwable ignore) {
             }
         }, Math.abs(UtilAll.computeNextHourTimeMillis() - System.currentTimeMillis()), 1000 * 60 * 60, TimeUnit.MILLISECONDS);
 
         this.scheduledExecutorService.scheduleAtFixedRate(() -> {
             try {
                 printAtDay();
-            } catch (Throwable ignored) {
+            } catch (Throwable ignore) {
             }
         }, Math.abs(UtilAll.computeNextMorningTimeMillis() - System.currentTimeMillis()) - 2000, 1000 * 60 * 60 * 24, TimeUnit.MILLISECONDS);
     }

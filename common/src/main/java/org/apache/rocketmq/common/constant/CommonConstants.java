@@ -14,6 +14,4 @@ public class CommonConstants {
 
     public static final String SPACE = " ";
 
-    public static final String POUND = "#";
-
 }

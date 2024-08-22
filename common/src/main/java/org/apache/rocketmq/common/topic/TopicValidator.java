@@ -10,20 +10,35 @@ import java.util.Set;
 public class TopicValidator {
 
     public static final String AUTO_CREATE_TOPIC_KEY_TOPIC = "TBW102";
+
     public static final String RMQ_SYS_SCHEDULE_TOPIC = "SCHEDULE_TOPIC_XXXX";
+
     public static final String RMQ_SYS_BENCHMARK_TOPIC = "BenchmarkTest";
+
     public static final String RMQ_SYS_TRANS_HALF_TOPIC = "RMQ_SYS_TRANS_HALF_TOPIC";
+
     public static final String RMQ_SYS_TRACE_TOPIC = "RMQ_SYS_TRACE_TOPIC";
+
     public static final String RMQ_SYS_TRANS_OP_HALF_TOPIC = "RMQ_SYS_TRANS_OP_HALF_TOPIC";
+
     public static final String RMQ_SYS_TRANS_CHECK_MAX_TIME_TOPIC = "TRANS_CHECK_MAX_TIME_TOPIC";
+
     public static final String RMQ_SYS_SELF_TEST_TOPIC = "SELF_TEST_TOPIC";
+
     public static final String RMQ_SYS_OFFSET_MOVED_EVENT = "OFFSET_MOVED_EVENT";
+
     public static final String RMQ_SYS_ROCKSDB_OFFSET_TOPIC = "CHECKPOINT_TOPIC";
+
     public static final String SYSTEM_TOPIC_PREFIX = "rmq_sys_";
+
     public static final String SYNC_BROKER_MEMBER_GROUP_PREFIX = SYSTEM_TOPIC_PREFIX + "SYNC_BROKER_MEMBER_";
+
     public static final boolean[] VALID_CHAR_BIT_MAP = new boolean[128];
+
     private static final int TOPIC_MAX_LENGTH = 127;
+
     private static final Set<String> SYSTEM_TOPIC_SET = new HashSet<>();
+
     private static final Set<String> NOT_ALLOWED_SEND_TOPIC_SET = new HashSet<>();
 
     static {

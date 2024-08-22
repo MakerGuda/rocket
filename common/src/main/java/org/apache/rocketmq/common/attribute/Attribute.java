@@ -7,8 +7,14 @@ import lombok.Setter;
 @Setter
 public abstract class Attribute {
 
+    /**
+     * 属性名称
+     */
     protected String name;
 
+    /**
+     * 是否可变
+     */
     protected boolean changeable;
 
     public Attribute(String name, boolean changeable) {

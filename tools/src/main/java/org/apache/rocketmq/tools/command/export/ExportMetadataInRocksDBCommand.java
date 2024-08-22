@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.export;
 
 import com.alibaba.fastjson.JSONObject;
@@ -35,7 +19,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 
 public class ExportMetadataInRocksDBCommand implements SubCommand {
+
     private static final String TOPICS_JSON_CONFIG = "topics";
+
     private static final String SUBSCRIPTION_GROUP_JSON_CONFIG = "subscriptionGroups";
 
     private static void handleExportMetadata(ConfigRocksDBStorage kvStore, String configType, boolean jsonEnable) {
@@ -49,9 +35,7 @@ public class ExportMetadataInRocksDBCommand implements SubCommand {
                         configTable.put(configKey, jsonObject);
                     }
             );
-
-            jsonConfig.put(configType.equalsIgnoreCase(TOPICS_JSON_CONFIG) ? "topicConfigTable" : "subscriptionGroupTable",
-                    (JSONObject) JSONObject.toJSON(configTable));
+            jsonConfig.put(configType.equalsIgnoreCase(TOPICS_JSON_CONFIG) ? "topicConfigTable" : "subscriptionGroupTable", (JSONObject) JSONObject.toJSON(configTable));
             final String jsonConfigStr = JSONObject.toJSONString(jsonConfig, true);
             System.out.print(jsonConfigStr + "\n");
         } else {
@@ -85,21 +69,15 @@ public class ExportMetadataInRocksDBCommand implements SubCommand {
 
     @Override
     public Options buildCommandlineOptions(Options options) {
-        Option pathOption = new Option("p", "path", true,
-                "Absolute path for the metadata directory");
+        Option pathOption = new Option("p", "path", true, "Absolute path for the metadata directory");
         pathOption.setRequired(true);
         options.addOption(pathOption);
-
-        Option configTypeOption = new Option("t", "configType", true, "Name of kv config, e.g. " +
-                "topics/subscriptionGroups");
+        Option configTypeOption = new Option("t", "configType", true, "Name of kv config, e.g. " + "topics/subscriptionGroups");
         configTypeOption.setRequired(true);
         options.addOption(configTypeOption);
-
-        Option jsonEnableOption = new Option("j", "jsonEnable", true,
-                "Json format enable, Default: false");
+        Option jsonEnableOption = new Option("j", "jsonEnable", true, "Json format enable, Default: false");
         jsonEnableOption.setRequired(false);
         options.addOption(jsonEnableOption);
-
         return options;
     }
 
@@ -110,21 +88,16 @@ public class ExportMetadataInRocksDBCommand implements SubCommand {
             System.out.print("RocksDB path is invalid.\n");
             return;
         }
-
         String configType = commandLine.getOptionValue("configType").trim().toLowerCase();
-
         boolean jsonEnable = false;
         if (commandLine.hasOption("jsonEnable")) {
             jsonEnable = Boolean.parseBoolean(commandLine.getOptionValue("jsonEnable").trim());
         }
-
-
-        ConfigRocksDBStorage kvStore = new ConfigRocksDBStorage(path, true /* readOnly */);
+        ConfigRocksDBStorage kvStore = new ConfigRocksDBStorage(path, true);
         if (!kvStore.start()) {
             System.out.print("RocksDB load error, path=" + path + "\n");
             return;
         }
-
         try {
             if (TOPICS_JSON_CONFIG.equalsIgnoreCase(configType) || SUBSCRIPTION_GROUP_JSON_CONFIG.equalsIgnoreCase(configType)) {
                 handleExportMetadata(kvStore, configType, jsonEnable);
@@ -135,4 +108,5 @@ public class ExportMetadataInRocksDBCommand implements SubCommand {
             kvStore.shutdown();
         }
     }
+
 }

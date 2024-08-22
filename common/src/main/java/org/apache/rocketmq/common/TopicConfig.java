@@ -22,16 +22,20 @@ public class TopicConfig {
      * 分隔符
      */
     private static final String SEPARATOR = " ";
+
     private static final TypeReference<Map<String, String>> ATTRIBUTES_TYPE_REFERENCE = new TypeReference<Map<String, String>>() {
     };
+
     /**
      * 默认读队列数量
      */
     public static int defaultReadQueueNums = 16;
+
     /**
      * 默认写队列数量
      */
     public static int defaultWriteQueueNums = 16;
+
     /**
      * 主题名称
      */
@@ -140,8 +144,7 @@ public class TopicConfig {
             if (str.length >= 6) {
                 try {
                     this.attributes = JSON.parseObject(str[5], ATTRIBUTES_TYPE_REFERENCE.getType());
-                } catch (Exception e) {
-                    // ignore exception when parse failed, cause map's key/value can have ' ' char.
+                } catch (Exception ignore) {
                 }
             }
             return true;
@@ -159,11 +162,6 @@ public class TopicConfig {
             return TopicMessageType.NORMAL;
         }
         return TopicMessageType.valueOf(content);
-    }
-
-    @JSONField(serialize = false, deserialize = false)
-    public void setTopicMessageType(TopicMessageType topicMessageType) {
-        attributes.put(TOPIC_MESSAGE_TYPE_ATTRIBUTE.getName(), topicMessageType.getValue());
     }
 
     @Override
@@ -210,14 +208,6 @@ public class TopicConfig {
         result = 31 * result + (order ? 1 : 0);
         result = 31 * result + (attributes != null ? attributes.hashCode() : 0);
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return "TopicConfig [topicName=" + topicName + ", readQueueNums=" + readQueueNums
-                + ", writeQueueNums=" + writeQueueNums + ", perm=" + PermName.perm2String(perm)
-                + ", topicFilterType=" + topicFilterType + ", topicSysFlag=" + topicSysFlag + ", order=" + order
-                + ", attributes=" + attributes + "]";
     }
 
 }

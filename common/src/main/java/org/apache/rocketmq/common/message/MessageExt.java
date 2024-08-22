@@ -75,8 +75,7 @@ public class MessageExt extends Message {
     public MessageExt() {
     }
 
-    public MessageExt(int queueId, long bornTimestamp, SocketAddress bornHost, long storeTimestamp,
-                      SocketAddress storeHost, String msgId) {
+    public MessageExt(int queueId, long bornTimestamp, SocketAddress bornHost, long storeTimestamp, SocketAddress storeHost, String msgId) {
         this.queueId = queueId;
         this.bornTimestamp = bornTimestamp;
         this.bornHost = bornHost;

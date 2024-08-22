@@ -11,12 +11,24 @@ public class MessageQueueForC implements Comparable<MessageQueueForC>, Serializa
 
     private static final long serialVersionUID = 5320967846569962104L;
 
+    /**
+     * 主题
+     */
     private String topic;
 
+    /**
+     * 所在broker名称
+     */
     private String brokerName;
 
+    /**
+     * 当前队列id
+     */
     private int queueId;
 
+    /**
+     * 偏移量
+     */
     private long offset;
 
     public MessageQueueForC(String topic, String brokerName, int queueId, long offset) {
@@ -82,11 +94,6 @@ public class MessageQueueForC implements Comparable<MessageQueueForC>, Serializa
             return false;
 
         return offset == other.offset;
-    }
-
-    @Override
-    public String toString() {
-        return "MessageQueueForC [topic=" + topic + ", brokerName=" + brokerName + ", queueId=" + queueId + ", offset=" + offset + "]";
     }
 
 }

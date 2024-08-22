@@ -13,9 +13,4 @@ public class AclConfig {
 
     private List<PlainAccessConfig> plainAccessConfigs;
 
-    @Override
-    public String toString() {
-        return "AclConfig{" + "globalWhiteAddrs=" + globalWhiteAddrs + ", plainAccessConfigs=" + plainAccessConfigs + '}';
-    }
-
 }

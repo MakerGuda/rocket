@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.tools.command.broker;
 
 
@@ -47,19 +31,15 @@ public class UpdateColdDataFlowCtrGroupConfigSubCommand implements SubCommand {
         Option opt = new Option("b", "brokerAddr", true, "update which broker");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("c", "clusterName", true, "update which cluster");
         opt.setRequired(false);
         options.addOption(opt);
-
         opt = new Option("g", "consumerGroup", true, "specific consumerGroup");
         opt.setRequired(true);
         options.addOption(opt);
-
         opt = new Option("v", "threshold", true, "cold read threshold value");
         opt.setRequired(true);
         options.addOption(opt);
-
         return options;
     }
 
@@ -72,7 +52,6 @@ public class UpdateColdDataFlowCtrGroupConfigSubCommand implements SubCommand {
             String value = commandLine.getOptionValue('v').trim();
             Properties properties = new Properties();
             properties.put(key, value);
-
             if (commandLine.hasOption('b')) {
                 String brokerAddr = commandLine.getOptionValue('b').trim();
                 defaultMQAdminExt.start();
@@ -87,8 +66,7 @@ public class UpdateColdDataFlowCtrGroupConfigSubCommand implements SubCommand {
                     try {
                         defaultMQAdminExt.updateColdDataFlowCtrGroupConfig(brokerAddr, properties);
                         System.out.printf("updateColdDataFlowCtrGroupConfig success, %s\n", brokerAddr);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    } catch (Exception ignore) {
                     }
                 }
                 return;
@@ -100,4 +78,5 @@ public class UpdateColdDataFlowCtrGroupConfigSubCommand implements SubCommand {
             defaultMQAdminExt.shutdown();
         }
     }
+
 }
