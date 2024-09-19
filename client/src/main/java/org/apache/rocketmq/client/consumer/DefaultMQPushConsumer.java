@@ -1,21 +1,7 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.rocketmq.client.consumer;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.QueryResult;
 import org.apache.rocketmq.client.consumer.listener.MessageListener;
@@ -49,80 +35,43 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * In most scenarios, this is the mostly recommended class to consume messages.
- * </p>
- * <p>
- * Technically speaking, this push client is virtually a wrapper of the underlying pull service. Specifically, on
- * arrival of messages pulled from brokers, it roughly invokes the registered callback handler to feed the messages.
- * </p>
- * <p>
- * See quickstart/Consumer in the example module for a typical usage.
- * </p>
- *
- * <p>
- * <strong>Thread Safety:</strong> After initialization, the instance can be regarded as thread-safe.
- * </p>
+ * 默认推模式消息消费
  */
+@Getter
+@Setter
 public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsumer {
 
     /**
-     * Internal implementation. Most of the functions herein are delegated to it.
+     * 内部实现类
      */
     protected final transient DefaultMQPushConsumerImpl defaultMQPushConsumerImpl;
+
     private final Logger log = LoggerFactory.getLogger(DefaultMQPushConsumer.class);
+
     /**
-     * Consumers of the same role is required to have exactly same subscriptions and consumerGroup to correctly achieve
-     * load balance. It's required and needs to be globally unique.
-     * </p>
-     * <p>
-     * See <a href="https://rocketmq.apache.org/docs/introduction/02concepts">here</a> for further discussion.
+     * 当前消费者所在的消费者组
      */
     private String consumerGroup;
 
     /**
-     * Message model defines the way how messages are delivered to each consumer clients.
-     * </p>
-     * <p>
-     * RocketMQ supports two message models: clustering and broadcasting. If clustering is set, consumer clients with
-     * the same {@link #consumerGroup} would only consume shards of the messages subscribed, which achieves load
-     * balances; Conversely, if the broadcasting is set, each consumer client will consume all subscribed messages
-     * separately.
-     * </p>
-     * <p>
-     * This field defaults to clustering.
+     * 消息模式，广播或者是集群
      */
     private MessageModel messageModel = MessageModel.CLUSTERING;
 
     /**
-     * Consuming point on consumer booting.
-     * </p>
-     * <p>
-     * There are three consuming points:
-     * <ul>
-     * <li>
+     * 消费者启动时的消费点
+     * CONSUME_FROM_LAST_OFFSET：从上次消费者客户端停止的地方继续消费
      * <code>CONSUME_FROM_LAST_OFFSET</code>: consumer clients pick up where it stopped previously.
      * If it were a newly booting up consumer client, according aging of the consumer group, there are two
      * cases:
-     * <ol>
-     * <li>
-     * if the consumer group is created so recently that the earliest message being subscribed has yet
+     * 1. if the consumer group is created so recently that the earliest message being subscribed has yet
      * expired, which means the consumer group represents a lately launched business, consuming will
      * start from the very beginning;
-     * </li>
-     * <li>
-     * if the earliest message being subscribed has expired, consuming will start from the latest
+     * 2. if the earliest message being subscribed has expired, consuming will start from the latest
      * messages, meaning messages born prior to the booting timestamp would be ignored.
-     * </li>
-     * </ol>
-     * </li>
-     * <li>
-     * <code>CONSUME_FROM_FIRST_OFFSET</code>: Consumer client will start from earliest messages available.
-     * </li>
-     * <li>
-     * <code>CONSUME_FROM_TIMESTAMP</code>: Consumer client will start from specified timestamp, which means
-     * messages born prior to {@link #consumeTimestamp} will be ignored
-     * </li>
-     * </ul>
+     *
+     * <code>CONSUME_FROM_FIRST_OFFSET</code>: 消费者客户端从最早的可用的消息开始消费
+     * <code>CONSUME_FROM_TIMESTAMP</code>: 消费者客户端从指定时间戳开始消费
      */
     private ConsumeFromWhere consumeFromWhere = ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET;
 
@@ -840,16 +789,6 @@ public class DefaultMQPushConsumer extends ClientConfig implements MQPushConsume
     @Override
     public void unsubscribe(String topic) {
         this.defaultMQPushConsumerImpl.unsubscribe(topic);
-    }
-
-    /**
-     * Update the message consuming thread core pool size.
-     *
-     * @param corePoolSize new core pool size.
-     */
-    @Override
-    public void updateCorePoolSize(int corePoolSize) {
-        this.defaultMQPushConsumerImpl.updateCorePoolSize(corePoolSize);
     }
 
     /**
